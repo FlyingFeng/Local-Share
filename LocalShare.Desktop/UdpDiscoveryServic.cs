@@ -18,7 +18,7 @@ namespace LocalShare.Desktop
         //private const int BroadcastPort = 9988;
         private const int BroadcastInterval = 3000; // 3秒
 
-        private readonly string _localIP;
+        //private readonly string _localIP;
         private readonly UdpClient _listener;
         private readonly CancellationTokenSource _cts = new();
 
@@ -29,7 +29,7 @@ namespace LocalShare.Desktop
 
         public UdpDiscoveryService()
         {
-            _localIP = GlobalShared.IpAddress ?? "127.0.0.1";
+            //_localIP = GlobalShared.IpAddress ?? "127.0.0.1";
 
             _listener = new UdpClient();
             // 允许多个程序绑定同一端口（同机多实例时不报错）

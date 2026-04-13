@@ -8,7 +8,6 @@ using LocalShare.Desktop.Models;
 using LocalShare.Desktop.Server;
 using LocalShare.Desktop.Views;
 using LocalShare.Protocol.Define;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
@@ -232,63 +231,12 @@ namespace LocalShare.Desktop.ViewModels
         }
 
         [RelayCommand]
-        private async Task Loaded()
+        private void Loaded()
         {
             try
             {
-                var dbContext = _services!.GetRequiredService<LocalDataContext>();
-                var node = dbContext.LocalNodes.FirstOrDefault();
-                if (node != null && !string.IsNullOrEmpty(node.NodeName))
-                {
-                    GlobalShared.NodeName = node.NodeName;
-                }
-                else
-                {
-                    node = new DataContext.Entities.LocalNodeEntity
-                    {
-                        InitTime = DateTime.UtcNow,
-                        LastUpdateTime = DateTime.UtcNow,
-                        NodeName = GlobalShared.NodeName!
-                    };
-                    await dbContext.LocalNodes.AddAsync(node);
-                }
-                var settings = await dbContext.LocalSettings.ToListAsync();
-                var ip = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyIpAddress);
-                if (ip == null)
-                {
-                    ip = new DataContext.Entities.LocalSettingEntity
-                    {
-                        Key = LocalSettingKey.KeyIpAddress,
-                        Value = GlobalShared.IpAddress!
-                    };
-                    await dbContext.LocalSettings.AddAsync(ip);
-                }
-                else
-                {
-                    if (ip.Value != GlobalShared.IpAddress)
-                    {
-                        ip.Value = GlobalShared.IpAddress!;
-                    }
-                    dbContext.LocalSettings.Update(ip);
-                }
                 NodeName = GlobalShared.NodeName!;
                 IpAddress = GlobalShared.IpAddress!;
-
-                var serverPort = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyServerPort);
-                if (serverPort == null)
-                {
-                    serverPort = new DataContext.Entities.LocalSettingEntity
-                    {
-                        Key = LocalSettingKey.KeyServerPort,
-                        Value = GlobalShared.ServerPort.ToString()
-                    };
-                    await dbContext.LocalSettings.AddAsync(serverPort);
-                }
-                else
-                {
-                    GlobalShared.ServerPort = int.Parse(serverPort.Value);
-                }
-                await dbContext.SaveChangesAsync();
                 _localServer = new LocalServer(_services!);
                 _server = new Grpc.Core.Server()
                 {

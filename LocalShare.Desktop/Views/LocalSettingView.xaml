@@ -4,7 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:LocalShare.Desktop.Views"
+             xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
              Unloaded="UserControl_Unloaded"
+             d:DataContext="{d:DesignInstance Type=vm:LocalSettingViewModel,IsDesignTimeCreatable=True}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Border>
@@ -14,37 +16,65 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
 
-            <ScrollViewer Grid.Column="1">
-                <StackPanel Orientation="Vertical">
-                    <Rectangle Height="10"/>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="监听端口：" VerticalAlignment="Center" Width="200"/>
-                        <TextBox Width="280" VerticalContentAlignment="Center"/>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="60"/>
+                </Grid.RowDefinitions>
+                <ScrollViewer Grid.Column="1">
+                    <StackPanel Orientation="Vertical">
+                        <Rectangle Height="10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding SelectedAll}" Content="应用所有" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Rectangle Height="10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding ServerPortSelected}"/>
+                            <Rectangle Width="10"/>
+                            <TextBlock Text="监听端口：" VerticalAlignment="Center" Width="200"/>
+                            <TextBox Text="{Binding ServerPort}" Width="280" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                        <Rectangle Height="10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding BrocastPortSelected}"/>
+                            <Rectangle Width="10"/>
+                            <TextBlock Text="广播端口：" VerticalAlignment="Center" Width="200"/>
+                            <TextBox Text="{Binding BrocastPort}" Width="280" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                        <Rectangle Height="10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding SendNodeMaxCountSelected}"/>
+                            <Rectangle Width="10"/>
+                            <TextBlock Text="最大同时发送节点数：" Width="200" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SendNodeMaxCount}" Width="280" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                        <Rectangle Height="10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding SameNodeMaxSendFileCountSelected}"/>
+                            <Rectangle Width="10"/>
+                            <TextBlock Text="单一节点最大同时发送文件数：" Width="200" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SameNodeMaxSendFileCount}" Width="280" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                        <Rectangle Height="10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding DownloadPathSelected}"/>
+                            <Rectangle Width="10"/>
+                            <TextBlock VerticalAlignment="Center" Text="文件保存路径：" Width="200"/>
+                            <TextBox Width="350" Text="{Binding DownloadPath}" IsReadOnly="True" VerticalContentAlignment="Center"/>
+                            <Rectangle Width="10"/>
+                            <Button Width="88" Style="{StaticResource ButtonPrimary.Small}" Command="{Binding ChooseDownloadPathCommand}">选择</Button>
+                        </StackPanel>
                     </StackPanel>
-                    <Rectangle Height="10"/>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="广播端口：" VerticalAlignment="Center" Width="200"/>
-                        <TextBox Width="280" VerticalContentAlignment="Center"/>
+                </ScrollViewer>
+
+                <Border Grid.Row="1">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                        <Button Width="110" Height="36" Command="{Binding ApplyCommand}" Style="{StaticResource ButtonPrimary}">应用</Button>
+                        <Rectangle Width="15"/>
+                        <Button Width="110" Height="36" Command="{Binding SaveCommand}" Style="{StaticResource ButtonPrimary}">保存</Button>
                     </StackPanel>
-                    <Rectangle Height="10"/>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="最大同时发送节点数：" Width="200" VerticalAlignment="Center"/>
-                        <TextBox Width="280" VerticalContentAlignment="Center"/>
-                    </StackPanel>
-                    <Rectangle Height="10"/>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="单一节点最大同时发送文件数：" Width="200" VerticalAlignment="Center"/>
-                        <TextBox Width="280" VerticalContentAlignment="Center"/>
-                    </StackPanel>
-                    <Rectangle Height="10"/>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Text="文件保存路径：" Width="200"/>
-                        <TextBox Width="280" VerticalContentAlignment="Center"/>
-                        <Rectangle Width="10"/>
-                        <Button Width="100">选择</Button>
-                    </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
+                </Border>
+            </Grid>
         </Grid>
     </Border>
 </UserControl>

@@ -10,7 +10,9 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Xml.Linq;
 
 namespace LocalShare.Desktop
 {
@@ -141,8 +143,9 @@ namespace LocalShare.Desktop
                 // 禁用休眠
                 PreventSleep();
                 await _host.StartAsync();
-                var context = _host.Services.GetRequiredService<LocalDataContext>();
-                context.LocalNodes.FirstOrDefault();
+                //var context = _host.Services.GetRequiredService<LocalDataContext>();
+                //context.LocalNodes.FirstOrDefault();
+                await LoadData();
                 var window = _host.Services.GetRequiredService<MainWindow>();
                 window.Show();
             }
@@ -168,6 +171,70 @@ namespace LocalShare.Desktop
                 await Log.CloseAndFlushAsync();
             }
         }
+
+
+        private async Task LoadData()
+        {
+            var dbContext = _host!.Services.GetRequiredService<LocalDataContext>();
+            var list = await dbContext.LocalSettings.ToListAsync();
+            var localNode = await dbContext.LocalNodes.FirstOrDefaultAsync();
+            if (localNode != null)
+            {
+                GlobalShared.NodeName = localNode.NodeName;
+            }
+            else
+            {
+                localNode = new DataContext.Entities.LocalNodeEntity
+                {
+                    InitTime = DateTime.UtcNow,
+                    LastUpdateTime = DateTime.UtcNow,
+                    NodeName = GlobalShared.NodeName!
+                };
+                await dbContext.LocalNodes.AddAsync(localNode);
+                await dbContext.SaveChangesAsync();
+            }
+
+            foreach (var each in list)
+            {
+                if (each.Key == LocalSettingKey.KeyBrocastPort)
+                {
+                    if (!string.IsNullOrWhiteSpace(each.Value) && int.TryParse(each.Value, out var val))
+                    {
+                        GlobalShared.BroadcastPort = val;
+                    }
+                }
+                else if (each.Key == LocalSettingKey.KeyDownloadPath)
+                {
+                    if (!string.IsNullOrWhiteSpace(each.Value) && Directory.Exists(each.Value))
+                    {
+                        GlobalShared.DownloadPath = each.Value;
+                    }
+                }
+                else if (each.Key == LocalSettingKey.KeySameNodeMaxSendFileCount)
+                {
+                    if (!string.IsNullOrWhiteSpace(each.Value) && int.TryParse(each.Value, out var val))
+                    {
+                        GlobalShared.SameNodeMaxSendFileCount = val;
+                    }
+                }
+                else if (each.Key == LocalSettingKey.KeySendNodeMaxCount)
+                {
+                    if (!string.IsNullOrWhiteSpace(each.Value) && int.TryParse(each.Value, out var val))
+                    {
+                        GlobalShared.SendNodeMaxCount = val;
+                    }
+                }
+                else if (each.Key == LocalSettingKey.KeyServerPort)
+                {
+                    if (!string.IsNullOrWhiteSpace(each.Value) && int.TryParse(each.Value, out var val))
+                    {
+                        GlobalShared.ServerPort = val;
+                    }
+                }
+            }
+
+        }
+
 
     }
 
