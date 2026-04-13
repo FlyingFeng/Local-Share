@@ -1,4 +1,5 @@
 ﻿using CommonTool;
+using Hardcodet.Wpf.TaskbarNotification;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.KeepStates;
 using LocalShare.Desktop.ViewModels;
@@ -19,7 +20,7 @@ namespace LocalShare.Desktop
     public partial class App : Application
     {
         private readonly IHost? _host;
-
+        private TaskbarIcon? _trayIcon;
 
         // ── 阻止休眠 API ─────────────────────────────────────────────
 
@@ -101,10 +102,42 @@ namespace LocalShare.Desktop
             }
         }
 
+
+        private void ExitApp()
+        {
+            _trayIcon?.Dispose();
+            Shutdown();
+        }
+
+        private void ShowMainWindow()
+        {
+            if (MainWindow != null)
+            {
+                MainWindow.Show();
+                MainWindow.WindowState = WindowState.Normal;
+                MainWindow.Activate();
+            }
+        }
+
         protected override async void OnStartup(StartupEventArgs e)
         {
             if (_host != null)
             {
+                _trayIcon = (TaskbarIcon)FindResource("TrayIcon");
+                var contextMenu = new System.Windows.Controls.ContextMenu();
+
+                var showItem = new System.Windows.Controls.MenuItem { Header = "恢复主窗口" };
+                showItem.Click += (s, args) => ShowMainWindow();
+
+                var exitItem = new System.Windows.Controls.MenuItem { Header = "关闭程序" };
+                exitItem.Click += (s, args) => ExitApp();
+
+                contextMenu.Items.Add(showItem);
+                contextMenu.Items.Add(new System.Windows.Controls.Separator());
+                contextMenu.Items.Add(exitItem);
+                _trayIcon.ContextMenu = contextMenu;
+                _trayIcon.TrayMouseDoubleClick += (s, args) => ShowMainWindow();
+
                 // 禁用休眠
                 PreventSleep();
                 await _host.StartAsync();
@@ -124,6 +157,7 @@ namespace LocalShare.Desktop
             Log.Information("Application stopped");
             // 恢复休眠
             RestoreSleep();
+            _trayIcon?.Dispose();
             if (_host != null)
             {
                 // 停止 UDP 发现服务

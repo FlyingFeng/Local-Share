@@ -25,7 +25,8 @@ namespace LocalShare.Desktop
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-
+            e.Cancel = true;   // 取消真正的关闭
+            this.Hide();       // 隐藏窗口
         }
     }
 }
