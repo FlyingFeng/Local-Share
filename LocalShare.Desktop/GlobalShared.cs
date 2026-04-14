@@ -13,7 +13,7 @@ namespace LocalShare.Desktop
         internal static int ServerPort = 11167;
         internal static int BroadcastPort = 9988;
         internal static string? DownloadPath = string.Empty;
-        internal static int SendNodeMaxCount;
-        internal static int SameNodeMaxSendFileCount;
+        internal static int SendNodeMaxCount = 3;
+        internal static int SameNodeMaxSendFileCount = 3;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using CommonTool;
+using HandyControl.Tools;
 using Hardcodet.Wpf.TaskbarNotification;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.KeepStates;
@@ -176,7 +177,6 @@ namespace LocalShare.Desktop
         private async Task LoadData()
         {
             var dbContext = _host!.Services.GetRequiredService<LocalDataContext>();
-            var list = await dbContext.LocalSettings.ToListAsync();
             var localNode = await dbContext.LocalNodes.FirstOrDefaultAsync();
             if (localNode != null)
             {
@@ -194,45 +194,82 @@ namespace LocalShare.Desktop
                 await dbContext.SaveChangesAsync();
             }
 
-            foreach (var each in list)
+            var list = await dbContext.LocalSettings.ToListAsync();
+
+            var brocastPortSetting = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeyBrocastPort);
+            if (brocastPortSetting == null)
             {
-                if (each.Key == LocalSettingKey.KeyBrocastPort)
+                brocastPortSetting = new DataContext.Entities.LocalSettingEntity()
                 {
-                    if (!string.IsNullOrWhiteSpace(each.Value) && int.TryParse(each.Value, out var val))
-                    {
-                        GlobalShared.BroadcastPort = val;
-                    }
-                }
-                else if (each.Key == LocalSettingKey.KeyDownloadPath)
-                {
-                    if (!string.IsNullOrWhiteSpace(each.Value) && Directory.Exists(each.Value))
-                    {
-                        GlobalShared.DownloadPath = each.Value;
-                    }
-                }
-                else if (each.Key == LocalSettingKey.KeySameNodeMaxSendFileCount)
-                {
-                    if (!string.IsNullOrWhiteSpace(each.Value) && int.TryParse(each.Value, out var val))
-                    {
-                        GlobalShared.SameNodeMaxSendFileCount = val;
-                    }
-                }
-                else if (each.Key == LocalSettingKey.KeySendNodeMaxCount)
-                {
-                    if (!string.IsNullOrWhiteSpace(each.Value) && int.TryParse(each.Value, out var val))
-                    {
-                        GlobalShared.SendNodeMaxCount = val;
-                    }
-                }
-                else if (each.Key == LocalSettingKey.KeyServerPort)
-                {
-                    if (!string.IsNullOrWhiteSpace(each.Value) && int.TryParse(each.Value, out var val))
-                    {
-                        GlobalShared.ServerPort = val;
-                    }
-                }
+                    Key = LocalSettingKey.KeyBrocastPort,
+                    Value = GlobalShared.BroadcastPort.ToString()
+                };
+                await dbContext.LocalSettings.AddAsync(brocastPortSetting);
+            }
+            else
+            {
+                GlobalShared.BroadcastPort = int.Parse(brocastPortSetting.Value);
             }
 
+            var serverPortSetting = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeyServerPort);
+            if (serverPortSetting == null)
+            {
+                serverPortSetting = new DataContext.Entities.LocalSettingEntity
+                {
+                    Key = LocalSettingKey.KeyServerPort,
+                    Value = GlobalShared.ServerPort.ToString()
+                };
+                await dbContext.LocalSettings.AddAsync(serverPortSetting);
+            }
+            else
+            {
+                GlobalShared.ServerPort = int.Parse(serverPortSetting.Value);
+            }
+
+            var downloadPathSetting = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeyDownloadPath);
+            if (downloadPathSetting == null)
+            {
+                downloadPathSetting = new DataContext.Entities.LocalSettingEntity
+                {
+                    Key = LocalSettingKey.KeyDownloadPath,
+                    Value = GlobalShared.DownloadPath!
+                };
+                await dbContext.LocalSettings.AddAsync(downloadPathSetting);
+            }
+            else
+            {
+                GlobalShared.DownloadPath = downloadPathSetting.Value;
+            }
+
+            var sameNodeMaxSendFileCountSetting = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeySameNodeMaxSendFileCount);
+            if (sameNodeMaxSendFileCountSetting == null)
+            {
+                sameNodeMaxSendFileCountSetting = new DataContext.Entities.LocalSettingEntity
+                {
+                    Key = LocalSettingKey.KeySameNodeMaxSendFileCount,
+                    Value = GlobalShared.SameNodeMaxSendFileCount.ToString()
+                };
+                await dbContext.LocalSettings.AddAsync(sameNodeMaxSendFileCountSetting);
+            }
+            else
+            {
+                GlobalShared.SameNodeMaxSendFileCount = int.Parse(sameNodeMaxSendFileCountSetting.Value);
+            }
+
+            var sendNodeMaxCountSetting = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeySendNodeMaxCount);
+            if (sendNodeMaxCountSetting == null)
+            {
+                sendNodeMaxCountSetting = new DataContext.Entities.LocalSettingEntity
+                {
+                    Key = LocalSettingKey.KeySendNodeMaxCount,
+                    Value = GlobalShared.SendNodeMaxCount.ToString()
+                };
+                await dbContext.LocalSettings.AddAsync(sendNodeMaxCountSetting);
+            }
+            else
+            {
+                GlobalShared.SendNodeMaxCount = int.Parse(sendNodeMaxCountSetting.Value);
+            }
         }
 
 

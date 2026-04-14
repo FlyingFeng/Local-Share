@@ -5,15 +5,49 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:LocalShare.Desktop.Views"
              xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:lc="clr-namespace:LocalShare.Desktop.LocalConverters"
+             xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
              Unloaded="UserControl_Unloaded"
              d:DataContext="{d:DesignInstance Type=vm:LocalSettingViewModel,IsDesignTimeCreatable=True}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:InvokeCommandAction Command="{Binding LoadedCommand}"/>
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
+    <UserControl.Resources>
+        <lc:EmptyStringToIntConverter x:Key="EmptyStringToIntConverter"/>
+        <ControlTemplate x:Key="ErrorMessageTemplate">
+            <WrapPanel>
+                <!-- Placeholder for the TextBox itself -->
+                <AdornedElementPlaceholder/>
+                <TextBlock Text="{Binding [0].ErrorContent}" VerticalAlignment="Center" Foreground="Red"/>
+                <!--<ItemsControl ItemsSource="{Binding}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding ErrorContent}" Foreground="Red"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>-->
+            </WrapPanel>
+        </ControlTemplate>
+        <Style TargetType="TextBox" BasedOn="{StaticResource TextBoxBaseStyle}">
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="True">
+                    <Setter Property="BorderBrush" Value="Red"/>
+                    <Setter Property="BorderThickness" Value="1.5"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
     <Border>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100"/>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="1">
@@ -32,37 +66,40 @@
                             <CheckBox IsChecked="{Binding ServerPortSelected}"/>
                             <Rectangle Width="10"/>
                             <TextBlock Text="监听端口：" VerticalAlignment="Center" Width="200"/>
-                            <TextBox Text="{Binding ServerPort}" Width="280" VerticalContentAlignment="Center"/>
+                            <TextBox Text="{Binding ServerPort,UpdateSourceTrigger=PropertyChanged}" Validation.ErrorTemplate="{StaticResource ErrorMessageTemplate}" Width="160" VerticalContentAlignment="Center"/>
                         </StackPanel>
                         <Rectangle Height="10"/>
                         <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding BrocastPortSelected}"/>
                             <Rectangle Width="10"/>
                             <TextBlock Text="广播端口：" VerticalAlignment="Center" Width="200"/>
-                            <TextBox Text="{Binding BrocastPort}" Width="280" VerticalContentAlignment="Center"/>
+                            <TextBox Text="{Binding BrocastPort,UpdateSourceTrigger=PropertyChanged}" Validation.ErrorTemplate="{StaticResource ErrorMessageTemplate}" Width="160" VerticalContentAlignment="Center"/>
                         </StackPanel>
                         <Rectangle Height="10"/>
                         <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding SendNodeMaxCountSelected}"/>
                             <Rectangle Width="10"/>
-                            <TextBlock Text="最大同时发送节点数：" Width="200" VerticalAlignment="Center"/>
-                            <TextBox Text="{Binding SendNodeMaxCount}" Width="280" VerticalContentAlignment="Center"/>
+                            <TextBlock Text="同时发文件送节点数：" Width="200" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SendNodeMaxCount,UpdateSourceTrigger=PropertyChanged}" Validation.ErrorTemplate="{StaticResource ErrorMessageTemplate}" Width="160" VerticalContentAlignment="Center"/>
                         </StackPanel>
                         <Rectangle Height="10"/>
                         <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding SameNodeMaxSendFileCountSelected}"/>
                             <Rectangle Width="10"/>
-                            <TextBlock Text="单一节点最大同时发送文件数：" Width="200" VerticalAlignment="Center"/>
-                            <TextBox Text="{Binding SameNodeMaxSendFileCount}" Width="280" VerticalContentAlignment="Center"/>
+                            <TextBlock Text="节点同时发送文件数：" Width="200" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SameNodeMaxSendFileCount,UpdateSourceTrigger=PropertyChanged}" Validation.ErrorTemplate="{StaticResource ErrorMessageTemplate}" Width="160" VerticalContentAlignment="Center"/>
                         </StackPanel>
                         <Rectangle Height="10"/>
                         <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding DownloadPathSelected}"/>
                             <Rectangle Width="10"/>
                             <TextBlock VerticalAlignment="Center" Text="文件保存路径：" Width="200"/>
-                            <TextBox Width="350" Text="{Binding DownloadPath}" IsReadOnly="True" VerticalContentAlignment="Center"/>
-                            <Rectangle Width="10"/>
-                            <Button Width="88" Style="{StaticResource ButtonPrimary.Small}" Command="{Binding ChooseDownloadPathCommand}">选择</Button>
+                            <Button Width="88" Style="{StaticResource ButtonPrimary}" Command="{Binding ChooseDownloadPathCommand}">选择</Button>
+                        </StackPanel>
+                        <Rectangle Height="10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Width="20"/>
+                            <TextBox Width="600" Text="{Binding DownloadPath}" IsReadOnly="True" VerticalContentAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
