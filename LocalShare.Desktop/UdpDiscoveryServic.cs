@@ -15,27 +15,16 @@ namespace LocalShare.Desktop
 {
     public class UdpDiscoveryService : IDisposable
     {
-        //private const int BroadcastPort = 9988;
         private const int BroadcastInterval = 3000; // 3秒
 
-        //private readonly string _localIP;
-        private readonly UdpClient _listener;
-        private readonly CancellationTokenSource _cts = new();
+        private UdpClient? _listener;
+        private CancellationTokenSource? _cts;
 
         private ConcurrentDictionary<string, NodeModel> nodeCaches = new();
 
         // 发现新客户端时触发
         public event Action<NodeModel>? ClientDiscovered;
 
-        public UdpDiscoveryService()
-        {
-            //_localIP = GlobalShared.IpAddress ?? "127.0.0.1";
-
-            _listener = new UdpClient();
-            // 允许多个程序绑定同一端口（同机多实例时不报错）
-            _listener.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            _listener.Client.Bind(new IPEndPoint(IPAddress.Any, GlobalShared.BroadcastPort));
-        }
 
         public List<NodeModel> GetNodeModelCaches()
         {
@@ -52,6 +41,13 @@ namespace LocalShare.Desktop
         /// </summary>
         public void Start()
         {
+            Dispose();
+            _listener = new UdpClient();
+            // 允许多个程序绑定同一端口（同机多实例时不报错）
+            _listener.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            _listener.Client.Bind(new IPEndPoint(IPAddress.Any, GlobalShared.BroadcastPort));
+            _cts = new CancellationTokenSource();
+
             Task.Run(() => BroadcastLoopAsync(_cts.Token));
             Task.Run(() => ListenLoopAsync(_cts.Token));
         }
@@ -92,6 +88,7 @@ namespace LocalShare.Desktop
                 }
                 catch (OperationCanceledException)
                 {
+                    Log.Warning($"退出广播");
                     break;
                 }
                 catch (Exception ex)
@@ -110,11 +107,12 @@ namespace LocalShare.Desktop
             {
                 try
                 {
-                    var result = await _listener.ReceiveAsync(ct);
+                    var result = await _listener!.ReceiveAsync(ct);
                     HandleMessage(result);
                 }
                 catch (OperationCanceledException)
                 {
+                    Log.Warning($"退出广播监听");
                     break;
                 }
                 catch (Exception ex)
@@ -142,9 +140,20 @@ namespace LocalShare.Desktop
         // ── 工具方法 ─────────────────────────────────────────────────
         public void Dispose()
         {
-            _cts.Cancel();
-            _cts.Dispose();
-            _listener.Dispose();
+            try
+            {
+                _cts?.Cancel();
+                _listener?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"UdpDiscoveryServic.Dispose error, {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                _cts = null;
+                _listener = null;
+            }
         }
     }
 }

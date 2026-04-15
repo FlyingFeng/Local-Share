@@ -1,5 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using HandyControl.Controls;
+using LocalShare.Desktop.DataContext;
+using LocalShare.Desktop.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -38,26 +43,26 @@ namespace LocalShare.Desktop.ViewModels
         [NotifyDataErrorInfo]
         [Required(ErrorMessage = "【监听端口】不能为空")]
         [Range(10000, 19999, ErrorMessage = "【监听端口】必须处于[10000,19999]区间")]
-        private string serverPort;
+        private string serverPort = string.Empty;
 
         [ObservableProperty]
         [NotifyDataErrorInfo]
         [Required(ErrorMessage = "【广播端口】不能为空")]
         [Range(5000, 9999, ErrorMessage = "【广播端口】必须处于[5000,9999]区间")]
-        private string brocastPort;
+        private string brocastPort = string.Empty;
 
 
         [ObservableProperty]
         [NotifyDataErrorInfo]
         [Required(ErrorMessage = "【同时发文件送节点数】不能为空")]
         [Range(1, 5, ErrorMessage = "【同时发文件送节点数】必须处于[1,5]区间")]
-        private string sendNodeMaxCount;
+        private string sendNodeMaxCount = string.Empty;
 
         [ObservableProperty]
         [NotifyDataErrorInfo]
         [Required(ErrorMessage = "【节点同时发送文件数】不能为空")]
         [Range(1, 5, ErrorMessage = "【节点同时发送文件数】必须处于[1,5]区间")]
-        private string sameNodeMaxSendFileCount;
+        private string sameNodeMaxSendFileCount = string.Empty;
 
         [ObservableProperty]
         [Required(ErrorMessage = "【文件保存路径】不能为空")]
@@ -74,16 +79,75 @@ namespace LocalShare.Desktop.ViewModels
         {
             if (ValidateAll())
             {
+                if (ServerPortSelected)
+                {
+                    if (int.TryParse(ServerPort, out var newPort) && GlobalShared.ServerPort != newPort)
+                    {
+                        GlobalShared.ServerPort = int.Parse(ServerPort);
+                        WeakReferenceMessenger.Default.Send(new MessageModel
+                        {
+                            MessageType = MessageType.RestartServer
+                        });
+                    }
+                }
+                if (BrocastPortSelected)
+                {
+                    if (int.TryParse(BrocastPort, out var newPort) && GlobalShared.BroadcastPort != newPort)
+                    {
+                        GlobalShared.BroadcastPort = int.Parse(BrocastPort);
+                        WeakReferenceMessenger.Default.Send(new MessageModel
+                        {
+                            MessageType = MessageType.RestartBrocast
+                        });
+                    }
+                }
+                if (SendNodeMaxCountSelected)
+                {
+                    GlobalShared.SendNodeMaxCount = int.Parse(SendNodeMaxCount);
+                }
+                if (SameNodeMaxSendFileCountSelected)
+                {
+                    GlobalShared.SameNodeMaxSendFileCount = int.Parse(SameNodeMaxSendFileCount);
+                }
 
+                Growl.Info("应用成功");
             }
         }
 
         [RelayCommand]
-        private void Save()
+        private async Task Save()
         {
             if (ValidateAll())
             {
-
+                using var dbContext = new LocalDataContext();
+                var settings = await dbContext.LocalSettings.ToListAsync();
+                var serverPortEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyServerPort);
+                if (serverPortEntity != null)
+                {
+                    serverPortEntity.Value = ServerPort;
+                }
+                var brocastPortEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyBrocastPort);
+                if (brocastPortEntity != null)
+                {
+                    brocastPortEntity.Value = BrocastPort;
+                }
+                var sendFileNodeCountEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeySendNodeMaxCount);
+                if (sendFileNodeCountEntity != null)
+                {
+                    sendFileNodeCountEntity.Value = SendNodeMaxCount;
+                }
+                var sameNodeSendFileCountEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeySameNodeMaxSendFileCount);
+                if (sameNodeSendFileCountEntity != null)
+                {
+                    sameNodeSendFileCountEntity.Value = SameNodeMaxSendFileCount;
+                }
+                var downloadPathEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyDownloadPath);
+                if (downloadPathEntity != null)
+                {
+                    downloadPathEntity.Value = DownloadPath;
+                }
+                await dbContext.SaveChangesAsync();
+                Growl.Info("保存成功");
             }
         }
 

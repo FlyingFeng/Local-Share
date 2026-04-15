@@ -3,11 +3,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Grpc.Core;
+using HandyControl.Controls;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.Models;
 using LocalShare.Desktop.Server;
 using LocalShare.Desktop.Views;
 using LocalShare.Protocol.Define;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
@@ -31,7 +33,8 @@ namespace LocalShare.Desktop.ViewModels
         private Grpc.Core.Server? _server;
         public MainViewModel() { }
 
-        public MainViewModel(UdpDiscoveryService udpDiscoveryService, IServiceProvider services)
+        public MainViewModel(UdpDiscoveryService udpDiscoveryService,
+            IServiceProvider services)
         {
             _services = services;
             _udpDiscoveryService = udpDiscoveryService;
@@ -90,7 +93,7 @@ namespace LocalShare.Desktop.ViewModels
         {
             try
             {
-                var _dbContext = _services!.GetRequiredService<LocalDataContext>();
+                using var _dbContext = new LocalDataContext();
                 var matched = _dbContext!.LocalNodes.FirstOrDefault();
                 if (matched != null)
                 {
@@ -137,7 +140,7 @@ namespace LocalShare.Desktop.ViewModels
                 SettingBrush = unSelectedBrushColor;
                 HistoryBrush = unSelectedBrushColor;
 
-                var view = _services?.GetRequiredService<SendView>();
+                var view = _services!.CreateScope().ServiceProvider.GetRequiredService<SendView>();
                 MainContent = view;
             }
             catch (Exception ex)
@@ -165,7 +168,7 @@ namespace LocalShare.Desktop.ViewModels
                 SettingBrush = unSelectedBrushColor;
                 HistoryBrush = unSelectedBrushColor;
 
-                var view = _services?.GetRequiredService<ReceiveView>();
+                var view = _services!.CreateScope().ServiceProvider.GetRequiredService<ReceiveView>();
                 MainContent = view;
             }
             catch (Exception ex)
@@ -192,7 +195,7 @@ namespace LocalShare.Desktop.ViewModels
                 SettingBrush = unSelectedBrushColor;
                 ReceiveBrush = unSelectedBrushColor;
 
-                var view = _services?.GetRequiredService<SendAndReceiveHistoryView>();
+                var view = _services!.CreateScope().ServiceProvider.GetRequiredService<SendAndReceiveHistoryView>();
                 MainContent = view;
             }
             catch (Exception ex)
@@ -220,7 +223,7 @@ namespace LocalShare.Desktop.ViewModels
                 ReceiveBrush = unSelectedBrushColor;
                 HistoryBrush = unSelectedBrushColor;
 
-                var view = _services?.GetRequiredService<LocalSettingView>();
+                var view = _services!.CreateScope().ServiceProvider.GetRequiredService<LocalSettingView>();
                 MainContent = view;
             }
             catch (Exception ex)
@@ -231,32 +234,23 @@ namespace LocalShare.Desktop.ViewModels
         }
 
         [RelayCommand]
-        private void Loaded()
+        private async Task Loaded()
         {
             try
             {
                 NodeName = GlobalShared.NodeName!;
                 IpAddress = GlobalShared.IpAddress!;
-                _localServer = new LocalServer(_services!);
-                _server = new Grpc.Core.Server()
-                {
-                    Services = { LocalShareService.BindService(_localServer) },
-                    Ports =
-                    {
-                        new ServerPort(GlobalShared.IpAddress,GlobalShared.ServerPort,ServerCredentials.Insecure)
-                    }
-                };
-                _server.Start();
-                _udpDiscoveryService!.Start();
+                _localServer = new LocalServer();
+                await StartServer();
+                StartBrocast();
             }
             catch (Exception ex)
             {
                 Log.Error($"MainViewModel.Loaded error, {ex.Message}\n{ex.StackTrace}");
             }
-
         }
 
-        public void Receive(MessageModel message)
+        public async void Receive(MessageModel message)
         {
             switch (message.MessageType)
             {
@@ -266,7 +260,52 @@ namespace LocalShare.Desktop.ViewModels
                 case MessageType.CloseMask:
                     MaskVisibility = Visibility.Collapsed;
                     break;
+                case MessageType.RestartBrocast:
+                    StartBrocast();
+                    break;
+                case MessageType.RestartServer:
+                    await StartServer();
+                    break;
             }
         }
+
+        private async Task StartServer()
+        {
+            try
+            {
+                if (_server != null)
+                {
+                    await _server.ShutdownAsync();
+                    //await _server.KillAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"StartServer.kill error, {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                _server = null;
+            }
+            
+            _server = new Grpc.Core.Server()
+            {
+                Services = { LocalShareService.BindService(_localServer) },
+                Ports =
+                    {
+                        new ServerPort(GlobalShared.IpAddress,GlobalShared.ServerPort,ServerCredentials.Insecure)
+                    }
+            };
+            _server.Start();
+            Growl.Info("服务启动成功");
+        }
+
+        private void StartBrocast()
+        {
+            _udpDiscoveryService!.Start();
+            Growl.Info("广播成功");
+        }
+
+
     }
 }

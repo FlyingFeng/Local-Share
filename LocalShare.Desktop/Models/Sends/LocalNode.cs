@@ -33,12 +33,6 @@ namespace LocalShare.Desktop.Models.Sends
         [ObservableProperty]
         private int port;
 
-        private readonly IServiceProvider _serviceProvider;
-
-        public LocalNode(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
 
         public ObservableCollection<FileTaskModel>? FileTasks { get; set; }
 
@@ -71,7 +65,8 @@ namespace LocalShare.Desktop.Models.Sends
                 var tmp = FileTasks!.Where(s => s.State == (int)SendFileTaskState.WaitForSchedule).ToList();
                 if (tmp != null && tmp.Count > 0)
                 {
-                    var dbContext = _serviceProvider.GetService<LocalDataContext>();
+                    //var dbContext = _serviceProvider.GetService<LocalDataContext>();
+                    using var dbContext = new LocalDataContext();
                     foreach (var item in tmp)
                     {
                         if (File.Exists(item.FileName))
@@ -93,7 +88,7 @@ namespace LocalShare.Desktop.Models.Sends
                             await dbContext!.AddAsync(entity);
                             await dbContext!.SaveChangesAsync();
 
-                            SendFileHandler handler = new SendFileHandler(_channel!, IpAddress, NodeName, _serviceProvider);
+                            SendFileHandler handler = new SendFileHandler(_channel!, IpAddress, NodeName);
                             var task = handler.SendFile(new SendFileModel
                             {
                                 FileName = fi.Name,

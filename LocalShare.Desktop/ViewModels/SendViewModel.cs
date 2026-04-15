@@ -27,15 +27,14 @@ namespace LocalShare.Desktop.ViewModels
     public partial class SendViewModel : ObservableObject, IClosable
     {
         public SendViewModel() { }
-        private readonly LocalDataContext? _dbContext;
+        //private readonly LocalDataContext? _dbContext;
         private readonly UdpDiscoveryService? _udpDiscoveryService;
         private readonly IServiceProvider? _serviceProvider;
-        public SendViewModel(LocalDataContext localDataContext,
-            UdpDiscoveryService udpDiscoveryService,
+        public SendViewModel(UdpDiscoveryService udpDiscoveryService,
             HomeDataHolder homeDataHolder,
             IServiceProvider serviceProvider)
         {
-            _dbContext = localDataContext;
+            //_dbContext = localDataContext;
             _udpDiscoveryService = udpDiscoveryService;
             _udpDiscoveryService.ClientDiscovered += UdpDiscoveryService_ClientDiscovered;
             HomeDataHolder = homeDataHolder;
@@ -55,6 +54,7 @@ namespace LocalShare.Desktop.ViewModels
             {
                 if (HomeDataHolder != null)
                 {
+                    using var _dbContext = new LocalDataContext();
                     var files = await _dbContext!.LocalFiles.ToListAsync() ?? [];
                     files.ForEach((e) =>
                     {
@@ -79,7 +79,7 @@ namespace LocalShare.Desktop.ViewModels
                         var matched = HomeDataHolder.Nodes.FirstOrDefault(s => e.NodeName == s.NodeName);
                         if (matched == null)
                         {
-                            var node = new LocalNode(_serviceProvider!)
+                            var node = new LocalNode()
                             {
                                 InBlackList = false,
                                 InWhiteList = false,
@@ -116,6 +116,7 @@ namespace LocalShare.Desktop.ViewModels
                 var selected = HomeDataHolder!.FileCaches.Where(s => s.IsSelected).ToList();
                 if (selected.Count > 0)
                 {
+                    using var _dbContext = new LocalDataContext();
                     foreach (var item in selected)
                     {
                         HomeDataHolder!.FileCaches.Remove(item);
@@ -174,6 +175,7 @@ namespace LocalShare.Desktop.ViewModels
                     var files = directoryInfo.EnumerateFiles("*.*", SearchOption.AllDirectories);
                     if (files.Any())
                     {
+                        using var _dbContext = new LocalDataContext();
                         var fileEntities = _dbContext!.LocalFiles.ToList() ?? [];
                         foreach (var info in files)
                         {
@@ -243,6 +245,7 @@ namespace LocalShare.Desktop.ViewModels
                         MessageType = MessageType.ShowMask
                     });
 
+                    using var _dbContext = new LocalDataContext();
                     var fileEntities = _dbContext!.LocalFiles.ToList() ?? [];
                     foreach (var file in dialog.FileNames)
                     {
@@ -369,7 +372,7 @@ namespace LocalShare.Desktop.ViewModels
             {
                 Application.Current.Dispatcher.Invoke(async () =>
                 {
-                    var node = new LocalNode(_serviceProvider!)
+                    var node = new LocalNode()
                     {
                         InBlackList = false,
                         InWhiteList = false,

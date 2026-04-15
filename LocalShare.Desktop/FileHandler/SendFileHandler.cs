@@ -20,13 +20,14 @@ namespace LocalShare.Desktop.FileHandler
         private readonly string _receiveNodeName;
         private readonly Channel _channel;
         private readonly LocalShareService.LocalShareServiceClient _client;
-        private readonly IServiceProvider _serviceProvider;
+        //private readonly IServiceProvider _serviceProvider;
 
         private readonly int eachReadBytes = 1024 * 256; //256kb
 
-        public SendFileHandler(Channel channel, string receiveIpAddress, string receiveNodeName, IServiceProvider serviceProvider)
+        public SendFileHandler(Channel channel,
+            string receiveIpAddress,
+            string receiveNodeName)
         {
-            _serviceProvider = serviceProvider;
             _channel = channel;
             _client = new LocalShareService.LocalShareServiceClient(_channel);
             _receiveIpAddress = receiveIpAddress;
@@ -36,7 +37,7 @@ namespace LocalShare.Desktop.FileHandler
 
         public async Task SendFile(SendFileModel model)
         {
-            var dbContext = _serviceProvider.GetService<LocalDataContext>();
+            using var dbContext = new LocalDataContext();
             SendFileTaskEntity? entity = null;
             try
             {

@@ -10,7 +10,9 @@ namespace LocalShare.Desktop.Models
     {
         Skip,
         ShowMask,
-        CloseMask
+        CloseMask,
+        RestartServer,
+        RestartBrocast
     }
 
 

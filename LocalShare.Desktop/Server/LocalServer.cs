@@ -13,11 +13,11 @@ namespace LocalShare.Desktop.Server
 {
     internal class LocalServer : LocalShare.Protocol.Define.LocalShareService.LocalShareServiceBase
     {
-        private readonly IServiceProvider _serviceProvider;
-        public LocalServer(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
+        //private readonly IServiceProvider _serviceProvider;
+        //public LocalServer(IServiceProvider serviceProvider)
+        //{
+        //    _serviceProvider = serviceProvider;
+        //}
 
         public override Task<PreStartFileTaskResponse> PreStartFileTask(PreStartFileTaskRequest request, ServerCallContext context)
         {
@@ -48,7 +48,7 @@ namespace LocalShare.Desktop.Server
         {
             try
             {
-                var _dbContext = _serviceProvider.GetService<LocalDataContext>();
+                using var _dbContext = new LocalDataContext();
                 var entity = _dbContext!.LocalNodes.FirstOrDefault();
                 if (entity != null)
                 {

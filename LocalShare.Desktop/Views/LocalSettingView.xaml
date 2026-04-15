@@ -94,7 +94,7 @@
                             <CheckBox IsChecked="{Binding DownloadPathSelected}"/>
                             <Rectangle Width="10"/>
                             <TextBlock VerticalAlignment="Center" Text="文件保存路径：" Width="200"/>
-                            <Button Width="88" Style="{StaticResource ButtonPrimary}" Command="{Binding ChooseDownloadPathCommand}">选择</Button>
+                            <Button Width="160" Style="{StaticResource ButtonPrimary}" Command="{Binding ChooseDownloadPathCommand}">选择</Button>
                         </StackPanel>
                         <Rectangle Height="10"/>
                         <StackPanel Orientation="Horizontal">

@@ -66,12 +66,16 @@ namespace LocalShare.Desktop
             {
                 Log.Information("Application started");
                 GlobalShared.IpAddress = NetworkHelper.GetLocalIPByUdp();
-                GlobalShared.NodeName = ChineseNameGenerator.Generate(NameLength.Two);
-                GlobalShared.DownloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "LocalShare");
                 if (string.IsNullOrEmpty(GlobalShared.IpAddress))
                 {
                     Log.Warning($"OnStartup.GetLocalIpAddress failed.");
                     return;
+                }
+                GlobalShared.NodeName = ChineseNameGenerator.Generate(NameLength.Two);
+                GlobalShared.DownloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "LocalShare");
+                if (!Directory.Exists(GlobalShared.DownloadPath))
+                {
+                    Directory.CreateDirectory(GlobalShared.DownloadPath);
                 }
 
                 _host = Host.CreateDefaultBuilder()
@@ -91,11 +95,11 @@ namespace LocalShare.Desktop
                         services.AddTransient<SendAndReceiveHistoryView>();
                         services.AddTransient<SendAndReceiveHistoryViewModel>();
 
-                        var dbPath = Path.Combine(AppContext.BaseDirectory, "Db", "LocalShare.db");
-                        services.AddDbContext<LocalDataContext>(opt =>
-                        {
-                            opt.UseSqlite($"Data Source={dbPath}");
-                        });
+                        //var dbPath = Path.Combine(AppContext.BaseDirectory, "Db", "LocalShare.db");
+                        //services.AddDbContextFactory<LocalDataContext>(opt =>
+                        //{
+                        //    opt.UseSqlite($"Data Source={dbPath}");
+                        //});
                     }).Build();
             }
             catch (Exception ex)
@@ -144,8 +148,6 @@ namespace LocalShare.Desktop
                 // 禁用休眠
                 PreventSleep();
                 await _host.StartAsync();
-                //var context = _host.Services.GetRequiredService<LocalDataContext>();
-                //context.LocalNodes.FirstOrDefault();
                 await LoadData();
                 var window = _host.Services.GetRequiredService<MainWindow>();
                 window.Show();
@@ -176,7 +178,7 @@ namespace LocalShare.Desktop
 
         private async Task LoadData()
         {
-            var dbContext = _host!.Services.GetRequiredService<LocalDataContext>();
+            using var dbContext = new LocalDataContext();
             var localNode = await dbContext.LocalNodes.FirstOrDefaultAsync();
             if (localNode != null)
             {
@@ -270,6 +272,12 @@ namespace LocalShare.Desktop
             {
                 GlobalShared.SendNodeMaxCount = int.Parse(sendNodeMaxCountSetting.Value);
             }
+
+            if (!Directory.Exists(GlobalShared.DownloadPath))
+            {
+                Directory.CreateDirectory(GlobalShared.DownloadPath!);
+            }
+            await dbContext.SaveChangesAsync();
         }
 
 
