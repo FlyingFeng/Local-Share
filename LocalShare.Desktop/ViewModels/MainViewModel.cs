@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Grpc.Core;
 using HandyControl.Controls;
 using LocalShare.Desktop.DataContext;
+using LocalShare.Desktop.KeepStates;
 using LocalShare.Desktop.Models;
 using LocalShare.Desktop.Server;
 using LocalShare.Desktop.Views;
@@ -26,6 +27,7 @@ namespace LocalShare.Desktop.ViewModels
     public partial class MainViewModel : ObservableObject, IRecipient<MessageModel>
     {
         private readonly UdpDiscoveryService? _udpDiscoveryService = null;
+        private readonly ReceiveDataHolder? _receiveDataHolder;
         private readonly IServiceProvider? _services = null;
         private readonly SolidColorBrush selectedBrushColor = new SolidColorBrush(Colors.Orange);
         private readonly SolidColorBrush unSelectedBrushColor = new SolidColorBrush(Colors.White);
@@ -34,10 +36,12 @@ namespace LocalShare.Desktop.ViewModels
         public MainViewModel() { }
 
         public MainViewModel(UdpDiscoveryService udpDiscoveryService,
-            IServiceProvider services)
+            IServiceProvider services,
+            ReceiveDataHolder receiveDataHolder)
         {
             _services = services;
             _udpDiscoveryService = udpDiscoveryService;
+            _receiveDataHolder = receiveDataHolder;
             WeakReferenceMessenger.Default.Register<MessageModel>(this);
             SendViewAction();
         }
@@ -240,7 +244,7 @@ namespace LocalShare.Desktop.ViewModels
             {
                 NodeName = GlobalShared.NodeName!;
                 IpAddress = GlobalShared.IpAddress!;
-                _localServer = new LocalServer();
+                _localServer = new LocalServer(_receiveDataHolder!);
                 await StartServer();
                 StartBrocast();
             }
@@ -275,7 +279,8 @@ namespace LocalShare.Desktop.ViewModels
             {
                 if (_server != null)
                 {
-                    await _server.ShutdownAsync();
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    await _server.KillAsync().WaitAsync(cts.Token);
                     //await _server.KillAsync();
                 }
             }
@@ -287,7 +292,7 @@ namespace LocalShare.Desktop.ViewModels
             {
                 _server = null;
             }
-            
+
             _server = new Grpc.Core.Server()
             {
                 Services = { LocalShareService.BindService(_localServer) },
@@ -296,8 +301,16 @@ namespace LocalShare.Desktop.ViewModels
                         new ServerPort(GlobalShared.IpAddress,GlobalShared.ServerPort,ServerCredentials.Insecure)
                     }
             };
-            _server.Start();
-            Growl.Info("服务启动成功");
+            try
+            {
+                _server.Start();
+                Growl.Info("服务启动成功");
+            }
+            catch (Exception)
+            {
+                _server = null;
+                throw;
+            }
         }
 
         private void StartBrocast()

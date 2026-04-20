@@ -10,7 +10,7 @@
         mc:Ignorable="d"
         Closing="Window_Closing"
         WindowState="Maximized"
-        Title="MainWindow" Height="900" Width="1200">
+        Title="Local Share" Height="900" Width="1200">
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
             <behavior:InvokeCommandAction Command="{Binding LoadedCommand}"/>

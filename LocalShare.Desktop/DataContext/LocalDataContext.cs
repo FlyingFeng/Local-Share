@@ -30,5 +30,7 @@ namespace LocalShare.Desktop.DataContext
         public DbSet<LocalSettingEntity> LocalSettings { get; set; }
         public DbSet<SendFileTaskEntity> SendFileTasks { get; set; }
 
+        public DbSet<ReceiveFileTaskEntity> ReceiveFileTasks { get; set; }
+
     }
 }

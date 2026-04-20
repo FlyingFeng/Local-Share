@@ -84,7 +84,8 @@ namespace LocalShare.Desktop
                         services.AddSingleton<MainViewModel>();
                         services.AddSingleton<MainWindow>();
                         services.AddSingleton<UdpDiscoveryService>();
-                        services.AddSingleton<HomeDataHolder>();
+                        services.AddSingleton<SendDataHolder>();
+                        services.AddSingleton<ReceiveDataHolder>();
 
                         services.AddTransient<SendView>();
                         services.AddTransient<SendViewModel>();

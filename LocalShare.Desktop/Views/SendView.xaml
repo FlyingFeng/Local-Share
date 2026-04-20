@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:LocalShare.Desktop.Views"
              xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:SendViewModel,IsDesignTimeCreatable=True}"
              xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d" 
              Unloaded="UserControl_Unloaded"
@@ -14,9 +15,6 @@
             <behavior:InvokeCommandAction Command="{Binding LoadedCommand}"/>
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
-    <d:UserControl.DataContext>
-        <vm:SendViewModel/>
-    </d:UserControl.DataContext>
     <!--<UserControl.Resources>
         <myConverter:FileSizeConverter x:Key="FileSizeConverter"/>
     </UserControl.Resources>-->

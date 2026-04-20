@@ -31,7 +31,7 @@ namespace LocalShare.Desktop.ViewModels
         private readonly UdpDiscoveryService? _udpDiscoveryService;
         private readonly IServiceProvider? _serviceProvider;
         public SendViewModel(UdpDiscoveryService udpDiscoveryService,
-            HomeDataHolder homeDataHolder,
+            SendDataHolder homeDataHolder,
             IServiceProvider serviceProvider)
         {
             //_dbContext = localDataContext;
@@ -41,7 +41,7 @@ namespace LocalShare.Desktop.ViewModels
             _serviceProvider = serviceProvider;
         }
 
-        public HomeDataHolder? HomeDataHolder { get; set; }
+        public SendDataHolder? HomeDataHolder { get; set; }
         [ObservableProperty]
         private bool isSelectAll;
         [ObservableProperty]

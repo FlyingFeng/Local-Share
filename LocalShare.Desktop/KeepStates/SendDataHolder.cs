@@ -11,10 +11,10 @@ using System.Windows;
 
 namespace LocalShare.Desktop.KeepStates
 {
-    public class HomeDataHolder
+    public class SendDataHolder
     {
         private readonly Timer _timer;
-        public HomeDataHolder()
+        public SendDataHolder()
         {
             _timer = new Timer(CheckNodeStatus);
             _timer.Change(0, 2000);
@@ -26,7 +26,7 @@ namespace LocalShare.Desktop.KeepStates
             try
             {
                 var utcNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                var matched = Nodes.Where(s => Math.Abs(s.LastSeenTime - utcNow) >= 10).ToList();
+                var matched = Nodes.Where(s => Math.Abs(s.LastSeenTime - utcNow) >= 8).ToList();
                 foreach (var item in matched)
                 {
                     await item.CloseAsync();

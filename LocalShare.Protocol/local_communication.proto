@@ -71,11 +71,14 @@ message StartFileTaskResponse{
 message PreStartFileTaskRequest{
 	string send_node_name    = 1; //发送方节点名称
 	string receive_node_name = 2; //接收方节点名称
+	string task_id           = 3;
+	string send_node_ip      = 4;
 }
 
 message PreStartFileTaskResponse{
 	bool need_password          = 1;
 	FileTaskStatus status       = 2;
+	string         task_id      = 3;
 }
 
 

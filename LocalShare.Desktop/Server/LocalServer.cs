@@ -1,5 +1,6 @@
 ﻿using Grpc.Core;
 using LocalShare.Desktop.DataContext;
+using LocalShare.Desktop.KeepStates;
 using LocalShare.Protocol.Define;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -13,24 +14,35 @@ namespace LocalShare.Desktop.Server
 {
     internal class LocalServer : LocalShare.Protocol.Define.LocalShareService.LocalShareServiceBase
     {
-        //private readonly IServiceProvider _serviceProvider;
-        //public LocalServer(IServiceProvider serviceProvider)
-        //{
-        //    _serviceProvider = serviceProvider;
-        //}
+        private readonly ReceiveDataHolder _receiveDataHolder;
+        public LocalServer(ReceiveDataHolder receiveDataHolder)
+        {
+            _receiveDataHolder = receiveDataHolder;
+        }
 
         public override Task<PreStartFileTaskResponse> PreStartFileTask(PreStartFileTaskRequest request, ServerCallContext context)
         {
+            _receiveDataHolder.AddReceiveFileHandler(request);
             return Task.FromResult(new PreStartFileTaskResponse
             {
                 NeedPassword = false,
-                Status = FileTaskStatus.Success
+                Status = FileTaskStatus.Success,
+                TaskId = request.TaskId
             });
         }
 
-        public override Task<StartFileTaskResponse> StartFileTask(StartFileTaskRequest request, ServerCallContext context)
+        public override async Task<StartFileTaskResponse> StartFileTask(StartFileTaskRequest request, ServerCallContext context)
         {
-            return base.StartFileTask(request, context);
+            var handler = _receiveDataHolder.GetReceiveFileHandler(request.FileMetaData.TaskId);
+            if (handler != null)
+            {
+                var response = await handler.HandleStartFileTask(request);
+                return response;
+            }
+            return new StartFileTaskResponse
+            {
+                Status = FileTaskStatus.Failed
+            };
         }
 
         public override Task<EmptyMessage> SendFile(IAsyncStreamReader<FileChunk> requestStream, ServerCallContext context)

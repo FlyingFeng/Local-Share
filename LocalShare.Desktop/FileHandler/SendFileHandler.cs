@@ -44,7 +44,7 @@ namespace LocalShare.Desktop.FileHandler
                 if (File.Exists(model.FilePath))
                 {
                     FileInfo fi = new FileInfo(model.FilePath);
-                    await PreStartFileTask();
+                    await PreStartFileTask(model);
                     var response = await StartFileTask(fi, model);
                     await ReadAndSendFile(fi, response);
                 }
@@ -111,12 +111,14 @@ namespace LocalShare.Desktop.FileHandler
             }
         }
 
-        private async Task<FileTaskStatus> PreStartFileTask()
+        private async Task<FileTaskStatus> PreStartFileTask(SendFileModel model)
         {
             var request = new PreStartFileTaskRequest
             {
                 ReceiveNodeName = _receiveNodeName,
-                SendNodeName = GlobalShared.NodeName!
+                SendNodeName = GlobalShared.NodeName!,
+                TaskId = model.TaskId,
+                SendNodeIp = GlobalShared.IpAddress!
             };
             var response = await _client.PreStartFileTaskAsync(request);
             return response.Status;
