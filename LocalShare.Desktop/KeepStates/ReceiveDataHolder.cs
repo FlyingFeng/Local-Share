@@ -34,5 +34,12 @@ namespace LocalShare.Desktop.KeepStates
             return val;
         }
 
+        public void RemoveReceiveFileHandler(string taskId)
+        {
+            if (_caches.ContainsKey(taskId))
+            {
+                _caches.Remove(taskId);
+            }
+        }
     }
 }

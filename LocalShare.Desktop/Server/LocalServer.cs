@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace LocalShare.Desktop.Server
 {
-    internal class LocalServer : LocalShare.Protocol.Define.LocalShareService.LocalShareServiceBase
+    internal class LocalServer : LocalShareService.LocalShareServiceBase
     {
         private readonly ReceiveDataHolder _receiveDataHolder;
         public LocalServer(ReceiveDataHolder receiveDataHolder)
@@ -45,9 +45,19 @@ namespace LocalShare.Desktop.Server
             };
         }
 
-        public override Task<EmptyMessage> SendFile(IAsyncStreamReader<FileChunk> requestStream, ServerCallContext context)
+        public override async Task<EmptyMessage> SendFile(IAsyncStreamReader<FileChunk> requestStream, ServerCallContext context)
         {
-            return base.SendFile(requestStream, context);
+            var entity = context.RequestHeaders.Get("task_id");
+            if (entity != null)
+            {
+                var handler = _receiveDataHolder.GetReceiveFileHandler(entity.Value);
+                if (handler != null)
+                {
+                    await handler.HandleFileTask(requestStream);
+                    _receiveDataHolder.RemoveReceiveFileHandler(entity.Value);
+                }
+            }
+            return new EmptyMessage();
         }
 
         public override Task DownloadFile(EmptyMessage request, IServerStreamWriter<FileChunk> responseStream, ServerCallContext context)

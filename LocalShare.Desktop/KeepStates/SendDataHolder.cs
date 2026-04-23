@@ -35,6 +35,7 @@ namespace LocalShare.Desktop.KeepStates
                         Nodes.Remove(item);
                     });
                 }
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {

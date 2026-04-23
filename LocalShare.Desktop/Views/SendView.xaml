@@ -5,6 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:LocalShare.Desktop.Views"
              xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
+             xmlns:myConverter="clr-namespace:LocalShare.Desktop.LocalConverters"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
              d:DataContext="{d:DesignInstance Type=vm:SendViewModel,IsDesignTimeCreatable=True}"
              xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d" 
@@ -15,9 +17,9 @@
             <behavior:InvokeCommandAction Command="{Binding LoadedCommand}"/>
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
-    <!--<UserControl.Resources>
-        <myConverter:FileSizeConverter x:Key="FileSizeConverter"/>
-    </UserControl.Resources>-->
+    <UserControl.Resources>
+        <myConverter:SendFileProgressConverter x:Key="SendFileProgressConverter"/>
+    </UserControl.Resources>
     <Grid Margin="2">
         <Grid.RowDefinitions>
             <RowDefinition/>
@@ -131,6 +133,12 @@
                     </StackPanel>
 
                     <ListView Grid.Row="1" ItemsSource="{Binding HomeDataHolder.Nodes}">
+                        <behavior:Interaction.Triggers>
+                            <behavior:EventTrigger EventName="SelectionChanged">
+                                <behavior:InvokeCommandAction Command="{Binding NodeSelectionChangedCommand}"
+                                                              CommandParameter="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}"/>
+                            </behavior:EventTrigger>
+                        </behavior:Interaction.Triggers>
                         <ListView.View>
                             <GridView AllowsColumnReorder="True">
                                 <GridViewColumn Width="70">
@@ -169,9 +177,23 @@
             <GridSplitter Grid.Column="1" Width="4" ShowsPreview="True" HorizontalAlignment="Right"/>
 
             <GroupBox Grid.Column="2" Header="发送情况" Margin="1">
-                <ListBox>
-
-                </ListBox>
+                <ListView ItemsSource="{Binding CurrentNodeFileTasks}">
+                    <ListView.View>
+                        <GridView AllowsColumnReorder="True">
+                            <GridViewColumn Header="文件名" Width="150">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding FileName}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding FileName}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="进度(%)" Width="120" DisplayMemberBinding="{Binding Progress}"/>
+                            <GridViewColumn Header="状态" Width="100" DisplayMemberBinding="{Binding State}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
             </GroupBox>
 
         </Grid>
@@ -179,7 +201,7 @@
 
         <Border Grid.Row="1">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Height="30" Width="120">开始发送</Button>
+                <Button Height="30" Width="120" Command="{Binding SendFileCommand}">开始发送</Button>
                 <Rectangle Width="10"/>
                 <Button Height="30" Width="120">暂停发送</Button>
                 <Rectangle Width="10"/>

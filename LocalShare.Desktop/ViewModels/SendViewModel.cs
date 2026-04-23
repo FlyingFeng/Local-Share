@@ -41,6 +41,9 @@ namespace LocalShare.Desktop.ViewModels
             _serviceProvider = serviceProvider;
         }
 
+
+        public ObservableCollection<FileTaskModel> CurrentNodeFileTasks { get; set; } = [];
+
         public SendDataHolder? HomeDataHolder { get; set; }
         [ObservableProperty]
         private bool isSelectAll;
@@ -87,8 +90,7 @@ namespace LocalShare.Desktop.ViewModels
                                 NodeName = e.NodeName,
                                 IpAddress = e.IpAddress,
                                 Port = e.Port,
-                                LastSeenTime = e.Time,
-                                FileTasks = new ObservableCollection<FileTaskModel>()
+                                LastSeenTime = e.Time
                             };
                             await node.InitAsync();
                             HomeDataHolder.Nodes.Add(node);
@@ -364,6 +366,46 @@ namespace LocalShare.Desktop.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void SendFile()
+        {
+            var selectedFiles = HomeDataHolder!.FileCaches.Where(s => s.IsSelected).ToList();
+            var selectedNodes = HomeDataHolder.Nodes.Where(s => s.IsSelected).ToList();
+            foreach (var eachNode in selectedNodes)
+            {
+                foreach (var eachFile in selectedFiles)
+                {
+                    var matched = eachNode.FileTasks.FirstOrDefault(s => s.FileName == eachFile.FileName);
+                    if (matched == null)
+                    {
+                        eachNode.FileTasks.Add(new FileTaskModel
+                        {
+                            FileName = eachFile.FileName,
+                            IsOpenFromDir = eachFile.IsOpenFromDir,
+                            Md5 = eachFile.Md5,
+                            TotalSize = eachFile.FileSize,
+                            State = 0,
+                            FullFileName = eachFile.FilePath
+                        });
+                    }
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void NodeSelectionChanged(object? args)
+        {
+            if (args != null && args is LocalNode node)
+            {
+                //CurrentNodeFileTasks = node.FileTasks;
+                CurrentNodeFileTasks.Clear();
+                foreach (var item in node.FileTasks)
+                {
+                    CurrentNodeFileTasks.Add(item);
+                }
+            }
+        }
+
 
         private void UdpDiscoveryService_ClientDiscovered(Protocol.Define.NodeModel obj)
         {
@@ -380,7 +422,6 @@ namespace LocalShare.Desktop.ViewModels
                         NodeName = obj.NodeName,
                         Port = obj.Port,
                         IpAddress = obj.IpAddress,
-                        FileTasks = [],
                         LastSeenTime = obj.Time
                     };
                     await node.InitAsync();

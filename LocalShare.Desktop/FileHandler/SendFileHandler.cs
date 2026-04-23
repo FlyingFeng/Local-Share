@@ -1,6 +1,7 @@
 ﻿using Grpc.Core;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.DataContext.Entities;
+using LocalShare.Desktop.Models.Sends;
 using LocalShare.Protocol.Define;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -22,12 +23,15 @@ namespace LocalShare.Desktop.FileHandler
         private readonly LocalShareService.LocalShareServiceClient _client;
         //private readonly IServiceProvider _serviceProvider;
 
-        private readonly int eachReadBytes = 1024 * 256; //256kb
+        private readonly int eachReadBytes = 1024 * 10; //256kb
+        private readonly LocalNode _node;
 
         public SendFileHandler(Channel channel,
             string receiveIpAddress,
-            string receiveNodeName)
+            string receiveNodeName,
+            LocalNode node)
         {
+            _node = node;
             _channel = channel;
             _client = new LocalShareService.LocalShareServiceClient(_channel);
             _receiveIpAddress = receiveIpAddress;
@@ -35,18 +39,19 @@ namespace LocalShare.Desktop.FileHandler
         }
 
 
-        public async Task SendFile(SendFileModel model)
+        public async Task SendFile(FileTaskModel model)
         {
             using var dbContext = new LocalDataContext();
             SendFileTaskEntity? entity = null;
             try
             {
-                if (File.Exists(model.FilePath))
+                if (File.Exists(model.FullFileName))
                 {
-                    FileInfo fi = new FileInfo(model.FilePath);
+                    FileInfo fi = new FileInfo(model.FullFileName);
                     await PreStartFileTask(model);
                     var response = await StartFileTask(fi, model);
-                    await ReadAndSendFile(fi, response);
+                    await ReadAndSendFile(fi, response, model);
+                    await _node.FinishSendFile(model);
                 }
             }
             catch (Exception ex)
@@ -67,12 +72,17 @@ namespace LocalShare.Desktop.FileHandler
         }
 
 
-        private async Task ReadAndSendFile(FileInfo fi, StartFileTaskResponse fileTask)
+        private async Task ReadAndSendFile(FileInfo fi, StartFileTaskResponse fileTask, FileTaskModel model)
         {
             var buffer = ArrayPool<byte>.Shared.Rent(eachReadBytes);
             try
             {
-                var request = _client.SendFile();
+                Metadata header = new Metadata
+                {
+                    { "task_id", fileTask.TaskId }
+                };
+
+                var request = _client.SendFile(header);
                 using FileStream fs = new FileStream(fi.FullName, FileMode.Open, FileAccess.Read);
                 fs.Position = fileTask.StartByteIndex;
                 var currentIndex = (int)(fileTask.StartByteIndex / eachReadBytes);
@@ -97,8 +107,10 @@ namespace LocalShare.Desktop.FileHandler
                         IsLast = totalChunk == currentIndex
                     };
                     await request.RequestStream.WriteAsync(chunkData);
+                    model.CurrentSize += read;
                 }
                 await request.RequestStream.CompleteAsync();
+                request.Dispose();
             }
             catch (Exception)
             {
@@ -111,7 +123,7 @@ namespace LocalShare.Desktop.FileHandler
             }
         }
 
-        private async Task<FileTaskStatus> PreStartFileTask(SendFileModel model)
+        private async Task<FileTaskStatus> PreStartFileTask(FileTaskModel model)
         {
             var request = new PreStartFileTaskRequest
             {
@@ -125,7 +137,7 @@ namespace LocalShare.Desktop.FileHandler
         }
 
 
-        private async Task<StartFileTaskResponse> StartFileTask(FileInfo fi, SendFileModel model)
+        private async Task<StartFileTaskResponse> StartFileTask(FileInfo fi, FileTaskModel model)
         {
             string relativeName = string.Empty;
             if (fi.Directory != null && model.IsOpenFromDir)
@@ -147,7 +159,7 @@ namespace LocalShare.Desktop.FileHandler
                     ChunkSize = eachReadBytes,  //256kb
                     FileExt = fi.Extension,
                     FileName = fi.Name,
-                    Md5 = model.MD5,
+                    Md5 = model.Md5,
                     TotalSize = fi.Length,
                     RelativePath = relativeName,
                     TaskId = model.TaskId,

@@ -5,9 +5,12 @@ using HandyControl.Controls;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Win32;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -71,7 +74,12 @@ namespace LocalShare.Desktop.ViewModels
         [RelayCommand]
         private void ChooseDownloadPath()
         {
-
+            OpenFolderDialog dialog = new OpenFolderDialog();
+            var flag = dialog.ShowDialog();
+            if (flag == true)
+            {
+                DownloadPath = dialog.FolderName;
+            }
         }
 
         [RelayCommand]
@@ -108,6 +116,22 @@ namespace LocalShare.Desktop.ViewModels
                 if (SameNodeMaxSendFileCountSelected)
                 {
                     GlobalShared.SameNodeMaxSendFileCount = int.Parse(SameNodeMaxSendFileCount);
+                }
+                if (DownloadPathSelected)
+                {
+                    if (!string.IsNullOrEmpty(DownloadPath) &&
+                       !Directory.Exists(DownloadPath))
+                    {
+                        try
+                        {
+                            Directory.CreateDirectory(DownloadPath);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error($"Create directory error, path: {DownloadPath}, message: {ex.Message}");
+                        }
+                    }
+                    GlobalShared.DownloadPath = DownloadPath;
                 }
 
                 Growl.Info("应用成功");

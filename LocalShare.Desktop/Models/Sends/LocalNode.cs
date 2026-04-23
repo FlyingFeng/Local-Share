@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Grpc.Core;
+using HandyControl.Controls;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.DataContext.Entities;
 using LocalShare.Desktop.FileHandler;
@@ -34,7 +35,7 @@ namespace LocalShare.Desktop.Models.Sends
         private int port;
 
 
-        public ObservableCollection<FileTaskModel>? FileTasks { get; set; }
+        public ObservableCollection<FileTaskModel> FileTasks { get; set; } = [];
 
         private Channel? _channel;
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
@@ -57,6 +58,25 @@ namespace LocalShare.Desktop.Models.Sends
             }
         }
 
+        public async Task FinishSendFile(FileTaskModel model)
+        {
+            var matched = FileTasks!.FirstOrDefault(s => s.FileName == model.FileName);
+            if (matched != null)
+            {
+                matched.State = 3;
+                //FileTasks.Remove(matched);
+                using var dbContext = new LocalDataContext();
+                var entity = dbContext.SendFileTasks.FirstOrDefault(s => s.TaskId == model.TaskId);
+                if (entity != null)
+                {
+                    entity.State = 3;
+                    entity.LastUpdateTime = DateTime.UtcNow;
+                    await dbContext.SaveChangesAsync();
+                }
+                Growl.Info($"文件发送完成，文件名：{model.FileName}");
+            }
+        }
+
 
         private async Task RunLoop()
         {
@@ -69,12 +89,12 @@ namespace LocalShare.Desktop.Models.Sends
                     using var dbContext = new LocalDataContext();
                     foreach (var item in tmp)
                     {
-                        if (File.Exists(item.FileName))
+                        if (File.Exists(item.FullFileName))
                         {
-                            FileInfo fi = new FileInfo(item.FileName);
+                            FileInfo fi = new FileInfo(item.FullFileName);
                             var entity = new SendFileTaskEntity
                             {
-                                FileFullName = item.FileName,
+                                FileFullName = item.FullFileName,
                                 FileName = fi.Name,
                                 InitTime = DateTime.UtcNow,
                                 LastUpdateTime = DateTime.UtcNow,
@@ -87,16 +107,17 @@ namespace LocalShare.Desktop.Models.Sends
                             };
                             await dbContext!.AddAsync(entity);
                             await dbContext!.SaveChangesAsync();
-
-                            SendFileHandler handler = new SendFileHandler(_channel!, IpAddress, NodeName);
-                            var task = handler.SendFile(new SendFileModel
-                            {
-                                FileName = fi.Name,
-                                FilePath = fi.FullName,
-                                IsOpenFromDir = item.IsOpenFromDir,
-                                MD5 = item.Md5,
-                                TaskId = entity.TaskId,
-                            });
+                            item.TaskId = entity.TaskId;
+                            SendFileHandler handler = new SendFileHandler(_channel!, IpAddress, NodeName, this);
+                            //var task = handler.SendFile(new SendFileModel
+                            //{
+                            //    FileName = fi.Name,
+                            //    FilePath = fi.FullName,
+                            //    IsOpenFromDir = item.IsOpenFromDir,
+                            //    MD5 = item.Md5,
+                            //    TaskId = entity.TaskId,
+                            //});
+                            var task = handler.SendFile(item);
                             entity.State = (int)SendFileTaskState.Sending;
                             await dbContext.SaveChangesAsync();
                             item.State = (int)SendFileTaskState.Sending;
@@ -115,7 +136,10 @@ namespace LocalShare.Desktop.Models.Sends
             try
             {
                 _tokenSource.Cancel();
-                await _channel!.ShutdownAsync();
+                if (_channel != null)
+                {
+                    await _channel.ShutdownAsync();
+                }
                 _channel = null;
                 FileTasks?.Clear();
             }

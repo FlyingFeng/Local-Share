@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,5 +29,20 @@ namespace LocalShare.Desktop.Models.Sends
         private bool isOpenFromDir;
         [ObservableProperty]
         private string md5 = string.Empty;
+        [ObservableProperty]
+        private string fullFileName = string.Empty;
+        [ObservableProperty]
+        private int progress = 0;
+        [ObservableProperty]
+        private string taskId = string.Empty;
+
+        partial void OnCurrentSizeChanged(long value)
+        {
+            if (TotalSize > 0 && value > 0)
+            {
+                Progress = (int)((CurrentSize * 1.0) / TotalSize * 100);
+            }
+        }
+
     }
 }
