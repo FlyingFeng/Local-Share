@@ -35,6 +35,8 @@ namespace LocalShare.Desktop.Models.Sends
         private int progress = 0;
         [ObservableProperty]
         private string taskId = string.Empty;
+        [ObservableProperty]
+        private LocalNode? parent;
 
         partial void OnCurrentSizeChanged(long value)
         {

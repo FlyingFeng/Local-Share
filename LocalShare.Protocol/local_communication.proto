@@ -48,10 +48,9 @@ message FileMetaData{
 	string file_name        = 2;   //文件名称，带后缀
 	string file_ext         = 3;   //文件后缀
 	int64  total_size       = 4;   //文件总大小
-	int32  total_chunks     = 5;   //总分片数
-	int32  chunk_size       = 6;   //每次传输的分片大小
-	string md5              = 7;   //文件md5值
-	string relative_path    = 8;   //相对路径（目录传输时使用）：subdir/doc.pdf
+	int32  chunk_size       = 5;   //每次传输的分片大小
+	string md5              = 6;   //文件md5值
+	string relative_path    = 7;   //相对路径（目录传输时使用）：subdir/doc.pdf
 }
 
 message StartFileTaskRequest{
@@ -83,11 +82,8 @@ message PreStartFileTaskResponse{
 
 
 message FileChunk{
-	string task_id          = 1;  //对应FileMetaData.task_id
-	int32  chunk_index      = 2;  //当前分片序号（从 0 开始）
-	bytes  data             = 3;  //分片二进制数据
-	string check_sum        = 4;  //当前分片的校验值，接收方逐片校验
-	bool   is_last          = 5;  //是否是最后一片
+	//string task_id          = 1;  //对应FileMetaData.task_id
+	bytes  data             = 1;  //分片二进制数据
 }
 
 

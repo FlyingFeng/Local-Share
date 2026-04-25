@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Grpc.Core;
 using HandyControl.Controls;
 using LocalShare.Desktop.DataContext;
@@ -10,6 +12,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -39,6 +42,29 @@ namespace LocalShare.Desktop.Models.Sends
 
         private Channel? _channel;
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+
+        [RelayCommand]
+        private void RemoveFileTask(object args)
+        {
+            if (args is string fileName)
+            {
+                var matchedFile = FileTasks.FirstOrDefault(s => s.FileName == fileName);
+                if (matchedFile != null)
+                {
+                    if (matchedFile.State == 0 ||
+                        matchedFile.State == 3 ||
+                        matchedFile.State == 4)
+                    {
+                        FileTasks.Remove(matchedFile);
+                        WeakReferenceMessenger.Default.Send(new MessageModel
+                        {
+                            MessageType = MessageType.RemoveCurrentNodeFinishedSendFileTask,
+                            Data = fileName
+                        });
+                    }
+                }
+            }
+        }
 
         public async Task InitAsync()
         {
@@ -85,7 +111,6 @@ namespace LocalShare.Desktop.Models.Sends
                 var tmp = FileTasks!.Where(s => s.State == (int)SendFileTaskState.WaitForSchedule).ToList();
                 if (tmp != null && tmp.Count > 0)
                 {
-                    //var dbContext = _serviceProvider.GetService<LocalDataContext>();
                     using var dbContext = new LocalDataContext();
                     foreach (var item in tmp)
                     {
@@ -109,19 +134,12 @@ namespace LocalShare.Desktop.Models.Sends
                             await dbContext!.SaveChangesAsync();
                             item.TaskId = entity.TaskId;
                             SendFileHandler handler = new SendFileHandler(_channel!, IpAddress, NodeName, this);
-                            //var task = handler.SendFile(new SendFileModel
-                            //{
-                            //    FileName = fi.Name,
-                            //    FilePath = fi.FullName,
-                            //    IsOpenFromDir = item.IsOpenFromDir,
-                            //    MD5 = item.Md5,
-                            //    TaskId = entity.TaskId,
-                            //});
                             var task = handler.SendFile(item);
                             entity.State = (int)SendFileTaskState.Sending;
                             await dbContext.SaveChangesAsync();
                             item.State = (int)SendFileTaskState.Sending;
                         }
+                        await Task.Delay(200);
                     }
                 }
 
@@ -135,6 +153,7 @@ namespace LocalShare.Desktop.Models.Sends
         {
             try
             {
+                Log.Information($"Close LocalNode, NodeName={NodeName}, IpAddress={IpAddress}, Port={Port}");
                 _tokenSource.Cancel();
                 if (_channel != null)
                 {

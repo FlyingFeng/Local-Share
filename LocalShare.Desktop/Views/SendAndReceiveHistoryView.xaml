@@ -4,31 +4,91 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
+             xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:myConverter="clr-namespace:LocalShare.Desktop.LocalConverters"
              d:DataContext="{d:DesignInstance Type=vm:SendAndReceiveHistoryViewModel,IsDesignTimeCreatable=True}"
              xmlns:local="clr-namespace:LocalShare.Desktop.Views"
              mc:Ignorable="d" 
              Unloaded="UserControl_Unloaded"
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <myConverter:FileTaskStateConverter x:Key="FileTaskStateConverter"/>
+    </UserControl.Resources>
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:InvokeCommandAction Command="{Binding LoadedCommand}"/>
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="60"/>
+            <RowDefinition Height="120"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="任务Id:" Width="80" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding SearchTaskId}" Width="150" Height="25"/>
+                <Rectangle Width="20"/>
+                <TextBlock Text="文件名称:" Width="80" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding SearchFileName}" Width="150" Height="25" />
+            </StackPanel>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="发送节点:" Width="80" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding SearchSendNodeName}" Width="150" Height="25"/>
+                <Rectangle Width="20"/>
+                <TextBlock Text="接收节点" Width="80" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding SearchReceiveNodeName}" Width="150" Height="25"/>
+            </StackPanel>
+            <StackPanel Grid.Row="2" HorizontalAlignment="Center" Orientation="Horizontal">
+                <Button Style="{StaticResource ButtonPrimary}" Command="{Binding SearchCommand}" Width="120">查找</Button>
+                <Rectangle Width="20"/>
+                <Button Style="{StaticResource ButtonDanger}" Command="{Binding ClearCommand}" Width="120">清空</Button>
+            </StackPanel>
+        </Grid>
         <TabControl Grid.Row="1">
+            <behavior:Interaction.Triggers>
+                <behavior:EventTrigger EventName="SelectionChanged">
+                    <behavior:InvokeCommandAction Command="{Binding TabSelectionChangedCommand}" CommandParameter="{Binding SelectedIndex, RelativeSource={RelativeSource AncestorType=TabControl}}"/>
+                </behavior:EventTrigger>
+            </behavior:Interaction.Triggers>
             <TabItem Header="发送记录">
                 <ListView ItemsSource="{Binding SendHistoryRecords}">
                     <ListView.View>
                         <GridView AllowsColumnReorder="True">
-                            <GridViewColumn Header="任务Id" Width="100" DisplayMemberBinding="{Binding TaskId}"/>
-                            <GridViewColumn Header="任务状态" Width="80" DisplayMemberBinding="{Binding State}"/>
+                            <GridViewColumn Header="任务Id" Width="100">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding TaskId}" TextTrimming="CharacterEllipsis" ToolTipService.ShowOnDisabled="True" ToolTipService.InitialShowDelay="500" ToolTipService.ShowDuration="5000" ToolTip="{Binding TaskId}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="任务状态" Width="80" DisplayMemberBinding="{Binding State,Converter={StaticResource FileTaskStateConverter}}"/>
                             <GridViewColumn Header="发送节点" Width="80" DisplayMemberBinding="{Binding SendNodeName}"/>
                             <GridViewColumn Header="接收节点" Width="80" DisplayMemberBinding="{Binding ReceiveNodeName}"/>
-                            <GridViewColumn Header="文件名称" Width="100" DisplayMemberBinding="{Binding FileName}"/>
-                            <GridViewColumn Header="完整路径" Width="150" DisplayMemberBinding="{Binding FileFullName}"/>
+                            <GridViewColumn Header="文件名称" Width="150">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis" ToolTipService.ShowOnDisabled="True" ToolTipService.InitialShowDelay="500" ToolTipService.ShowDuration="5000" ToolTip="{Binding FileName}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="完整路径" Width="180">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding FileFullName}" TextTrimming="CharacterEllipsis" ToolTipService.ShowOnDisabled="True" ToolTipService.InitialShowDelay="500" ToolTipService.ShowDuration="5000" ToolTip="{Binding FileFullName}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
                             <GridViewColumn Header="发送节点IP地址" Width="130" DisplayMemberBinding="{Binding SendIpAddress}"/>
                             <GridViewColumn Header="接收节点IP地址" Width="130" DisplayMemberBinding="{Binding ReceiveIpAddress}"/>
-                            <GridViewColumn Header="创建时间" Width="130" DisplayMemberBinding="{Binding InitTime}"/>
-                            <GridViewColumn Header="完成时间" Width="130" DisplayMemberBinding="{Binding LastUpdateTime}"/>
+                            <GridViewColumn Header="创建时间" Width="130" DisplayMemberBinding="{Binding InitTime,StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"/>
+                            <GridViewColumn Header="完成时间" Width="130" DisplayMemberBinding="{Binding LastUpdateTime,StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"/>
                         </GridView>
                     </ListView.View>
                 </ListView>
@@ -37,16 +97,34 @@
                 <ListView ItemsSource="{Binding ReceiveHistoryRecords}">
                     <ListView.View>
                         <GridView AllowsColumnReorder="True">
-                            <GridViewColumn Header="任务Id" Width="100" DisplayMemberBinding="{Binding TaskId}"/>
-                            <GridViewColumn Header="任务状态" Width="80" DisplayMemberBinding="{Binding State}"/>
+                            <GridViewColumn Header="任务Id" Width="100">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding TaskId}" TextTrimming="CharacterEllipsis"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="任务状态" Width="80" DisplayMemberBinding="{Binding State,Converter={StaticResource FileTaskStateConverter}}"/>
                             <GridViewColumn Header="发送节点" Width="80" DisplayMemberBinding="{Binding SendNodeName}"/>
                             <GridViewColumn Header="接收节点" Width="80" DisplayMemberBinding="{Binding ReceiveNodeName}"/>
-                            <GridViewColumn Header="文件名称" Width="100" DisplayMemberBinding="{Binding FileName}"/>
-                            <GridViewColumn Header="完整路径" Width="150" DisplayMemberBinding="{Binding FileFullName}"/>
+                            <GridViewColumn Header="文件名称" Width="150" >
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis" ToolTipService.ShowOnDisabled="True" ToolTipService.InitialShowDelay="500" ToolTipService.ShowDuration="5000" ToolTip="{Binding FileName}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="完整路径" Width="180">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding FileFullName}" TextTrimming="CharacterEllipsis" ToolTipService.ShowOnDisabled="True" ToolTipService.InitialShowDelay="500" ToolTipService.ShowDuration="5000" ToolTip="{Binding FileFullName}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
                             <GridViewColumn Header="发送节点IP地址" Width="130" DisplayMemberBinding="{Binding SendIpAddress}"/>
                             <GridViewColumn Header="接收节点IP地址" Width="130" DisplayMemberBinding="{Binding ReceiveIpAddress}"/>
-                            <GridViewColumn Header="创建时间" Width="130" DisplayMemberBinding="{Binding InitTime}"/>
-                            <GridViewColumn Header="完成时间" Width="130" DisplayMemberBinding="{Binding LastUpdateTime}"/>
+                            <GridViewColumn Header="创建时间" Width="130" DisplayMemberBinding="{Binding InitTime,StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"/>
+                            <GridViewColumn Header="完成时间" Width="130" DisplayMemberBinding="{Binding LastUpdateTime,StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"/>
                         </GridView>
                     </ListView.View>
                 </ListView>

@@ -24,7 +24,7 @@ using System.Windows;
 
 namespace LocalShare.Desktop.ViewModels
 {
-    public partial class SendViewModel : ObservableObject, IClosable
+    public partial class SendViewModel : ObservableObject, IClosable, IRecipient<MessageModel>
     {
         public SendViewModel() { }
         //private readonly LocalDataContext? _dbContext;
@@ -39,6 +39,7 @@ namespace LocalShare.Desktop.ViewModels
             _udpDiscoveryService.ClientDiscovered += UdpDiscoveryService_ClientDiscovered;
             HomeDataHolder = homeDataHolder;
             _serviceProvider = serviceProvider;
+            WeakReferenceMessenger.Default.Register<MessageModel>(this);
         }
 
 
@@ -49,6 +50,8 @@ namespace LocalShare.Desktop.ViewModels
         private bool isSelectAll;
         [ObservableProperty]
         private bool isNodeSelectAll;
+        [ObservableProperty]
+        private int selectedNodeIndex = -1;
 
         [RelayCommand]
         private async Task Loaded()
@@ -96,6 +99,17 @@ namespace LocalShare.Desktop.ViewModels
                             HomeDataHolder.Nodes.Add(node);
                         }
                     });
+
+                    if (HomeDataHolder.Nodes!.Count > 0)
+                    {
+                        var firstNode = HomeDataHolder.Nodes.First();
+                        CurrentNodeFileTasks.Clear();
+                        foreach (var item in firstNode.FileTasks)
+                        {
+                            CurrentNodeFileTasks.Add(item);
+                        }
+                    }
+
                 }
             }
             catch (Exception ex)
@@ -385,10 +399,16 @@ namespace LocalShare.Desktop.ViewModels
                             Md5 = eachFile.Md5,
                             TotalSize = eachFile.FileSize,
                             State = 0,
-                            FullFileName = eachFile.FilePath
+                            FullFileName = eachFile.FilePath,
+                            Parent = eachNode
                         });
                     }
                 }
+            }
+            if (HomeDataHolder.Nodes.Count > 0)
+            {
+                SelectedNodeIndex = -1;
+                SelectedNodeIndex = 0;
             }
         }
 
@@ -439,6 +459,21 @@ namespace LocalShare.Desktop.ViewModels
         {
             // 取消订阅，切断单例对本对象的引用
             _udpDiscoveryService!.ClientDiscovered -= UdpDiscoveryService_ClientDiscovered;
+        }
+
+        public void Receive(MessageModel message)
+        {
+            if (message.MessageType == MessageType.RemoveCurrentNodeFinishedSendFileTask)
+            {
+                if (message.Data is string fileName)
+                {
+                    var matched = CurrentNodeFileTasks.FirstOrDefault(s => s.FileName == fileName);
+                    if (matched != null)
+                    {
+                        CurrentNodeFileTasks.Remove(matched);
+                    }
+                }
+            }
         }
     }
 }

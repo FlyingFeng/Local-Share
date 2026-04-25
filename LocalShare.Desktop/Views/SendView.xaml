@@ -7,6 +7,7 @@
              xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
              xmlns:myConverter="clr-namespace:LocalShare.Desktop.LocalConverters"
              xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:design="clr-namespace:LocalShare.Desktop.DesignData"
              d:DataContext="{d:DesignInstance Type=vm:SendViewModel,IsDesignTimeCreatable=True}"
              xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d" 
@@ -19,6 +20,7 @@
     </behavior:Interaction.Triggers>
     <UserControl.Resources>
         <myConverter:SendFileProgressConverter x:Key="SendFileProgressConverter"/>
+        <myConverter:FileTaskStateConverter x:Key="FileTaskStateConverter"/>
     </UserControl.Resources>
     <Grid Margin="2">
         <Grid.RowDefinitions>
@@ -31,7 +33,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
 
             <GroupBox Header="文件列表" Margin="1">
@@ -48,7 +50,7 @@
                         <Button Width="88" Height="32" Command="{Binding RemoveSelectedFileCommand}">移除选中</Button>
                     </StackPanel>
 
-                    <ListView Grid.Row="1" ItemsSource="{Binding HomeDataHolder.FileCaches}">
+                    <ListView Grid.Row="1" ItemsSource="{Binding HomeDataHolder.FileCaches}" d:DataContext="{d:DesignInstance Type=design:LocalFileCacheDesignData,IsDesignTimeCreatable=True}" d:ItemsSource="{Binding FileCaches}">
                         <ListView.View>
                             <GridView AllowsColumnReorder="True">
                                 <GridViewColumn Width="70">
@@ -71,6 +73,7 @@
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding FileName}"
+                                                       Cursor="Hand"
                                                        TextTrimming="CharacterEllipsis"
                                                        ToolTipService.ShowOnDisabled="True"
                                                        ToolTipService.InitialShowDelay="500"
@@ -89,7 +92,7 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                                 <GridViewColumn Header="文件大小" Width="120" DisplayMemberBinding="{Binding FileSize,Converter={StaticResource Long2FileSizeConverter}}"/>
-                                <GridViewColumn Header="md5" Width="90">
+                                <!--<GridViewColumn Header="md5" Width="90">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding Md5}"
@@ -100,7 +103,7 @@
                                                        ToolTip="{Binding Md5}"/>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
+                                </GridViewColumn>-->
                                 <!--<GridViewColumn Header="操作" Width="90">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -132,7 +135,7 @@
                         <Button Width="88" Height="32" Command="{Binding RemoveSelectedNodeCommand}">移除选中</Button>
                     </StackPanel>
 
-                    <ListView Grid.Row="1" ItemsSource="{Binding HomeDataHolder.Nodes}">
+                    <ListView x:Name="ListNodes" Grid.Row="1" SelectedIndex="{Binding SelectedNodeIndex}" ItemsSource="{Binding HomeDataHolder.Nodes}" d:ItemsSource="{Binding Nodes}" d:DataContext="{d:DesignInstance Type=design:LocalNodeDesignData,IsDesignTimeCreatable=True}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="SelectionChanged">
                                 <behavior:InvokeCommandAction Command="{Binding NodeSelectionChangedCommand}"
@@ -177,23 +180,47 @@
             <GridSplitter Grid.Column="1" Width="4" ShowsPreview="True" HorizontalAlignment="Right"/>
 
             <GroupBox Grid.Column="2" Header="发送情况" Margin="1">
-                <ListView ItemsSource="{Binding CurrentNodeFileTasks}">
-                    <ListView.View>
-                        <GridView AllowsColumnReorder="True">
-                            <GridViewColumn Header="文件名" Width="150">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding FileName}"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding FileName}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="进度(%)" Width="120" DisplayMemberBinding="{Binding Progress}"/>
-                            <GridViewColumn Header="状态" Width="100" DisplayMemberBinding="{Binding State}"/>
-                        </GridView>
-                    </ListView.View>
-                </ListView>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="38"/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <!--<StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button>移除</Button>
+                    </StackPanel>-->
+
+                    <ListView Grid.Row="1" ItemsSource="{Binding CurrentNodeFileTasks}" d:DataContext="{d:DesignInstance Type=design:SendFileTaskDesignData,IsDesignTimeCreatable=True}">
+                        <ListView.View>
+                            <GridView AllowsColumnReorder="True">
+                                <GridViewColumn Header="文件名" Width="150">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding FileName}"
+                                      TextTrimming="CharacterEllipsis"
+                                      ToolTip="{Binding FileName}"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="文件大小" Width="100" DisplayMemberBinding="{Binding TotalSize,Converter={StaticResource Long2FileSizeConverter}}"/>
+                                <GridViewColumn Header="进度(%)" Width="100" DisplayMemberBinding="{Binding Progress}"/>
+                                <GridViewColumn Header="状态" Width="100" DisplayMemberBinding="{Binding State,Converter={StaticResource FileTaskStateConverter}}"/>
+                                <GridViewColumn Header="操作" Width="180">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <!--<Button>暂停</Button>
+                                                <Rectangle Width="10"/>-->
+                                                <Button Command="{Binding Parent.RemoveFileTaskCommand}"
+                                                        CommandParameter="{Binding FileName}">移除</Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </Grid>
             </GroupBox>
 
         </Grid>

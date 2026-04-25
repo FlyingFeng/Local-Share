@@ -23,7 +23,7 @@ namespace LocalShare.Desktop.FileHandler
         private readonly LocalShareService.LocalShareServiceClient _client;
         //private readonly IServiceProvider _serviceProvider;
 
-        private readonly int eachReadBytes = 1024 * 10; //256kb
+        private readonly int eachReadBytes = 1024 * 256; //256kb
         private readonly LocalNode _node;
 
         public SendFileHandler(Channel channel,
@@ -58,7 +58,7 @@ namespace LocalShare.Desktop.FileHandler
             {
                 if (entity != null)
                 {
-                    entity.State = 3;
+                    entity.State = 4;
                     dbContext!.SendFileTasks.Update(entity);
                     await dbContext!.SaveChangesAsync();
                 }
@@ -85,26 +85,16 @@ namespace LocalShare.Desktop.FileHandler
                 var request = _client.SendFile(header);
                 using FileStream fs = new FileStream(fi.FullName, FileMode.Open, FileAccess.Read);
                 fs.Position = fileTask.StartByteIndex;
-                var currentIndex = (int)(fileTask.StartByteIndex / eachReadBytes);
-                int totalChunk = (int)(fi.Length / eachReadBytes);
-                if (fi.Length % eachReadBytes != 0)
-                {
-                    totalChunk += 1;
-                }
                 while (true)
                 {
-                    int read = await fs.ReadAsync(buffer, 0, buffer.Length);
+                    int read = await fs.ReadAsync(buffer);
                     if (read <= 0)
                     {
                         break;
                     }
-                    currentIndex++;
                     var chunkData = new FileChunk
                     {
-                        Data = Google.Protobuf.ByteString.CopyFrom(buffer, 0, read),
-                        TaskId = fileTask.TaskId,
-                        ChunkIndex = currentIndex,
-                        IsLast = totalChunk == currentIndex
+                        Data = Google.Protobuf.ByteString.CopyFrom(buffer, 0, read)
                     };
                     await request.RequestStream.WriteAsync(chunkData);
                     model.CurrentSize += read;
@@ -162,8 +152,7 @@ namespace LocalShare.Desktop.FileHandler
                     Md5 = model.Md5,
                     TotalSize = fi.Length,
                     RelativePath = relativeName,
-                    TaskId = model.TaskId,
-                    TotalChunks = totalChunk
+                    TaskId = model.TaskId
                 }
             };
             var response = await _client.StartFileTaskAsync(request);

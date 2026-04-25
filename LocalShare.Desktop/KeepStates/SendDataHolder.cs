@@ -26,7 +26,7 @@ namespace LocalShare.Desktop.KeepStates
             try
             {
                 var utcNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                var matched = Nodes.Where(s => Math.Abs(s.LastSeenTime - utcNow) >= 8).ToList();
+                var matched = Nodes.Where(s => Math.Abs(s.LastSeenTime - utcNow) >= 15).ToList();
                 foreach (var item in matched)
                 {
                     await item.CloseAsync();
@@ -35,7 +35,7 @@ namespace LocalShare.Desktop.KeepStates
                         Nodes.Remove(item);
                     });
                 }
-                await Task.CompletedTask;
+                //await Task.CompletedTask;
             }
             catch (Exception ex)
             {
@@ -44,8 +44,8 @@ namespace LocalShare.Desktop.KeepStates
         }
 
 
-        public ObservableCollection<LocalNode> Nodes { get; set; } = new();
-        public ObservableCollection<FileCache> FileCaches { get; set; } = new();
+        public ObservableCollection<LocalNode> Nodes { get; set; } = [];
+        public ObservableCollection<FileCache> FileCaches { get; set; } = [];
 
     }
 }

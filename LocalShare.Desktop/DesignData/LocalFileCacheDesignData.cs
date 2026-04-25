@@ -1,0 +1,37 @@
+﻿using LocalShare.Desktop.Models.Sends;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace LocalShare.Desktop.DesignData
+{
+    public class LocalFileCacheDesignData
+    {
+        public List<FileCache> FileCaches { get; set; } = [];
+
+        public LocalFileCacheDesignData()
+        {
+            FileCaches.Add(new FileCache
+            {
+                FileName = "12.txt",
+                FilePath = "D:\\1\\2\\12.txt",
+                FileSize = 55441122,
+                IsOpenFromDir = true,
+                Md5 = "151515",
+                IsSelected = true
+            });
+            FileCaches.Add(new FileCache
+            {
+                IsSelected = false,
+                Md5 = "12324343",
+                IsOpenFromDir = false,
+                FileSize = 4561313351,
+                FileName = "test.txt",
+                FilePath = "D:\\1\\3\\test.txt"
+            });
+        }
+    }
+}
