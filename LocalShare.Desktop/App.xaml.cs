@@ -73,10 +73,10 @@ namespace LocalShare.Desktop
                 }
                 GlobalShared.NodeName = ChineseNameGenerator.Generate(NameLength.Two);
                 GlobalShared.DownloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "LocalShare");
-                if (!Directory.Exists(GlobalShared.DownloadPath))
-                {
-                    Directory.CreateDirectory(GlobalShared.DownloadPath);
-                }
+                //if (!Directory.Exists(GlobalShared.DownloadPath))
+                //{
+                //    Directory.CreateDirectory(GlobalShared.DownloadPath);
+                //}
 
                 _host = Host.CreateDefaultBuilder()
                     .ConfigureServices((context, services) =>

@@ -21,6 +21,7 @@
     <UserControl.Resources>
         <myConverter:SendFileProgressConverter x:Key="SendFileProgressConverter"/>
         <myConverter:FileTaskStateConverter x:Key="FileTaskStateConverter"/>
+        <myConverter:NodeStateConverter x:Key="NodeStateConverter"/>
     </UserControl.Resources>
     <Grid Margin="2">
         <Grid.RowDefinitions>
@@ -43,11 +44,11 @@
                         <RowDefinition/>
                     </Grid.RowDefinitions>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button Width="88" Height="32" Command="{Binding OpenFilesCommand}">打开文件</Button>
+                        <Button Style="{StaticResource ButtonPrimary}" Width="88" Height="32" Command="{Binding OpenFilesCommand}">打开文件</Button>
                         <Rectangle Width="10"/>
-                        <Button Width="88" Height="32" Command="{Binding OpenDirFilesCommand}">打开文件夹</Button>
+                        <Button Style="{StaticResource ButtonPrimary}" Width="88" Height="32" Command="{Binding OpenDirFilesCommand}">打开文件夹</Button>
                         <Rectangle Width="10"/>
-                        <Button Width="88" Height="32" Command="{Binding RemoveSelectedFileCommand}">移除选中</Button>
+                        <Button Style="{StaticResource ButtonDanger}" Width="88" Height="32" Command="{Binding RemoveSelectedFileCommand}">移除选中</Button>
                     </StackPanel>
 
                     <ListView Grid.Row="1" ItemsSource="{Binding HomeDataHolder.FileCaches}" d:DataContext="{d:DesignInstance Type=design:LocalFileCacheDesignData,IsDesignTimeCreatable=True}" d:ItemsSource="{Binding FileCaches}">
@@ -69,7 +70,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="文件名" Width="150">
+                                <GridViewColumn Header="文件名称" Width="150">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding FileName}"
@@ -132,7 +133,9 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button Width="88" Height="32" Command="{Binding RemoveSelectedNodeCommand}">移除选中</Button>
+                        <Button Style="{StaticResource ButtonPrimary}" Width="88" Height="32" Command="{Binding AddLocalNodeCommand}">添加节点</Button>
+                        <Rectangle Width="10"/>
+                        <Button Style="{StaticResource ButtonDanger}" Width="88" Height="32" Command="{Binding RemoveSelectedNodeCommand}">移除选中</Button>
                     </StackPanel>
 
                     <ListView x:Name="ListNodes" Grid.Row="1" SelectedIndex="{Binding SelectedNodeIndex}" ItemsSource="{Binding HomeDataHolder.Nodes}" d:ItemsSource="{Binding Nodes}" d:DataContext="{d:DesignInstance Type=design:LocalNodeDesignData,IsDesignTimeCreatable=True}">
@@ -160,7 +163,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="节点名称" Width="180" >
+                                <GridViewColumn Header="节点名称" Width="100" >
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding NodeName}"
@@ -172,6 +175,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
+                                <GridViewColumn Header="状态" Width="80" DisplayMemberBinding="{Binding State,Converter={StaticResource NodeStateConverter}}"/>
                             </GridView>
                         </ListView.View>
                     </ListView>
@@ -193,7 +197,7 @@
                     <ListView Grid.Row="1" ItemsSource="{Binding CurrentNodeFileTasks}" d:DataContext="{d:DesignInstance Type=design:SendFileTaskDesignData,IsDesignTimeCreatable=True}">
                         <ListView.View>
                             <GridView AllowsColumnReorder="True">
-                                <GridViewColumn Header="文件名" Width="150">
+                                <GridViewColumn Header="文件名称" Width="150">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding FileName}"
@@ -212,7 +216,8 @@
                                                 <!--<Button>暂停</Button>
                                                 <Rectangle Width="10"/>-->
                                                 <Button Command="{Binding Parent.RemoveFileTaskCommand}"
-                                                        CommandParameter="{Binding FileName}">移除</Button>
+                                                        CommandParameter="{Binding FileName}"
+                                                        Style="{StaticResource ButtonDanger.Small}">移除</Button>
                                             </StackPanel>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
@@ -228,11 +233,11 @@
 
         <Border Grid.Row="1">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Height="30" Width="120" Command="{Binding SendFileCommand}">开始发送</Button>
-                <Rectangle Width="10"/>
+                <Button Style="{StaticResource ButtonPrimary}" Height="30" Width="120" Command="{Binding SendFileCommand}">开始发送</Button>
+                <!--<Rectangle Width="10"/>
                 <Button Height="30" Width="120">暂停发送</Button>
                 <Rectangle Width="10"/>
-                <Button Height="30" Width='120'>终止发送</Button>
+                <Button Height="30" Width='120'>终止发送</Button>-->
             </StackPanel>
         </Border>
 

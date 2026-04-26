@@ -50,6 +50,7 @@ namespace LocalShare.Desktop.FileHandler
                     FileInfo fi = new FileInfo(model.FullFileName);
                     await PreStartFileTask(model);
                     var response = await StartFileTask(fi, model);
+                    await Task.Delay(1000);
                     await ReadAndSendFile(fi, response, model);
                     await _node.FinishSendFile(model);
                 }
@@ -85,6 +86,7 @@ namespace LocalShare.Desktop.FileHandler
                 var request = _client.SendFile(header);
                 using FileStream fs = new FileStream(fi.FullName, FileMode.Open, FileAccess.Read);
                 fs.Position = fileTask.StartByteIndex;
+                model.CurrentSize += fileTask.StartByteIndex;
                 while (true)
                 {
                     int read = await fs.ReadAsync(buffer);
@@ -99,6 +101,7 @@ namespace LocalShare.Desktop.FileHandler
                     await request.RequestStream.WriteAsync(chunkData);
                     model.CurrentSize += read;
                 }
+                await Task.Delay(3000);
                 await request.RequestStream.CompleteAsync();
                 request.Dispose();
             }

@@ -1,11 +1,14 @@
 ﻿using Grpc.Core;
+using HandyControl.Controls;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.DataContext.Entities;
+using LocalShare.Desktop.Models.Receives;
 using LocalShare.Protocol.Define;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -21,6 +24,9 @@ namespace LocalShare.Desktop.FileHandler
         public string TaskId { get; set; } = string.Empty;
         public string SendNodeName { get; set; } = string.Empty;
         public string SendNodeIp { get; set; } = string.Empty;
+
+        public ReceiveFileTaskModel? TaskModel { get; set; }
+
 
         public async Task<StartFileTaskResponse> HandleStartFileTask(StartFileTaskRequest req)
         {
@@ -63,6 +69,17 @@ namespace LocalShare.Desktop.FileHandler
                 result.StartByteIndex = fi.Length;
             }
 
+            TaskModel = new ReceiveFileTaskModel
+            {
+                FileName = entity.FileName,
+                TotalSize = req.FileMetaData.TotalSize,
+                TaskId = entity.TaskId,
+                SaveFilePath = entity.FileFullName,
+                SendNodeName = entity.SendNodeName,
+                State = 1,
+                CurrentSize = result.StartByteIndex,
+            };
+
             return result;
         }
 
@@ -90,22 +107,15 @@ namespace LocalShare.Desktop.FileHandler
                     while (await request.MoveNext())
                     {
                         await fs.WriteAsync(request.Current.Data.ToByteArray());
+                        TaskModel!.CurrentSize += request.Current.Data.Length;
                     }
 
                     if (entity != null)
                     {
                         entity.State = 3;
                         entity.LastUpdateTime = DateTime.UtcNow;
-
+                        TaskModel!.State = 3;
                     }
-                    //using var dbContext = new LocalDataContext();
-                    //var item = dbContext.ReceiveFileTasks.FirstOrDefault(s => s.TaskId == existedItem.TaskId);
-                    //if (item != null)
-                    //{
-                    //    item.State = 3;
-                    //    item.LastUpdateTime = DateTime.UtcNow;
-                    //    await dbContext.SaveChangesAsync();
-                    //}
                 }
             }
             catch (Exception ex)
@@ -113,17 +123,17 @@ namespace LocalShare.Desktop.FileHandler
                 if (entity != null)
                 {
                     entity.State = 4;
-                    //dbContext!.SendFileTasks.Update(entity);
-                    //await dbContext!.SaveChangesAsync();
+                    TaskModel!.State = 4;
                 }
                 Log.Error($"HandleFileTask error, {ex.Message}\n{ex.StackTrace}");
             }
             finally
             {
+                fs?.Dispose();
                 using var dbContext = new LocalDataContext();
                 dbContext.ReceiveFileTasks.Update(entity!);
                 await dbContext.SaveChangesAsync();
-                fs?.Dispose();
+                Growl.Info($"文件接收完成，文件名：{entity!.FileName}");
             }
         }
     }

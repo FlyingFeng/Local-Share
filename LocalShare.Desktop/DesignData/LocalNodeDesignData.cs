@@ -20,12 +20,14 @@ namespace LocalShare.Desktop.DesignData
                 IpAddress = "1.1.1.1",
                 IsSelected = false,
                 NodeName = "测试1",
+                State = 0
             });
             Nodes.Add(new LocalNode
             {
                 IpAddress = "1.1.1.2",
                 IsSelected = true,
-                NodeName = "测试2"
+                NodeName = "测试2",
+                State = 1
             });
         }
 

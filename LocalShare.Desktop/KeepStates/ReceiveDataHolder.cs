@@ -8,11 +8,24 @@ using System.Threading.Tasks;
 
 namespace LocalShare.Desktop.KeepStates
 {
+    public delegate void ReceiveFileTaskAddedEventHandler(ReceiveFileHandler handler);
+
     public class ReceiveDataHolder
     {
         private readonly Dictionary<string, ReceiveFileHandler> _caches = new();
 
+        public event ReceiveFileTaskAddedEventHandler? OnReceiveFileTaskAdded;
 
+
+        public List<ReceiveFileHandler> GetAllHandlers()
+        {
+            return [.. _caches.Select(s => s.Value)];
+        }
+
+        public void NotifyReceiveFileTaskAdded(ReceiveFileHandler handler)
+        {
+            OnReceiveFileTaskAdded?.Invoke(handler);
+        }
 
 
         public void AddReceiveFileHandler(PreStartFileTaskRequest req)

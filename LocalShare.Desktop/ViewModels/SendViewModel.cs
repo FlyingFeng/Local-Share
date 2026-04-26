@@ -54,6 +54,12 @@ namespace LocalShare.Desktop.ViewModels
         private int selectedNodeIndex = -1;
 
         [RelayCommand]
+        private void AddLocalNode()
+        {
+
+        }
+
+        [RelayCommand]
         private async Task Loaded()
         {
             try
@@ -385,6 +391,24 @@ namespace LocalShare.Desktop.ViewModels
         {
             var selectedFiles = HomeDataHolder!.FileCaches.Where(s => s.IsSelected).ToList();
             var selectedNodes = HomeDataHolder.Nodes.Where(s => s.IsSelected).ToList();
+            if (selectedNodes.Count > GlobalShared.SendNodeMaxCount)
+            {
+                HandyControl.Controls.MessageBox.Show($"最多只能选择{GlobalShared.SendNodeMaxCount}个节点", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+            if (selectedFiles.Count > GlobalShared.SameNodeMaxSendFileCount)
+            {
+                HandyControl.Controls.MessageBox.Show($"每个节点最多只能选择{GlobalShared.SameNodeMaxSendFileCount}个文件", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+            var sendFileNodeCount = HomeDataHolder!.Nodes.Where(s => s.IsSending).Count();
+            if (sendFileNodeCount > GlobalShared.SendNodeMaxCount)
+            {
+                HandyControl.Controls.MessageBox.Show($"同时发送文件的节点最多只能有{GlobalShared.SendNodeMaxCount}个", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+
             foreach (var eachNode in selectedNodes)
             {
                 foreach (var eachFile in selectedFiles)
@@ -427,31 +451,32 @@ namespace LocalShare.Desktop.ViewModels
         }
 
 
-        private void UdpDiscoveryService_ClientDiscovered(Protocol.Define.NodeModel obj)
+        private async void UdpDiscoveryService_ClientDiscovered(Protocol.Define.NodeModel obj)
         {
             var matched = HomeDataHolder!.Nodes.FirstOrDefault(s => s.IpAddress == obj.IpAddress && s.Port == obj.Port);
             if (matched == null)
             {
-                Application.Current.Dispatcher.Invoke(async () =>
-                {
-                    var node = new LocalNode()
-                    {
-                        InBlackList = false,
-                        InWhiteList = false,
-                        IsSelected = false,
-                        NodeName = obj.NodeName,
-                        Port = obj.Port,
-                        IpAddress = obj.IpAddress,
-                        LastSeenTime = obj.Time
-                    };
-                    await node.InitAsync();
-                    HomeDataHolder!.Nodes.Add(node);
-                });
+                await Application.Current.Dispatcher.InvokeAsync(async () =>
+                 {
+                     var node = new LocalNode()
+                     {
+                         InBlackList = false,
+                         InWhiteList = false,
+                         IsSelected = false,
+                         NodeName = obj.NodeName,
+                         Port = obj.Port,
+                         IpAddress = obj.IpAddress,
+                         LastSeenTime = obj.Time
+                     };
+                     await node.InitAsync();
+                     HomeDataHolder!.Nodes.Add(node);
+                 });
             }
             else
             {
                 matched.NodeName = obj.NodeName;
                 matched.LastSeenTime = obj.Time;
+                await matched.UpdateNodeStateAsync();
             }
         }
 

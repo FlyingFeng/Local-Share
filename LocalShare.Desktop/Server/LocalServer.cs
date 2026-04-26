@@ -37,6 +37,7 @@ namespace LocalShare.Desktop.Server
             if (handler != null)
             {
                 var response = await handler.HandleStartFileTask(request);
+                _receiveDataHolder.NotifyReceiveFileTaskAdded(handler);
                 return response;
             }
             return new StartFileTaskResponse
@@ -54,7 +55,7 @@ namespace LocalShare.Desktop.Server
                 if (handler != null)
                 {
                     await handler.HandleFileTask(requestStream);
-                    _receiveDataHolder.RemoveReceiveFileHandler(entity.Value);
+                    //_receiveDataHolder.RemoveReceiveFileHandler(entity.Value);
                 }
             }
             return new EmptyMessage();

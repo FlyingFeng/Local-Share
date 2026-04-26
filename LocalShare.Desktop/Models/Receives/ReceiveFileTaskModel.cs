@@ -17,7 +17,7 @@ namespace LocalShare.Desktop.Models.Receives
         private long currentSize = 0;
         /// <summary>
         /// 0:wait for schedule
-        /// 1:sending
+        /// 1:sending/receiving
         /// 2:stop
         /// 3:finish
         /// 4:error
@@ -31,14 +31,14 @@ namespace LocalShare.Desktop.Models.Receives
         [ObservableProperty]
         private string taskId = string.Empty;
         [ObservableProperty]
-        private double progress = 0;
+        private int progress = 0;
 
 
         partial void OnCurrentSizeChanged(long value)
         {
             if (TotalSize > 0 && value > 0)
             {
-                Progress = CurrentSize / TotalSize * 100.0;
+                Progress = (int)((CurrentSize * 1.0) / TotalSize * 100);
             }
         }
 
