@@ -10,8 +10,8 @@
         mc:Ignorable="d"
         Closing="Window_Closing"
         WindowState="Maximized"
-        ShowInTaskbar="False"
-        Icon="{StaticResource AppIcon16}"
+        ShowInTaskbar="True"
+        Icon="{StaticResource AppIcon}"
         Title="Local Share" Height="900" Width="1200">
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">

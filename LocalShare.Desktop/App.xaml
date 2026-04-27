@@ -7,13 +7,11 @@
     <Application.Resources>
         <ResourceDictionary>
             <tb:TaskbarIcon x:Key="TrayIcon"
-                        IconSource="/Res/app-16x16.ico"
+                        IconSource="/Res/thunder.ico"
                         ToolTipText="Local Share"
                         Visibility="Visible"/>
 
-            <BitmapImage x:Key="AppIcon" UriSource="pack://application:,,,/Res/app.ico" />
-            <BitmapImage x:Key="AppIcon16" UriSource="pack://application:,,,/Res/app-16x16.ico" />
-            <BitmapImage x:Key="AppIcon32" UriSource="pack://application:,,,/Res/app-32x32.ico" />
+            <BitmapImage x:Key="AppIcon" UriSource="pack://application:,,,/Res/thunder.ico" />
 
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml"/>

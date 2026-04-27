@@ -90,7 +90,7 @@ namespace LocalShare.Desktop.ViewModels
                     {
                         query = query.Where(s => s.ReceiveNodeName.Contains(SearchReceiveNodeName));
                     }
-                    var list = await query.ToListAsync();
+                    var list = await query.OrderByDescending(s => s.InitTime).ToListAsync();
                     SendHistoryRecords.Clear();
                     foreach (var item in list)
                     {
@@ -128,7 +128,7 @@ namespace LocalShare.Desktop.ViewModels
                     {
                         query = query.Where(s => s.ReceiveNodeName.Contains(SearchReceiveNodeName));
                     }
-                    var list = await query.ToListAsync();
+                    var list = await query.OrderByDescending(s => s.InitTime).ToListAsync();
                     ReceiveHistoryRecords.Clear();
                     foreach (var item in list)
                     {
