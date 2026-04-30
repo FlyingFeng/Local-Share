@@ -43,6 +43,14 @@ namespace LocalShare.Desktop.ViewModels
         private bool downloadPathSelected;
         [ObservableProperty]
         private bool multicastAddressSelected = false;
+        [ObservableProperty]
+        private bool transferSpeedSelected = false;
+
+        [ObservableProperty]
+        [NotifyDataErrorInfo]
+        [Required(ErrorMessage = "【传输基准速率】不能为空")]
+        [Range(1, 1024, ErrorMessage = "【传输基准速率】必须处于[1,1024]区间")]
+        private string transferSpeed = string.Empty;
 
         [ObservableProperty]
         [NotifyDataErrorInfo]
@@ -125,6 +133,10 @@ namespace LocalShare.Desktop.ViewModels
                 {
                     GlobalShared.SameNodeMaxSendFileCount = int.Parse(SameNodeMaxSendFileCount);
                 }
+                if (TransferSpeedSelected)
+                {
+                    GlobalShared.TransferSpeed = int.Parse(TransferSpeed);
+                }
                 if (DownloadPathSelected)
                 {
                     if (!string.IsNullOrEmpty(DownloadPath) &&
@@ -194,6 +206,11 @@ namespace LocalShare.Desktop.ViewModels
                 {
                     multicastAddressEntity.Value = MulticastAddress;
                 }
+                var transferSpeedEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyTransferSpeed);
+                if (transferSpeedEntity != null)
+                {
+                    transferSpeedEntity.Value = TransferSpeed;
+                }
                 await dbContext.SaveChangesAsync();
                 Growl.Info("保存成功");
             }
@@ -208,6 +225,7 @@ namespace LocalShare.Desktop.ViewModels
             SendNodeMaxCount = GlobalShared.SendNodeMaxCount.ToString();
             DownloadPath = GlobalShared.DownloadPath!;
             MulticastAddress = GlobalShared.MulticastAddress!;
+            TransferSpeed = GlobalShared.TransferSpeed.ToString();
         }
 
 

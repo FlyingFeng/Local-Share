@@ -16,6 +16,7 @@ namespace LocalShare.Desktop
         internal static int SendNodeMaxCount = 3;
         internal static int SameNodeMaxSendFileCount = 3;
         internal static string MulticastAddress = "239.255.255.250";
+        internal static int TransferSpeed = 256;  //单位 KB
 
         internal static int MulticastPort = 9989;
     }

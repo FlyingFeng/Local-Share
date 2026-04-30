@@ -97,6 +97,13 @@
                         </StackPanel>
                         <Rectangle Height="10"/>
                         <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding TransferSpeedSelected}"/>
+                            <Rectangle Width="10"/>
+                            <TextBlock Text="传输基准速率(KB)：" Width="200" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding TransferSpeed,UpdateSourceTrigger=PropertyChanged}" Validation.ErrorTemplate="{StaticResource ErrorMessageTemplate}" Width="160" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Rectangle Height="10"/>
+                        <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding DownloadPathSelected}"/>
                             <Rectangle Width="10"/>
                             <TextBlock VerticalAlignment="Center" Text="文件保存路径：" Width="200"/>

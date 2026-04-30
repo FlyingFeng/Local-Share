@@ -199,6 +199,21 @@ namespace LocalShare.Desktop
 
             var list = await dbContext.LocalSettings.ToListAsync();
 
+            var transferSpeed = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeyTransferSpeed);
+            if (transferSpeed == null)
+            {
+                transferSpeed = new DataContext.Entities.LocalSettingEntity
+                {
+                    Key = LocalSettingKey.KeyTransferSpeed,
+                    Value = GlobalShared.TransferSpeed.ToString()
+                };
+                await dbContext.LocalSettings.AddAsync(transferSpeed);
+            }
+            else
+            {
+                GlobalShared.TransferSpeed = int.Parse(transferSpeed.Value);
+            }
+
             var multicastAddressSetting = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeyMulticastAddress);
             if (multicastAddressSetting == null)
             {

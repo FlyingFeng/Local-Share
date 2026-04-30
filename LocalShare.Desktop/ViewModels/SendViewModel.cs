@@ -54,9 +54,32 @@ namespace LocalShare.Desktop.ViewModels
         private int selectedNodeIndex = -1;
 
         [RelayCommand]
-        private void AddLocalNode()
+        private async Task AddLocalNode()
         {
-
+            AddLocalNodeWindow window = new AddLocalNodeWindow();
+            var flag = window.ShowDialog();
+            if (flag == true)
+            {
+                if (window.NodeInfo != null)
+                {
+                    var matched = HomeDataHolder!.Nodes.FirstOrDefault(s => s.IpAddress == window.NodeInfo.IpAddress && s.Port == window.NodeInfo.Port);
+                    if (matched == null)
+                    {
+                        var node = new LocalNode()
+                        {
+                            InBlackList = false,
+                            InWhiteList = false,
+                            IsSelected = false,
+                            NodeName = window.NodeInfo.NodeName,
+                            Port = window.NodeInfo.Port,
+                            IpAddress = window.NodeInfo.IpAddress,
+                            LastSeenTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                        };
+                        await node.InitAsync();
+                        HomeDataHolder!.Nodes.Add(node);
+                    }
+                }
+            }
         }
 
         [RelayCommand]

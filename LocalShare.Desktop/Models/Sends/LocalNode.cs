@@ -63,7 +63,7 @@ namespace LocalShare.Desktop.Models.Sends
                     LocalShareService.LocalShareServiceClient _client = new LocalShareService.LocalShareServiceClient(_channel);
                     await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(10));
                     State = 0;
-                    await Task.Delay(1000, _tokenSource.Token);
+                    await Task.Delay(3000, _tokenSource.Token);
                 }
                 catch (TaskCanceledException)
                 {
@@ -135,29 +135,6 @@ namespace LocalShare.Desktop.Models.Sends
             }
         }
 
-
-        //[RelayCommand]
-        private void RemoveFileTask(object args)
-        {
-            if (args is string fileName)
-            {
-                var matchedFile = FileTasks.FirstOrDefault(s => s.FileName == fileName);
-                if (matchedFile != null)
-                {
-                    if (matchedFile.State == 0 ||
-                        matchedFile.State == 3 ||
-                        matchedFile.State == 4)
-                    {
-                        FileTasks.Remove(matchedFile);
-                        WeakReferenceMessenger.Default.Send(new MessageModel
-                        {
-                            MessageType = MessageType.RemoveCurrentNodeFinishedSendFileTask,
-                            Data = fileName
-                        });
-                    }
-                }
-            }
-        }
 
         public async Task UpdateNodeStateAsync()
         {

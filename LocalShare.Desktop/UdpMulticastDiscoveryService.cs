@@ -16,7 +16,7 @@ namespace LocalShare.Desktop
     public class UdpMulticastDiscoveryService : IDisposable
     {
         private const int BroadcastInterval = 3000; // 3秒
-        private const string MulticastGroup = "239.255.255.250"; // 组播地址
+        //private const string MulticastGroup = "239.255.255.250"; // 组播地址
         private const int MulticastTtl = 32; // 组播 TTL
 
         private UdpClient? _listener;
@@ -49,7 +49,7 @@ namespace LocalShare.Desktop
             _listener.Client.Bind(new IPEndPoint(IPAddress.Any, GlobalShared.BroadcastPort));
 
             // 加入组播组
-            _listener.JoinMulticastGroup(IPAddress.Parse(MulticastGroup));
+            _listener.JoinMulticastGroup(IPAddress.Parse(GlobalShared.MulticastAddress));
 
             _cts = new CancellationTokenSource();
             Task.Run(() => MulticastSendLoopAsync(_cts.Token));
@@ -67,7 +67,7 @@ namespace LocalShare.Desktop
                 SocketOptionName.MulticastTimeToLive,
                 MulticastTtl);
 
-            var multicastEndPoint = new IPEndPoint(IPAddress.Parse(MulticastGroup), GlobalShared.BroadcastPort);
+            var multicastEndPoint = new IPEndPoint(IPAddress.Parse(GlobalShared.MulticastAddress), GlobalShared.BroadcastPort);
 
             while (!ct.IsCancellationRequested)
             {
@@ -150,7 +150,7 @@ namespace LocalShare.Desktop
                 _cts?.Cancel();
 
                 // 离开组播组后再释放，避免残留组播订阅
-                try { _listener?.DropMulticastGroup(IPAddress.Parse(MulticastGroup)); }
+                try { _listener?.DropMulticastGroup(IPAddress.Parse(GlobalShared.MulticastAddress)); }
                 catch { /* 忽略离组失败 */ }
 
                 _listener?.Dispose();

@@ -1,0 +1,26 @@
+﻿<Window x:Class="LocalShare.Desktop.AddLocalNodeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LocalShare.Desktop"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        mc:Ignorable="d"
+        Loaded="Window_Loaded"
+        Title="添加节点" Height="160" Width="600">
+
+    <StackPanel Orientation="Vertical">
+        <Rectangle Height="20"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <hc:TextBox x:Name="TxtIpAddress" hc:InfoElement.Placeholder="IP地址" Width="230" Margin="5"/>
+            <TextBlock Text=":" VerticalAlignment="Center"/>
+            <hc:TextBox x:Name="TxtPort" hc:InfoElement.Placeholder="端口" Width="100" Margin="5"/>
+        </StackPanel>
+        <Rectangle Height="20"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button x:Name="BtnAddNode" Click="BtnAddNode_Click" Width="110" Height="30" Style="{StaticResource ButtonPrimary}">添加</Button>
+            <Rectangle Width="20"/>
+            <Button x:Name="BtnCancel" Click="BtnCancel_Click" Width="110" Height="30" Style="{StaticResource ButtonPrimary}">退出</Button>
+        </StackPanel>
+    </StackPanel>
+</Window>

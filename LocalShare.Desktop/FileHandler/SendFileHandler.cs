@@ -21,7 +21,7 @@ namespace LocalShare.Desktop.FileHandler
         private readonly Channel _channel;
         private readonly LocalShareService.LocalShareServiceClient _client;
 
-        private readonly int eachReadBytes = 1024 * 256; //256kb
+        private readonly int eachReadBytes; //1024 * 256; //256kb
         private readonly LocalNode _node;
         private readonly CancellationTokenSource _tokenSource;
 
@@ -29,6 +29,7 @@ namespace LocalShare.Desktop.FileHandler
             string receiveNodeName,
             LocalNode node)
         {
+            eachReadBytes = GlobalShared.TransferSpeed * 1024;
             _node = node;
             _channel = channel;
             _client = new LocalShareService.LocalShareServiceClient(_channel);

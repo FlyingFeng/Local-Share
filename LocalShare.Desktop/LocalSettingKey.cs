@@ -17,5 +17,6 @@ namespace LocalShare.Desktop
         internal const string KeySameNodeMaxSendFileCount = "same_node_max_send_file_count";
         internal const string KeyDownloadPath = "download_path";
         internal const string KeyMulticastAddress = "multicast_address";
+        internal const string KeyTransferSpeed = "transfer_speed";
     }
 }
