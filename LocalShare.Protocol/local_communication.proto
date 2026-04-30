@@ -31,6 +31,7 @@ message FileOperationRequest{
 	string task_id               = 2;
 	string file_name             = 3;
 	int32  operation_type        = 4;   //0:暂停    1:继续    2:取消
+	int32  sender                = 5;   //0:发送方    1:接收方
 }
 
 

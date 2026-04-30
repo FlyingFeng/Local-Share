@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace LocalShare.Desktop.Models.Sends
 {
@@ -43,7 +44,7 @@ namespace LocalShare.Desktop.Models.Sends
 
         private Channel? _channel;
         private CancellationTokenSource? _tokenSource;
-        private readonly Dictionary<string, Task> sendFileTasks = new Dictionary<string, Task>();
+        private readonly Dictionary<string, SendFileHandler> sendFileTasks = new Dictionary<string, SendFileHandler>();
 
 
         public bool IsSending => sendFileTasks.Count > 0;
@@ -71,7 +72,7 @@ namespace LocalShare.Desktop.Models.Sends
                 catch (Exception ex)
                 {
                     State = 1;
-                    await CloseAsync();
+                    Close();
                     Log.Error($"LocalNode.CheckAlive error, nodeName= {NodeName},{ex.Message}\n{ex.StackTrace}");
                     break;
                 }
@@ -79,8 +80,63 @@ namespace LocalShare.Desktop.Models.Sends
             }
         }
 
-
         [RelayCommand]
+        private async Task CancelFileTask(object args)
+        {
+            if (args is string fileName)
+            {
+                try
+                {
+                    var matchedFile = FileTasks.FirstOrDefault(s => s.FileName == fileName);
+                    if (matchedFile != null)
+                    {
+                        if (sendFileTasks.TryGetValue(matchedFile.TaskId, out var handler))
+                        {
+                            handler.CancelFileTask();
+                            sendFileTasks.Remove(matchedFile.TaskId);
+                        }
+
+                        LocalShareService.LocalShareServiceClient client = new LocalShareService.LocalShareServiceClient(_channel);
+                        try
+                        {
+                            await client.OperateFileTaskAsync(new FileOperationRequest
+                            {
+                                FileName = fileName,
+                                OperationType = 2,
+                                SendNodeName = GlobalShared.NodeName,
+                                TaskId = matchedFile.TaskId,
+                                Sender = 0
+                            });
+
+                        }
+                        catch (Exception ex2)
+                        {
+                            Log.Error($"CancelFileTask.inner error, {ex2.Message}\n{ex2.StackTrace}");
+                        }
+                    }
+                    await Task.Delay(100);
+                    if (matchedFile != null)
+                    {
+                        await Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            FileTasks.Remove(matchedFile);
+                        });
+                    }
+                    WeakReferenceMessenger.Default.Send(new MessageModel
+                    {
+                        MessageType = MessageType.RemoveCurrentNodeFinishedSendFileTask,
+                        Data = fileName
+                    });
+                }
+                catch (Exception ex)
+                {
+                    HandyControl.Controls.MessageBox.Show($"取消发送失败，文件名：{args}\n错误信息：{ex.Message}");
+                }
+            }
+        }
+
+
+        //[RelayCommand]
         private void RemoveFileTask(object args)
         {
             if (args is string fileName)
@@ -109,24 +165,31 @@ namespace LocalShare.Desktop.Models.Sends
             {
                 if (State == 1)
                 {
+                    State = 0;
                     _tokenSource = new CancellationTokenSource();
                     if (_channel == null)
                     {
                         _channel = new Channel($"{IpAddress}:{Port}", ChannelCredentials.Insecure);
                     }
-                    await _channel.ConnectAsync();
+                    await _channel.ConnectAsync(DateTime.UtcNow.AddSeconds(5));
                     if (_channel.State == ChannelState.Ready)
                     {
                         State = 0;
                         _ = CheckAlive();
-                        _ = RunLoop();
+                        //_ = RunLoop();
                     }
                 }
             }
             catch (Exception ex)
             {
+                State = 1;
+                _tokenSource?.Cancel();
                 Log.Error($"LocalNode.UpdateNodeStateAsync error, IpAddress={IpAddress}, Port={Port}\n{ex.Message}\n{ex.StackTrace}");
                 throw;
+            }
+            finally
+            {
+
             }
         }
 
@@ -177,13 +240,10 @@ namespace LocalShare.Desktop.Models.Sends
             {
                 try
                 {
-                    if (_tokenSource == null || _tokenSource.IsCancellationRequested)
-                    {
-                        break;
-                    }
                     if (State != 0)
                     {
-                        break;
+                        await Task.Delay(1000);
+                        continue;
                     }
 
                     var currentScheduleCount = sendFileTasks.Count;
@@ -208,28 +268,21 @@ namespace LocalShare.Desktop.Models.Sends
                                     SendIpAddress = GlobalShared.IpAddress!,
                                     ReceiveNodeName = NodeName,
                                     SendNodeName = GlobalShared.NodeName!,
-                                    State = (int)SendFileTaskState.WaitForSchedule,
-                                    TaskId = Guid.NewGuid().ToString()
+                                    State = (int)SendFileTaskState.Transferring,
+                                    TaskId = item.TaskId
                                 };
                                 await dbContext!.AddAsync(entity);
                                 await dbContext!.SaveChangesAsync();
-                                item.TaskId = entity.TaskId;
-                                SendFileHandler handler = new SendFileHandler(_channel!, IpAddress, NodeName, this);
-                                var task = handler.SendFile(item);
-                                sendFileTasks[item.TaskId] = task;
-                                entity.State = (int)SendFileTaskState.Sending;
-                                await dbContext.SaveChangesAsync();
-                                item.State = (int)SendFileTaskState.Sending;
+                                SendFileHandler handler = new SendFileHandler(_channel!, NodeName, this);
+                                _ = handler.SendFile(item, entity);
+                                item.State = (int)SendFileTaskState.Transferring;
+                                sendFileTasks[item.TaskId] = handler;
                             }
-                            await Task.Delay(500, _tokenSource.Token);
+                            await Task.Delay(500);
                         }
                     }
 
-                    await Task.Delay(1000, _tokenSource.Token);
-                }
-                catch (TaskCanceledException)
-                {
-                    break;
+                    await Task.Delay(1000);
                 }
                 catch (Exception ex)
                 {
@@ -240,17 +293,17 @@ namespace LocalShare.Desktop.Models.Sends
 
 
 
-        public async Task CloseAsync()
+        public void Close()
         {
             try
             {
                 Log.Information($"Close LocalNode, NodeName={NodeName}, IpAddress={IpAddress}, Port={Port}");
                 _tokenSource?.Cancel();
-                if (_channel != null)
-                {
-                    await _channel.ShutdownAsync();
-                }
-                _channel = null;
+                //if (_channel != null)
+                //{
+                //    await _channel.ShutdownAsync();
+                //}
+                //_channel = null;
                 _tokenSource = null;
                 //FileTasks?.Clear();
             }

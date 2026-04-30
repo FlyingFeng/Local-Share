@@ -2,6 +2,7 @@
 using HandyControl.Controls;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.DataContext.Entities;
+using LocalShare.Desktop.KeepStates;
 using LocalShare.Desktop.Models.Receives;
 using LocalShare.Protocol.Define;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using static Grpc.Core.Metadata;
 
 namespace LocalShare.Desktop.FileHandler
@@ -20,6 +22,7 @@ namespace LocalShare.Desktop.FileHandler
     public class ReceiveFileHandler
     {
         private ReceiveFileTaskEntity? entity;
+        private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
 
         public string TaskId { get; set; } = string.Empty;
         public string SendNodeName { get; set; } = string.Empty;
@@ -27,6 +30,13 @@ namespace LocalShare.Desktop.FileHandler
 
         public ReceiveFileTaskModel? TaskModel { get; set; }
 
+
+        public void CancelFileTask(string taskId, ReceiveDataHolder receiveDataHolder)
+        {
+            _tokenSource?.Cancel();
+            receiveDataHolder.NotifyReceiveFileTaskRemoved(this);
+            receiveDataHolder.RemoveReceiveFileHandler(taskId);
+        }
 
         public async Task<StartFileTaskResponse> HandleStartFileTask(StartFileTaskRequest req)
         {
@@ -83,9 +93,10 @@ namespace LocalShare.Desktop.FileHandler
             return result;
         }
 
-        public async Task HandleFileTask(IAsyncStreamReader<FileChunk> request)
+        public async Task HandleFileTask(IAsyncStreamReader<FileChunk> request, ReceiveDataHolder receiveDataHolder)
         {
             FileStream? fs = null;
+            bool hasError = false;
             try
             {
                 if (entity != null)
@@ -104,36 +115,49 @@ namespace LocalShare.Desktop.FileHandler
                         }
                         fs = new FileStream(entity.FileFullName, FileMode.Create, FileAccess.Write);
                     }
-                    while (await request.MoveNext())
+                    while (await request.MoveNext(_tokenSource.Token))
                     {
-                        await fs.WriteAsync(request.Current.Data.ToByteArray());
+                        if (_tokenSource.IsCancellationRequested)
+                        {
+                            hasError = true;
+                            break;
+                        }
+                        await fs.WriteAsync(request.Current.Data.ToByteArray(), _tokenSource.Token);
                         TaskModel!.CurrentSize += request.Current.Data.Length;
                     }
-
-                    if (entity != null)
+                    if (TaskModel!.CurrentSize != TaskModel!.TotalSize)
                     {
-                        entity.State = 3;
-                        entity.LastUpdateTime = DateTime.UtcNow;
-                        TaskModel!.State = 3;
+                        hasError = true;
                     }
                 }
             }
             catch (Exception ex)
             {
-                if (entity != null)
-                {
-                    entity.State = 4;
-                    TaskModel!.State = 4;
-                }
+                hasError = true;
                 Log.Error($"HandleFileTask error, {ex.Message}\n{ex.StackTrace}");
             }
             finally
             {
                 fs?.Dispose();
+                if (hasError)
+                {
+                    entity!.State = 4;
+                    entity.LastUpdateTime = DateTime.UtcNow;
+                    TaskModel!.State = 4;
+                    receiveDataHolder.NotifyReceiveFileTaskRemoved(this);
+                    receiveDataHolder.RemoveReceiveFileHandler(TaskId);
+                    Growl.Info($"文件接收错误，文件名：{entity!.FileName}");
+                }
+                else
+                {
+                    entity!.State = 3;
+                    entity.LastUpdateTime = DateTime.UtcNow;
+                    TaskModel!.State = 3;
+                    Growl.Info($"文件接收完成，文件名：{entity!.FileName}");
+                }
                 using var dbContext = new LocalDataContext();
                 dbContext.ReceiveFileTasks.Update(entity!);
                 await dbContext.SaveChangesAsync();
-                Growl.Info($"文件接收完成，文件名：{entity!.FileName}");
             }
         }
     }

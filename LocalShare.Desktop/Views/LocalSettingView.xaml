@@ -70,6 +70,12 @@
                         </StackPanel>
                         <Rectangle Height="10"/>
                         <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding MulticastAddressSelected}"/>
+                            <Rectangle Width="10"/>
+                            <TextBlock Text="组播地址：" VerticalAlignment="Center" Width="200"/>
+                            <TextBox Text="{Binding MulticastAddress,UpdateSourceTrigger=PropertyChanged}" Validation.ErrorTemplate="{StaticResource ErrorMessageTemplate}" Width="160" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Visibility="Collapsed">
                             <CheckBox IsChecked="{Binding BrocastPortSelected}"/>
                             <Rectangle Width="10"/>
                             <TextBlock Text="广播端口：" VerticalAlignment="Center" Width="200"/>

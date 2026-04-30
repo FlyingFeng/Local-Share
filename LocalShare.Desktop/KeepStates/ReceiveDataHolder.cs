@@ -8,13 +8,14 @@ using System.Threading.Tasks;
 
 namespace LocalShare.Desktop.KeepStates
 {
-    public delegate void ReceiveFileTaskAddedEventHandler(ReceiveFileHandler handler);
+    public delegate void ReceiveFileTaskEventHandler(ReceiveFileHandler handler);
 
     public class ReceiveDataHolder
     {
         private readonly Dictionary<string, ReceiveFileHandler> _caches = new();
 
-        public event ReceiveFileTaskAddedEventHandler? OnReceiveFileTaskAdded;
+        public event ReceiveFileTaskEventHandler? OnReceiveFileTaskAdded;
+        public event ReceiveFileTaskEventHandler? OnReceiveFileTaskRemoved;
 
 
         public List<ReceiveFileHandler> GetAllHandlers()
@@ -27,6 +28,10 @@ namespace LocalShare.Desktop.KeepStates
             OnReceiveFileTaskAdded?.Invoke(handler);
         }
 
+        public void NotifyReceiveFileTaskRemoved(ReceiveFileHandler handler)
+        {
+            OnReceiveFileTaskRemoved?.Invoke(handler);
+        }
 
         public void AddReceiveFileHandler(PreStartFileTaskRequest req)
         {

@@ -158,8 +158,8 @@ namespace LocalShare.Desktop.ViewModels
         private async Task Loaded()
         {
             using var dbContext = new LocalDataContext();
-            var sendData = await dbContext.SendFileTasks.Where(s => s.State == 3 || s.State == 4).ToListAsync();
-            var receiveData = await dbContext.ReceiveFileTasks.Where(s => s.State == 3 || s.State == 4).ToListAsync();
+            var sendData = await dbContext.SendFileTasks.AsNoTracking().Where(s => s.State == 3 || s.State == 4).OrderByDescending(s => s.InitTime).ToListAsync();
+            var receiveData = await dbContext.ReceiveFileTasks.AsNoTracking().Where(s => s.State == 3 || s.State == 4).OrderByDescending(s => s.InitTime).ToListAsync();
 
             SendHistoryRecords.Clear();
             foreach (var send in sendData)

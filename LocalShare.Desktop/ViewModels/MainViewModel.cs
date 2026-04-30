@@ -26,7 +26,7 @@ namespace LocalShare.Desktop.ViewModels
 {
     public partial class MainViewModel : ObservableObject, IRecipient<MessageModel>
     {
-        private readonly UdpDiscoveryService? _udpDiscoveryService = null;
+        private readonly UdpMulticastDiscoveryService? _udpDiscoveryService = null;
         private readonly ReceiveDataHolder? _receiveDataHolder;
         private readonly IServiceProvider? _services = null;
         private readonly SolidColorBrush selectedBrushColor = new SolidColorBrush(Colors.Orange);
@@ -35,7 +35,7 @@ namespace LocalShare.Desktop.ViewModels
         private Grpc.Core.Server? _server;
         public MainViewModel() { }
 
-        public MainViewModel(UdpDiscoveryService udpDiscoveryService,
+        public MainViewModel(UdpMulticastDiscoveryService udpDiscoveryService,
             IServiceProvider services,
             ReceiveDataHolder receiveDataHolder)
         {
@@ -246,7 +246,8 @@ namespace LocalShare.Desktop.ViewModels
                 IpAddress = GlobalShared.IpAddress!;
                 _localServer = new LocalServer(_receiveDataHolder!);
                 await StartServer();
-                StartBrocast();
+                StartMulticast();
+                //StartBrocast();
             }
             catch (Exception ex)
             {
@@ -269,6 +270,9 @@ namespace LocalShare.Desktop.ViewModels
                     break;
                 case MessageType.RestartServer:
                     await StartServer();
+                    break;
+                case MessageType.RestartMulticast:
+                    StartMulticast();
                     break;
             }
         }
@@ -313,10 +317,16 @@ namespace LocalShare.Desktop.ViewModels
             }
         }
 
-        private void StartBrocast()
+        public void StartMulticast()
         {
             _udpDiscoveryService!.Start();
-            Growl.Info("广播成功");
+            Growl.Info("启动组播成功");
+        }
+
+        private void StartBrocast()
+        {
+            //_udpDiscoveryService!.Start();
+            //Growl.Info("启动广播成功");
         }
 
 

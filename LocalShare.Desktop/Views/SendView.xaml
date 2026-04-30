@@ -213,11 +213,9 @@
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <!--<Button>暂停</Button>
-                                                <Rectangle Width="10"/>-->
-                                                <Button Command="{Binding Parent.RemoveFileTaskCommand}"
-                                                        CommandParameter="{Binding FileName}"
-                                                        Style="{StaticResource ButtonDanger.Small}">移除</Button>
+                                                <Button Content="取消"
+                                                        Command="{Binding Parent.CancelFileTaskCommand}"
+                                                        CommandParameter="{Binding FileName}"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
@@ -233,7 +231,7 @@
 
         <Border Grid.Row="1">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Style="{StaticResource ButtonPrimary}" Height="30" Width="120" Command="{Binding SendFileCommand}">开始发送</Button>
+                <Button Style="{StaticResource ButtonPrimary}" Height="30" Width="120" Command="{Binding SendFileCommand}" Content="发送"/>
                 <!--<Rectangle Width="10"/>
                 <Button Height="30" Width="120">暂停发送</Button>
                 <Rectangle Width="10"/>

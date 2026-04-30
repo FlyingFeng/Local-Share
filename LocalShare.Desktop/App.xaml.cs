@@ -83,7 +83,7 @@ namespace LocalShare.Desktop
                     {
                         services.AddSingleton<MainViewModel>();
                         services.AddSingleton<MainWindow>();
-                        services.AddSingleton<UdpDiscoveryService>();
+                        services.AddSingleton<UdpMulticastDiscoveryService>();
                         services.AddSingleton<SendDataHolder>();
                         services.AddSingleton<ReceiveDataHolder>();
 
@@ -168,7 +168,7 @@ namespace LocalShare.Desktop
             if (_host != null)
             {
                 // 停止 UDP 发现服务
-                var discovery = _host.Services.GetRequiredService<UdpDiscoveryService>();
+                var discovery = _host.Services.GetRequiredService<UdpMulticastDiscoveryService>();
                 discovery.Dispose();
 
                 await _host.StopAsync();
@@ -198,6 +198,21 @@ namespace LocalShare.Desktop
             }
 
             var list = await dbContext.LocalSettings.ToListAsync();
+
+            var multicastAddressSetting = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeyMulticastAddress);
+            if (multicastAddressSetting == null)
+            {
+                multicastAddressSetting = new DataContext.Entities.LocalSettingEntity
+                {
+                    Key = LocalSettingKey.KeyMulticastAddress,
+                    Value = GlobalShared.MulticastAddress
+                };
+                await dbContext.LocalSettings.AddAsync(multicastAddressSetting);
+            }
+            else
+            {
+                GlobalShared.MulticastAddress = multicastAddressSetting.Value;
+            }
 
             var brocastPortSetting = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeyBrocastPort);
             if (brocastPortSetting == null)

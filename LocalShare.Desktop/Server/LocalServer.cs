@@ -20,6 +20,27 @@ namespace LocalShare.Desktop.Server
             _receiveDataHolder = receiveDataHolder;
         }
 
+
+        public override Task<CommonResponse> OperateFileTask(FileOperationRequest request, ServerCallContext context)
+        {
+            if (request.Sender == 0)
+            {
+                var handller = _receiveDataHolder.GetReceiveFileHandler(request.TaskId);
+                if (handller != null)
+                {
+                    handller.CancelFileTask(request.TaskId, _receiveDataHolder);
+                }
+            }
+            else if (request.Sender == 1)
+            {
+
+            }
+            return Task.FromResult(new CommonResponse
+            {
+                Success = true
+            });
+        }
+
         public override Task<PreStartFileTaskResponse> PreStartFileTask(PreStartFileTaskRequest request, ServerCallContext context)
         {
             _receiveDataHolder.AddReceiveFileHandler(request);
@@ -54,7 +75,7 @@ namespace LocalShare.Desktop.Server
                 var handler = _receiveDataHolder.GetReceiveFileHandler(entity.Value);
                 if (handler != null)
                 {
-                    await handler.HandleFileTask(requestStream);
+                    await handler.HandleFileTask(requestStream, _receiveDataHolder);
                     //_receiveDataHolder.RemoveReceiveFileHandler(entity.Value);
                 }
             }

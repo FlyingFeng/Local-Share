@@ -9,7 +9,7 @@ namespace LocalShare.Desktop.Models.Sends
     internal enum SendFileTaskState
     {
         WaitForSchedule,
-        Sending,
+        Transferring,
         Stop,
         Finish,
         Error

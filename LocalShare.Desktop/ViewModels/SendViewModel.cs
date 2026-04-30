@@ -28,9 +28,9 @@ namespace LocalShare.Desktop.ViewModels
     {
         public SendViewModel() { }
         //private readonly LocalDataContext? _dbContext;
-        private readonly UdpDiscoveryService? _udpDiscoveryService;
+        private readonly UdpMulticastDiscoveryService? _udpDiscoveryService;
         private readonly IServiceProvider? _serviceProvider;
-        public SendViewModel(UdpDiscoveryService udpDiscoveryService,
+        public SendViewModel(UdpMulticastDiscoveryService udpDiscoveryService,
             SendDataHolder homeDataHolder,
             IServiceProvider serviceProvider)
         {
@@ -203,7 +203,7 @@ namespace LocalShare.Desktop.ViewModels
                         {
                             try
                             {
-                                var md5 = await FileHashHelper.ComputeMd5Async(info.FullName);
+                                var md5 = string.Empty; //await FileHashHelper.ComputeMd5Async(info.FullName);
                                 var matchedEntity = fileEntities.FirstOrDefault(s => s.FileFullPath == info.FullName);
                                 if (matchedEntity == null)
                                 {
@@ -274,7 +274,7 @@ namespace LocalShare.Desktop.ViewModels
                         try
                         {
                             var info = new FileInfo(file);
-                            var md5 = await FileHashHelper.ComputeMd5Async(info.FullName);
+                            var md5 = string.Empty; //await FileHashHelper.ComputeMd5Async(info.FullName);
                             var matchedEntity = fileEntities.FirstOrDefault(s => s.FileFullPath == file);
                             if (matchedEntity == null)
                             {
@@ -424,7 +424,8 @@ namespace LocalShare.Desktop.ViewModels
                             TotalSize = eachFile.FileSize,
                             State = 0,
                             FullFileName = eachFile.FilePath,
-                            Parent = eachNode
+                            Parent = eachNode,
+                            TaskId = Guid.NewGuid().ToString()
                         });
                     }
                 }

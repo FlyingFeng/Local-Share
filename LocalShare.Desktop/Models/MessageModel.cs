@@ -13,7 +13,8 @@ namespace LocalShare.Desktop.Models
         CloseMask,
         RestartServer,
         RestartBrocast,
-        RemoveCurrentNodeFinishedSendFileTask
+        RemoveCurrentNodeFinishedSendFileTask,
+        RestartMulticast
     }
 
 

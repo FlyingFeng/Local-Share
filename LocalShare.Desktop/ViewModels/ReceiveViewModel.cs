@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using LocalShare.Desktop.KeepStates;
 using LocalShare.Desktop.Models.Receives;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -23,10 +24,33 @@ namespace LocalShare.Desktop.ViewModels
         public ReceiveViewModel(ReceiveDataHolder? receiveDataHolder)
         {
             _receiveDataHolder = receiveDataHolder;
-            _receiveDataHolder!.OnReceiveFileTaskAdded += _receiveDataHolder_OnReceiveFileTaskAdded;
+            _receiveDataHolder!.OnReceiveFileTaskAdded += ReceiveDataHolder_OnReceiveFileTaskAdded;
+            _receiveDataHolder!.OnReceiveFileTaskRemoved += ReceiveDataHolder_OnReceiveFileTaskRemoved;
         }
 
-        private void _receiveDataHolder_OnReceiveFileTaskAdded(FileHandler.ReceiveFileHandler handler)
+        private void ReceiveDataHolder_OnReceiveFileTaskRemoved(FileHandler.ReceiveFileHandler handler)
+        {
+            try
+            {
+                if (handler != null && handler.TaskModel != null)
+                {
+                    var matched = CacheData.FirstOrDefault(s => s.TaskId == handler.TaskModel.TaskId);
+                    if (matched != null)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            CacheData.Remove(matched);
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"ReceiveDataHolder_OnReceiveFileTaskRemoved error, {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
+        private void ReceiveDataHolder_OnReceiveFileTaskAdded(FileHandler.ReceiveFileHandler handler)
         {
             try
             {
@@ -43,10 +67,10 @@ namespace LocalShare.Desktop.ViewModels
 
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Log.Error($"ReceiveDataHolder_OnReceiveFileTaskAdded error, {ex.Message}\n{ex.StackTrace}");
 
-                throw;
             }
 
         }
@@ -79,13 +103,15 @@ namespace LocalShare.Desktop.ViewModels
                     matched.State == 4))
                 {
                     CacheData.Remove(matched);
+                    _receiveDataHolder!.RemoveReceiveFileHandler(taskId);
                 }
             }
         }
 
         public void Close()
         {
-            _receiveDataHolder!.OnReceiveFileTaskAdded -= _receiveDataHolder_OnReceiveFileTaskAdded;
+            _receiveDataHolder!.OnReceiveFileTaskAdded -= ReceiveDataHolder_OnReceiveFileTaskAdded;
+            _receiveDataHolder!.OnReceiveFileTaskRemoved -= ReceiveDataHolder_OnReceiveFileTaskRemoved;
         }
     }
 }

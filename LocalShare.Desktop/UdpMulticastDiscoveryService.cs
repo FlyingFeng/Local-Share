@@ -13,9 +13,11 @@ using System.Threading.Tasks;
 
 namespace LocalShare.Desktop
 {
-    public class UdpDiscoveryService : IDisposable
+    public class UdpMulticastDiscoveryService : IDisposable
     {
         private const int BroadcastInterval = 3000; // 3秒
+        private const string MulticastGroup = "239.255.255.250"; // 组播地址
+        private const int MulticastTtl = 32; // 组播 TTL
 
         private UdpClient? _listener;
         private CancellationTokenSource? _cts;
@@ -24,7 +26,6 @@ namespace LocalShare.Desktop
 
         // 发现新客户端时触发
         public event Action<NodeModel>? ClientDiscovered;
-
 
         public List<NodeModel> GetNodeModelCaches()
         {
@@ -37,40 +38,43 @@ namespace LocalShare.Desktop
         }
 
         /// <summary>
-        /// 启动广播和监听
+        /// 启动组播发送和监听
         /// </summary>
         public void Start()
         {
             Dispose();
+
             _listener = new UdpClient();
-            // 允许多个程序绑定同一端口（同机多实例时不报错）
             _listener.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             _listener.Client.Bind(new IPEndPoint(IPAddress.Any, GlobalShared.BroadcastPort));
-            _cts = new CancellationTokenSource();
 
-            Task.Run(() => BroadcastLoopAsync(_cts.Token));
+            // 加入组播组
+            _listener.JoinMulticastGroup(IPAddress.Parse(MulticastGroup));
+
+            _cts = new CancellationTokenSource();
+            Task.Run(() => MulticastSendLoopAsync(_cts.Token));
             Task.Run(() => ListenLoopAsync(_cts.Token));
         }
 
-        /// <summary>
-        /// 停止服务
-        /// </summary>
-        //public void Stop() => _cts.Cancel();
+        // ── 组播发送循环 ─────────────────────────────────────────────
 
-        // ── 广播循环 ────────────────────────────────────────────────
-
-        private async Task BroadcastLoopAsync(CancellationToken ct)
+        private async Task MulticastSendLoopAsync(CancellationToken ct)
         {
             using var sender = new UdpClient();
-            sender.EnableBroadcast = true;
+            sender.MulticastLoopback = true; // 本机也能收到（同机多实例时有用，可按需改为 false）
+            sender.Client.SetSocketOption(
+                SocketOptionLevel.IP,
+                SocketOptionName.MulticastTimeToLive,
+                MulticastTtl);
 
-            var broadcast = new IPEndPoint(IPAddress.Broadcast, GlobalShared.BroadcastPort);
+            var multicastEndPoint = new IPEndPoint(IPAddress.Parse(MulticastGroup), GlobalShared.BroadcastPort);
 
             while (!ct.IsCancellationRequested)
             {
                 try
                 {
                     await Task.Delay(BroadcastInterval, ct);
+
                     if (!string.IsNullOrEmpty(GlobalShared.IpAddress) &&
                         !string.IsNullOrEmpty(GlobalShared.NodeName))
                     {
@@ -83,18 +87,18 @@ namespace LocalShare.Desktop
                             Time = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                         };
                         var data = nodeModel.ToByteArray();
-                        await sender.SendAsync(data, data.Length, broadcast);
+                        await sender.SendAsync(data, data.Length, multicastEndPoint);
                     }
                 }
                 catch (OperationCanceledException)
                 {
-                    Log.Warning($"退出广播");
+                    Log.Warning("退出组播发送");
                     break;
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning($"[广播异常] {ex.Message}");
-                    await Task.Delay(1000, ct); // 出错后等 1 秒重试
+                    Log.Warning($"[组播发送异常] {ex.Message}");
+                    await Task.Delay(1000, ct);
                 }
             }
         }
@@ -112,7 +116,7 @@ namespace LocalShare.Desktop
                 }
                 catch (OperationCanceledException)
                 {
-                    Log.Warning($"退出广播监听");
+                    Log.Warning("退出组播监听");
                     break;
                 }
                 catch (Exception ex)
@@ -129,25 +133,31 @@ namespace LocalShare.Desktop
             var data = NodeModel.Parser.ParseFrom(result.Buffer);
             if (data != null &&
                 (data.IpAddress != GlobalShared.IpAddress ||
-                data.Port != GlobalShared.ServerPort ||
-                data.NodeName != GlobalShared.NodeName))
+                 data.Port != GlobalShared.ServerPort ||
+                 data.NodeName != GlobalShared.NodeName))
             {
                 nodeCaches.AddOrUpdate($"{data.NodeName}-{data.IpAddress}-{data.Port}", data, (k, v) => data);
                 ClientDiscovered?.Invoke(data);
             }
         }
 
-        // ── 工具方法 ─────────────────────────────────────────────────
+        // ── 释放资源 ─────────────────────────────────────────────────
+
         public void Dispose()
         {
             try
             {
                 _cts?.Cancel();
+
+                // 离开组播组后再释放，避免残留组播订阅
+                try { _listener?.DropMulticastGroup(IPAddress.Parse(MulticastGroup)); }
+                catch { /* 忽略离组失败 */ }
+
                 _listener?.Dispose();
             }
             catch (Exception ex)
             {
-                Log.Error($"UdpDiscoveryServic.Dispose error, {ex.Message}\n{ex.StackTrace}");
+                Log.Error($"UdpDiscoveryService.Dispose error, {ex.Message}\n{ex.StackTrace}");
             }
             finally
             {

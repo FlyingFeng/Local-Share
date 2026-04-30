@@ -17,32 +17,35 @@ namespace LocalShare.Desktop.FileHandler
 {
     public class SendFileHandler
     {
-        private readonly string _receiveIpAddress;
         private readonly string _receiveNodeName;
         private readonly Channel _channel;
         private readonly LocalShareService.LocalShareServiceClient _client;
-        //private readonly IServiceProvider _serviceProvider;
 
         private readonly int eachReadBytes = 1024 * 256; //256kb
         private readonly LocalNode _node;
+        private readonly CancellationTokenSource _tokenSource;
 
         public SendFileHandler(Channel channel,
-            string receiveIpAddress,
             string receiveNodeName,
             LocalNode node)
         {
             _node = node;
             _channel = channel;
             _client = new LocalShareService.LocalShareServiceClient(_channel);
-            _receiveIpAddress = receiveIpAddress;
             _receiveNodeName = receiveNodeName;
+            _tokenSource = new CancellationTokenSource();
+        }
+
+        public void CancelFileTask()
+        {
+            _tokenSource?.Cancel();
         }
 
 
-        public async Task SendFile(FileTaskModel model)
+        public async Task SendFile(FileTaskModel model, SendFileTaskEntity entity)
         {
             using var dbContext = new LocalDataContext();
-            SendFileTaskEntity? entity = null;
+            bool flag = false;
             try
             {
                 if (File.Exists(model.FullFileName))
@@ -50,25 +53,32 @@ namespace LocalShare.Desktop.FileHandler
                     FileInfo fi = new FileInfo(model.FullFileName);
                     await PreStartFileTask(model);
                     var response = await StartFileTask(fi, model);
-                    await Task.Delay(1000);
+                    await Task.Delay(1000, _tokenSource.Token);
                     await ReadAndSendFile(fi, response, model);
+                    await Task.Delay(2000, _tokenSource.Token);
                     await _node.FinishSendFile(model);
+                    flag = true;
                 }
             }
             catch (Exception ex)
             {
-                if (entity != null)
-                {
-                    entity.State = 4;
-                    dbContext!.SendFileTasks.Update(entity);
-                    await dbContext!.SaveChangesAsync();
-                }
-
+                flag = false;
+                model.State = 4;
                 Log.Error($"SendFileHandler.SendFile error, {ex.Message}\n{ex.StackTrace}");
             }
             finally
             {
-
+                entity.LastUpdateTime = DateTime.UtcNow;
+                if (flag)
+                {
+                    entity.State = 3;
+                }
+                else
+                {
+                    entity.State = 4;
+                }
+                dbContext.SendFileTasks.Update(entity);
+                await dbContext.SaveChangesAsync();
             }
         }
 
@@ -76,6 +86,7 @@ namespace LocalShare.Desktop.FileHandler
         private async Task ReadAndSendFile(FileInfo fi, StartFileTaskResponse fileTask, FileTaskModel model)
         {
             var buffer = ArrayPool<byte>.Shared.Rent(eachReadBytes);
+            AsyncClientStreamingCall<FileChunk, EmptyMessage>? request = null;
             try
             {
                 Metadata header = new Metadata
@@ -83,14 +94,18 @@ namespace LocalShare.Desktop.FileHandler
                     { "task_id", fileTask.TaskId }
                 };
 
-                var request = _client.SendFile(header);
+                request = _client.SendFile(header, cancellationToken: _tokenSource.Token);
                 using FileStream fs = new FileStream(fi.FullName, FileMode.Open, FileAccess.Read);
                 fs.Position = fileTask.StartByteIndex;
                 model.CurrentSize += fileTask.StartByteIndex;
                 while (true)
                 {
-                    int read = await fs.ReadAsync(buffer);
+                    int read = await fs.ReadAsync(buffer, cancellationToken: _tokenSource.Token);
                     if (read <= 0)
+                    {
+                        break;
+                    }
+                    if (_tokenSource.IsCancellationRequested)
                     {
                         break;
                     }
@@ -101,9 +116,7 @@ namespace LocalShare.Desktop.FileHandler
                     await request.RequestStream.WriteAsync(chunkData);
                     model.CurrentSize += read;
                 }
-                await Task.Delay(3000);
-                await request.RequestStream.CompleteAsync();
-                request.Dispose();
+                //await Task.Delay(3000, _tokenSource.Token);
             }
             catch (Exception)
             {
@@ -112,6 +125,11 @@ namespace LocalShare.Desktop.FileHandler
             }
             finally
             {
+                if (request != null)
+                {
+                    await request.RequestStream.CompleteAsync();
+                    request.Dispose();
+                }
                 ArrayPool<byte>.Shared.Return(buffer);
             }
         }
@@ -125,7 +143,7 @@ namespace LocalShare.Desktop.FileHandler
                 TaskId = model.TaskId,
                 SendNodeIp = GlobalShared.IpAddress!
             };
-            var response = await _client.PreStartFileTaskAsync(request);
+            var response = await _client.PreStartFileTaskAsync(request, cancellationToken: _tokenSource.Token);
             return response.Status;
         }
 
@@ -136,11 +154,6 @@ namespace LocalShare.Desktop.FileHandler
             if (fi.Directory != null && model.IsOpenFromDir)
             {
                 relativeName = fi.FullName.Split(fi.Directory.Root.Name)[1];
-            }
-            int totalChunk = (int)(fi.Length / eachReadBytes);
-            if (fi.Length % eachReadBytes != 0)
-            {
-                totalChunk += 1;
             }
 
             var request = new StartFileTaskRequest
@@ -158,12 +171,9 @@ namespace LocalShare.Desktop.FileHandler
                     TaskId = model.TaskId
                 }
             };
-            var response = await _client.StartFileTaskAsync(request);
+            var response = await _client.StartFileTaskAsync(request, cancellationToken: _tokenSource.Token);
             return response;
         }
-
-
-
 
 
     }

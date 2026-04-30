@@ -41,6 +41,14 @@ namespace LocalShare.Desktop.ViewModels
         private bool sameNodeMaxSendFileCountSelected;
         [ObservableProperty]
         private bool downloadPathSelected;
+        [ObservableProperty]
+        private bool multicastAddressSelected = false;
+
+        [ObservableProperty]
+        [NotifyDataErrorInfo]
+        [RegularExpression(@"^(22[4-9]|23[0-9])\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]\d|\d)\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]\d|\d)\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]\d|\d)", ErrorMessage = "【组播地址】必须是合法的IP地址")]
+        [Required(ErrorMessage = "【组播地址】不能为空")]
+        private string multicastAddress = string.Empty;
 
         [ObservableProperty]
         [NotifyDataErrorInfo]
@@ -133,6 +141,17 @@ namespace LocalShare.Desktop.ViewModels
                     }
                     GlobalShared.DownloadPath = DownloadPath;
                 }
+                if (MulticastAddressSelected)
+                {
+                    if (!string.IsNullOrEmpty(MulticastAddress) && GlobalShared.MulticastAddress != MulticastAddress)
+                    {
+                        GlobalShared.MulticastAddress = MulticastAddress;
+                    }
+                    WeakReferenceMessenger.Default.Send(new MessageModel
+                    {
+                        MessageType = MessageType.RestartMulticast
+                    });
+                }
 
                 Growl.Info("应用成功");
             }
@@ -170,6 +189,11 @@ namespace LocalShare.Desktop.ViewModels
                 {
                     downloadPathEntity.Value = DownloadPath;
                 }
+                var multicastAddressEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyMulticastAddress);
+                if (multicastAddressEntity != null)
+                {
+                    multicastAddressEntity.Value = MulticastAddress;
+                }
                 await dbContext.SaveChangesAsync();
                 Growl.Info("保存成功");
             }
@@ -183,6 +207,7 @@ namespace LocalShare.Desktop.ViewModels
             SameNodeMaxSendFileCount = GlobalShared.SameNodeMaxSendFileCount.ToString();
             SendNodeMaxCount = GlobalShared.SendNodeMaxCount.ToString();
             DownloadPath = GlobalShared.DownloadPath!;
+            MulticastAddress = GlobalShared.MulticastAddress!;
         }
 
 
