@@ -21,6 +21,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using MessageBox = HandyControl.Controls.MessageBox;
 
 namespace LocalShare.Desktop.ViewModels
 {
@@ -88,6 +89,7 @@ namespace LocalShare.Desktop.ViewModels
             catch (Exception ex)
             {
                 Log.Error($"RandomNodeName error, {ex.Message}\n{ex.StackTrace}");
+                MessageBox.Show($"产生随机名称失败\n{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -121,6 +123,8 @@ namespace LocalShare.Desktop.ViewModels
             catch (Exception ex)
             {
                 Log.Error($"SendViewModel.UpdateNode error, {ex.Message}\n{ex.StackTrace}");
+                MessageBox.Show($"保存失败\n{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+
             }
         }
 

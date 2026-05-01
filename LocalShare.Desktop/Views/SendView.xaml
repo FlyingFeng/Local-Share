@@ -134,8 +134,6 @@
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <Button Style="{StaticResource ButtonPrimary}" Width="88" Height="32" Command="{Binding AddLocalNodeCommand}">添加节点</Button>
-                        <Rectangle Width="10"/>
-                        <Button Style="{StaticResource ButtonDanger}" Width="88" Height="32" Command="{Binding RemoveSelectedNodeCommand}">移除选中</Button>
                     </StackPanel>
 
                     <ListView x:Name="ListNodes" Grid.Row="1" SelectedIndex="{Binding SelectedNodeIndex}" ItemsSource="{Binding HomeDataHolder.Nodes}" d:ItemsSource="{Binding Nodes}" d:DataContext="{d:DesignInstance Type=design:LocalNodeDesignData,IsDesignTimeCreatable=True}">

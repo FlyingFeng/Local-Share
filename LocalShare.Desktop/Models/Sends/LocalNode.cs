@@ -192,21 +192,28 @@ namespace LocalShare.Desktop.Models.Sends
 
         public async Task FinishSendFile(FileTaskModel model)
         {
-            var matched = FileTasks!.FirstOrDefault(s => s.FileName == model.FileName);
-            if (matched != null)
+            try
             {
-                matched.State = 3;
-                //FileTasks.Remove(matched);
-                using var dbContext = new LocalDataContext();
-                var entity = dbContext.SendFileTasks.FirstOrDefault(s => s.TaskId == model.TaskId);
-                if (entity != null)
+                var matched = FileTasks!.FirstOrDefault(s => s.FileName == model.FileName);
+                if (matched != null)
                 {
-                    entity.State = 3;
-                    entity.LastUpdateTime = DateTime.UtcNow;
-                    await dbContext.SaveChangesAsync();
+                    matched.State = 3;
+                    //FileTasks.Remove(matched);
+                    using var dbContext = new LocalDataContext();
+                    var entity = dbContext.SendFileTasks.FirstOrDefault(s => s.TaskId == model.TaskId);
+                    if (entity != null)
+                    {
+                        entity.State = 3;
+                        entity.LastUpdateTime = DateTime.UtcNow;
+                        await dbContext.SaveChangesAsync();
+                    }
+                    sendFileTasks.Remove(model.TaskId);
+                    Growl.Info($"文件发送完成，文件名：{model.FileName}");
                 }
-                sendFileTasks.Remove(model.TaskId);
-                Growl.Info($"文件发送完成，文件名：{model.FileName}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"FinishSendFile error, {ex.Message}\n{ex.StackTrace}");
             }
         }
 

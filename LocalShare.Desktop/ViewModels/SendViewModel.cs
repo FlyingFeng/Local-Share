@@ -21,24 +21,21 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
+using MessageBox = HandyControl.Controls.MessageBox;
 
 namespace LocalShare.Desktop.ViewModels
 {
     public partial class SendViewModel : ObservableObject, IClosable, IRecipient<MessageModel>
     {
         public SendViewModel() { }
-        //private readonly LocalDataContext? _dbContext;
         private readonly UdpMulticastDiscoveryService? _udpDiscoveryService;
-        private readonly IServiceProvider? _serviceProvider;
         public SendViewModel(UdpMulticastDiscoveryService udpDiscoveryService,
-            SendDataHolder homeDataHolder,
-            IServiceProvider serviceProvider)
+            SendDataHolder homeDataHolder
+            )
         {
-            //_dbContext = localDataContext;
             _udpDiscoveryService = udpDiscoveryService;
             _udpDiscoveryService.ClientDiscovered += UdpDiscoveryService_ClientDiscovered;
             HomeDataHolder = homeDataHolder;
-            _serviceProvider = serviceProvider;
             WeakReferenceMessenger.Default.Register<MessageModel>(this);
         }
 
@@ -56,29 +53,36 @@ namespace LocalShare.Desktop.ViewModels
         [RelayCommand]
         private async Task AddLocalNode()
         {
-            AddLocalNodeWindow window = new AddLocalNodeWindow();
-            var flag = window.ShowDialog();
-            if (flag == true)
+            try
             {
-                if (window.NodeInfo != null)
+                AddLocalNodeWindow window = new AddLocalNodeWindow();
+                var flag = window.ShowDialog();
+                if (flag == true)
                 {
-                    var matched = HomeDataHolder!.Nodes.FirstOrDefault(s => s.IpAddress == window.NodeInfo.IpAddress && s.Port == window.NodeInfo.Port);
-                    if (matched == null)
+                    if (window.NodeInfo != null)
                     {
-                        var node = new LocalNode()
+                        var matched = HomeDataHolder!.GetNode(ipAddress: window.NodeInfo.IpAddress, port: window.NodeInfo.Port);//HomeDataHolder!.Nodes.FirstOrDefault(s => s.IpAddress == window.NodeInfo.IpAddress && s.Port == window.NodeInfo.Port);
+                        if (matched == null)
                         {
-                            InBlackList = false,
-                            InWhiteList = false,
-                            IsSelected = false,
-                            NodeName = window.NodeInfo.NodeName,
-                            Port = window.NodeInfo.Port,
-                            IpAddress = window.NodeInfo.IpAddress,
-                            LastSeenTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-                        };
-                        await node.InitAsync();
-                        HomeDataHolder!.Nodes.Add(node);
+                            var node = new LocalNode()
+                            {
+                                InBlackList = false,
+                                InWhiteList = false,
+                                IsSelected = false,
+                                NodeName = window.NodeInfo.NodeName,
+                                Port = window.NodeInfo.Port,
+                                IpAddress = window.NodeInfo.IpAddress,
+                                LastSeenTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                            };
+                            await node.InitAsync();
+                            HomeDataHolder!.Nodes.Add(node);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"添加节点失败\n{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -111,7 +115,7 @@ namespace LocalShare.Desktop.ViewModels
                     var nodeCaches = _udpDiscoveryService?.GetNodeModelCaches() ?? [];
                     nodeCaches.ForEach(async e =>
                     {
-                        var matched = HomeDataHolder.Nodes.FirstOrDefault(s => e.NodeName == s.NodeName);
+                        var matched = HomeDataHolder!.GetNode(nodeName: e.NodeName); //HomeDataHolder.Nodes.FirstOrDefault(s => e.NodeName == s.NodeName);
                         if (matched == null)
                         {
                             var node = new LocalNode()
@@ -124,8 +128,10 @@ namespace LocalShare.Desktop.ViewModels
                                 Port = e.Port,
                                 LastSeenTime = e.Time
                             };
+                            HomeDataHolder!.AddNode(node);
                             await node.InitAsync();
-                            HomeDataHolder.Nodes.Add(node);
+                            //await node.InitAsync();
+                            //HomeDataHolder.Nodes.Add(node);
                         }
                     });
 
@@ -145,12 +151,6 @@ namespace LocalShare.Desktop.ViewModels
             {
                 Log.Error($"SendViewModel.Loaded error, {ex.Message}\n{ex.StackTrace}");
             }
-        }
-
-        [RelayCommand]
-        private void RemoveSelectedNode()
-        {
-            Growl.Info("test");
         }
 
         [RelayCommand]
@@ -474,33 +474,47 @@ namespace LocalShare.Desktop.ViewModels
             }
         }
 
-
+        private bool isHandle = false;
         private async void UdpDiscoveryService_ClientDiscovered(Protocol.Define.NodeModel obj)
         {
-            var matched = HomeDataHolder!.Nodes.FirstOrDefault(s => s.IpAddress == obj.IpAddress && s.Port == obj.Port);
-            if (matched == null)
+            try
             {
-                await Application.Current.Dispatcher.InvokeAsync(async () =>
-                 {
-                     var node = new LocalNode()
-                     {
-                         InBlackList = false,
-                         InWhiteList = false,
-                         IsSelected = false,
-                         NodeName = obj.NodeName,
-                         Port = obj.Port,
-                         IpAddress = obj.IpAddress,
-                         LastSeenTime = obj.Time
-                     };
-                     await node.InitAsync();
-                     HomeDataHolder!.Nodes.Add(node);
-                 });
+                if (isHandle)
+                {
+                    return;
+                }
+                isHandle = true;
+
+                var matched = HomeDataHolder!.GetNode(obj.IpAddress, obj.Port); //HomeDataHolder!.Nodes.FirstOrDefault(s => s.IpAddress == obj.IpAddress && s.Port == obj.Port);
+                if (matched == null)
+                {
+                    var node = new LocalNode()
+                    {
+                        InBlackList = false,
+                        InWhiteList = false,
+                        IsSelected = false,
+                        NodeName = obj.NodeName,
+                        Port = obj.Port,
+                        IpAddress = obj.IpAddress,
+                        LastSeenTime = obj.Time
+                    };
+                    HomeDataHolder!.AddNode(node);
+                    await node.InitAsync();
+                }
+                else
+                {
+                    matched.NodeName = obj.NodeName;
+                    matched.LastSeenTime = obj.Time;
+                    await matched.UpdateNodeStateAsync();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                matched.NodeName = obj.NodeName;
-                matched.LastSeenTime = obj.Time;
-                await matched.UpdateNodeStateAsync();
+                Log.Error($"UdpDiscoveryService_ClientDiscovered error, {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                isHandle = false;
             }
         }
 

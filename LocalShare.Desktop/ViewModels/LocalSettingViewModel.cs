@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using HandyControl.Controls;
+using HandyControl.Data;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.Models;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Forms;
 
 namespace LocalShare.Desktop.ViewModels
 {
@@ -174,45 +177,52 @@ namespace LocalShare.Desktop.ViewModels
         {
             if (ValidateAll())
             {
-                using var dbContext = new LocalDataContext();
-                var settings = await dbContext.LocalSettings.ToListAsync();
-                var serverPortEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyServerPort);
-                if (serverPortEntity != null)
+                try
                 {
-                    serverPortEntity.Value = ServerPort;
+                    using var dbContext = new LocalDataContext();
+                    var settings = await dbContext.LocalSettings.ToListAsync();
+                    var serverPortEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyServerPort);
+                    if (serverPortEntity != null)
+                    {
+                        serverPortEntity.Value = ServerPort;
+                    }
+                    var brocastPortEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyBrocastPort);
+                    if (brocastPortEntity != null)
+                    {
+                        brocastPortEntity.Value = BrocastPort;
+                    }
+                    var sendFileNodeCountEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeySendNodeMaxCount);
+                    if (sendFileNodeCountEntity != null)
+                    {
+                        sendFileNodeCountEntity.Value = SendNodeMaxCount;
+                    }
+                    var sameNodeSendFileCountEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeySameNodeMaxSendFileCount);
+                    if (sameNodeSendFileCountEntity != null)
+                    {
+                        sameNodeSendFileCountEntity.Value = SameNodeMaxSendFileCount;
+                    }
+                    var downloadPathEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyDownloadPath);
+                    if (downloadPathEntity != null)
+                    {
+                        downloadPathEntity.Value = DownloadPath;
+                    }
+                    var multicastAddressEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyMulticastAddress);
+                    if (multicastAddressEntity != null)
+                    {
+                        multicastAddressEntity.Value = MulticastAddress;
+                    }
+                    var transferSpeedEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyTransferSpeed);
+                    if (transferSpeedEntity != null)
+                    {
+                        transferSpeedEntity.Value = TransferSpeed;
+                    }
+                    await dbContext.SaveChangesAsync();
+                    Growl.Info("保存成功");
                 }
-                var brocastPortEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyBrocastPort);
-                if (brocastPortEntity != null)
+                catch (Exception ex)
                 {
-                    brocastPortEntity.Value = BrocastPort;
+                    HandyControl.Controls.MessageBox.Show($"保存失败\n{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-                var sendFileNodeCountEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeySendNodeMaxCount);
-                if (sendFileNodeCountEntity != null)
-                {
-                    sendFileNodeCountEntity.Value = SendNodeMaxCount;
-                }
-                var sameNodeSendFileCountEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeySameNodeMaxSendFileCount);
-                if (sameNodeSendFileCountEntity != null)
-                {
-                    sameNodeSendFileCountEntity.Value = SameNodeMaxSendFileCount;
-                }
-                var downloadPathEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyDownloadPath);
-                if (downloadPathEntity != null)
-                {
-                    downloadPathEntity.Value = DownloadPath;
-                }
-                var multicastAddressEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyMulticastAddress);
-                if (multicastAddressEntity != null)
-                {
-                    multicastAddressEntity.Value = MulticastAddress;
-                }
-                var transferSpeedEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyTransferSpeed);
-                if (transferSpeedEntity != null)
-                {
-                    transferSpeedEntity.Value = TransferSpeed;
-                }
-                await dbContext.SaveChangesAsync();
-                Growl.Info("保存成功");
             }
         }
 

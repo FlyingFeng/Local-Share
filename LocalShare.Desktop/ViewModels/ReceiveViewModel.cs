@@ -70,7 +70,6 @@ namespace LocalShare.Desktop.ViewModels
             catch (Exception ex)
             {
                 Log.Error($"ReceiveDataHolder_OnReceiveFileTaskAdded error, {ex.Message}\n{ex.StackTrace}");
-
             }
 
         }
