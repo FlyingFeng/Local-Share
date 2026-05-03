@@ -29,6 +29,7 @@ namespace LocalShare.Desktop.ViewModels
     {
         private readonly UdpMulticastDiscoveryService? _udpDiscoveryService = null;
         private readonly ReceiveDataHolder? _receiveDataHolder;
+        private readonly SendDataHolder? _sendDataHolder;
         private readonly IServiceProvider? _services = null;
         private readonly SolidColorBrush selectedBrushColor = new SolidColorBrush(Colors.Orange);
         private readonly SolidColorBrush unSelectedBrushColor = new SolidColorBrush(Colors.White);
@@ -38,10 +39,12 @@ namespace LocalShare.Desktop.ViewModels
 
         public MainViewModel(UdpMulticastDiscoveryService udpDiscoveryService,
             IServiceProvider services,
+            SendDataHolder sendDataHolder,
             ReceiveDataHolder receiveDataHolder)
         {
             _services = services;
             _udpDiscoveryService = udpDiscoveryService;
+            _sendDataHolder = sendDataHolder;
             _receiveDataHolder = receiveDataHolder;
             WeakReferenceMessenger.Default.Register<MessageModel>(this);
             SendViewAction();
@@ -248,7 +251,7 @@ namespace LocalShare.Desktop.ViewModels
             {
                 NodeName = GlobalShared.NodeName!;
                 IpAddress = GlobalShared.IpAddress!;
-                _localServer = new LocalServer(_receiveDataHolder!);
+                _localServer = new LocalServer(_receiveDataHolder!, _sendDataHolder!);
                 await StartServer();
                 StartMulticast();
                 //StartBrocast();

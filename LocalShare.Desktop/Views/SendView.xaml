@@ -32,9 +32,9 @@
 
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="3*"/>
             </Grid.ColumnDefinitions>
 
             <GroupBox Header="文件列表" Margin="1">
@@ -174,6 +174,16 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                                 <GridViewColumn Header="状态" Width="80" DisplayMemberBinding="{Binding State,Converter={StaticResource NodeStateConverter}}"/>
+                                <GridViewColumn Header="操作" Width="80">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <hc:Badge Status="Processing" Background="Red" ShowBadge="{Binding ShowBadge}">
+                                                <Button Style="{StaticResource ButtonInfo.Small}"
+                                                        Command="{Binding ShowChatWindowCommand}">对话</Button>
+                                            </hc:Badge>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
                             </GridView>
                         </ListView.View>
                     </ListView>

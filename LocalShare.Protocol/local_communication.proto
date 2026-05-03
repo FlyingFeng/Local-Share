@@ -26,6 +26,17 @@ message CommonResponse{
 	string message = 2;
 }
 
+
+message ChatRequest{
+	string chat_id          = 1;
+	string send_node_ip     = 2;
+	string send_node_name   = 3;
+	string receive_node_name   = 4;
+	string receive_node_ip     = 5;
+	string message             = 6;
+	int64 time                 = 7;
+}
+
 message FileOperationRequest{
 	string send_node_name        = 1;
 	string task_id               = 2;
@@ -97,4 +108,5 @@ service LocalShareService{
 	rpc SendFile(stream FileChunk) returns(EmptyMessage);
 	rpc DownloadFile(EmptyMessage) returns(stream FileChunk);
 	rpc OperateFileTask(FileOperationRequest) returns(CommonResponse);
+	rpc Chat(ChatRequest) returns(CommonResponse);
 }

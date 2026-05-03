@@ -194,7 +194,7 @@ namespace LocalShare.Desktop
                     NodeName = GlobalShared.NodeName!
                 };
                 await dbContext.LocalNodes.AddAsync(localNode);
-                await dbContext.SaveChangesAsync();
+                //await dbContext.SaveChangesAsync();
             }
 
             var list = await dbContext.LocalSettings.ToListAsync();

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using LocalShare.Desktop.Models;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +12,7 @@ namespace LocalShare.Desktop
     {
         internal static string? IpAddress = "127.0.0.1";
         internal static string? NodeName = "";
-        internal static int ServerPort = 11167;
+        internal static int ServerPort = 11166;
         internal static int BroadcastPort = 9988;
         internal static string? DownloadPath = string.Empty;
         internal static int SendNodeMaxCount = 3;

@@ -1,6 +1,8 @@
-﻿using Grpc.Core;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Grpc.Core;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.KeepStates;
+using LocalShare.Desktop.Models;
 using LocalShare.Protocol.Define;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -15,9 +17,23 @@ namespace LocalShare.Desktop.Server
     internal class LocalServer : LocalShareService.LocalShareServiceBase
     {
         private readonly ReceiveDataHolder _receiveDataHolder;
-        public LocalServer(ReceiveDataHolder receiveDataHolder)
+        private readonly SendDataHolder _sendDataHolder;
+        public LocalServer(ReceiveDataHolder receiveDataHolder, SendDataHolder sendDataHolder)
         {
+            _sendDataHolder = sendDataHolder;
             _receiveDataHolder = receiveDataHolder;
+        }
+
+        public override Task<CommonResponse> Chat(ChatRequest request, ServerCallContext context)
+        {
+            var node = _sendDataHolder.Nodes.FirstOrDefault(s => s.NodeName == request.SendNodeName &&
+                                                                s.IpAddress == request.SendNodeIp);
+            if (node != null)
+            {
+                node.ReceiveChatMessage(request);
+            }
+
+            return Task.FromResult(new CommonResponse { Success = true });
         }
 
 

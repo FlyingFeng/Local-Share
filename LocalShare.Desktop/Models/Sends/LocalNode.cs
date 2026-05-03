@@ -39,6 +39,8 @@ namespace LocalShare.Desktop.Models.Sends
         private int port;
         [ObservableProperty]
         private int state = 0;  // 0: 在线, 1: 离线
+        [ObservableProperty]
+        private bool showBadge = false;
 
         public ObservableCollection<FileTaskModel> FileTasks { get; set; } = [];
 
@@ -46,8 +48,25 @@ namespace LocalShare.Desktop.Models.Sends
         private CancellationTokenSource? _tokenSource;
         private readonly Dictionary<string, SendFileHandler> sendFileTasks = new Dictionary<string, SendFileHandler>();
 
-
         public bool IsSending => sendFileTasks.Count > 0;
+
+        public void ReceiveChatMessage(ChatRequest request)
+        {
+            ShowBadge = true;
+            var messageInfo = new MessageInfo
+            {
+                ChatId = request.ChatId,
+                Message = request.Message,
+                Time = request.Time,
+                Type = 1
+            };
+            ChatMessageHolder.AddChatHistoryData(request.SendNodeName, messageInfo);
+            WeakReferenceMessenger.Default.Send(new MessageModel
+            {
+                MessageType = MessageType.ChatMessageArrived,
+                Data = messageInfo
+            });
+        }
 
         private async Task CheckAlive()
         {
@@ -78,6 +97,17 @@ namespace LocalShare.Desktop.Models.Sends
                 }
 
             }
+        }
+
+        [RelayCommand]
+        private void ShowChatWindow()
+        {
+            ChatWindow window = new ChatWindow();
+            window.NodeChannel = _channel;
+            window.Node = this;
+            window.Title = NodeName;
+            ShowBadge = false;
+            window.ShowDialog();
         }
 
         [RelayCommand]
