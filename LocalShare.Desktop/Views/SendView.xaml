@@ -22,6 +22,36 @@
         <myConverter:SendFileProgressConverter x:Key="SendFileProgressConverter"/>
         <myConverter:FileTaskStateConverter x:Key="FileTaskStateConverter"/>
         <myConverter:NodeStateConverter x:Key="NodeStateConverter"/>
+        <SolidColorBrush x:Key="Item.MouseOver.Background" Color="#f5f5f5"/>
+        <SolidColorBrush x:Key="Item.MouseOver.Border" Color="#a826A0Da"/>
+        <Style x:Key="ListViewItemStyle" TargetType="{x:Type ListViewItem}">
+            <Setter Property="Background" Value="{DynamicResource RegionBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="UIElement.SnapsToDevicePixels" Value="true" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="Padding" Value="{StaticResource DefaultControlPadding}" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListViewItem}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
+                            <GridViewRowPresenter  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.MouseOver.Background}"/>
+                                <Setter Property="BorderBrush" TargetName="Bd" Value="{StaticResource Item.MouseOver.Border}"/>
+                                <Setter Property="BorderThickness" TargetName="Bd" Value="1"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
     <Grid Margin="2">
         <Grid.RowDefinitions>
@@ -51,7 +81,7 @@
                         <Button Style="{StaticResource ButtonDanger}" Width="88" Height="32" Command="{Binding RemoveSelectedFileCommand}">移除选中</Button>
                     </StackPanel>
 
-                    <ListView Grid.Row="1" ItemsSource="{Binding HomeDataHolder.FileCaches}" d:DataContext="{d:DesignInstance Type=design:LocalFileCacheDesignData,IsDesignTimeCreatable=True}" d:ItemsSource="{Binding FileCaches}">
+                    <ListView Grid.Row="1" ItemContainerStyle="{StaticResource ListViewItemStyle}" ItemsSource="{Binding HomeDataHolder.FileCaches}" d:DataContext="{d:DesignInstance Type=design:LocalFileCacheDesignData,IsDesignTimeCreatable=True}" d:ItemsSource="{Binding FileCaches}">
                         <ListView.View>
                             <GridView AllowsColumnReorder="True">
                                 <GridViewColumn Width="70">
@@ -131,7 +161,7 @@
                         <Button Style="{StaticResource ButtonPrimary}" Width="88" Height="32" Command="{Binding AddLocalNodeCommand}">添加节点</Button>
                     </StackPanel>
 
-                    <ListView x:Name="ListNodes" Grid.Row="1" SelectedIndex="{Binding SelectedNodeIndex}" ItemsSource="{Binding HomeDataHolder.Nodes}" d:ItemsSource="{Binding Nodes}" d:DataContext="{d:DesignInstance Type=design:LocalNodeDesignData,IsDesignTimeCreatable=True}">
+                    <ListView x:Name="ListNodes" ItemContainerStyle="{StaticResource ListViewItemStyle}" Grid.Row="1" SelectedIndex="{Binding SelectedNodeIndex}" ItemsSource="{Binding HomeDataHolder.Nodes}" d:ItemsSource="{Binding Nodes}" d:DataContext="{d:DesignInstance Type=design:LocalNodeDesignData,IsDesignTimeCreatable=True}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="SelectionChanged">
                                 <behavior:InvokeCommandAction Command="{Binding NodeSelectionChangedCommand}"
@@ -202,7 +232,7 @@
                         <Button>移除</Button>
                     </StackPanel>-->
 
-                    <ListView Grid.Row="1" ItemsSource="{Binding CurrentNodeFileTasks}" d:DataContext="{d:DesignInstance Type=design:SendFileTaskDesignData,IsDesignTimeCreatable=True}">
+                    <ListView Grid.Row="1" ItemContainerStyle="{StaticResource ListViewItemStyle}" ItemsSource="{Binding CurrentNodeFileTasks}" d:DataContext="{d:DesignInstance Type=design:SendFileTaskDesignData,IsDesignTimeCreatable=True}">
                         <ListView.View>
                             <GridView AllowsColumnReorder="True">
                                 <GridViewColumn Header="文件名称" Width="150">
