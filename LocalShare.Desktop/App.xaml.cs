@@ -110,6 +110,7 @@ namespace LocalShare.Desktop
                         services.AddTransient<LocalSettingViewModel>();
                         services.AddTransient<SendAndReceiveHistoryView>();
                         services.AddTransient<SendAndReceiveHistoryViewModel>();
+                        services.AddTransient<AboutView>();
 
                     }).Build();
             }

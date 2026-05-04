@@ -7,10 +7,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Res\thunder.ico</ApplicationIcon>
+    <AssemblyName>LocalShare</AssemblyName>
+    <Version>1.0.1</Version>
+    <Authors>Flying</Authors>
+    <PackageProjectUrl>https://github.com/FlyingFeng/Local-Share</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Res\alipay.jpg" />
     <None Remove="Res\thunder.ico" />
+    <None Remove="Res\thunder.png" />
+    <None Remove="Res\wechat.jpg" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,7 +44,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Res\alipay.jpg" />
     <Resource Include="Res\thunder.ico" />
+    <Resource Include="Res\thunder.png" />
+    <Resource Include="Res\wechat.jpg" />
   </ItemGroup>
 
   <ItemGroup>

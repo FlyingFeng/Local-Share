@@ -59,6 +59,8 @@
                     <Button Background="{Binding HistoryBrush}" Width="108" Height="32" Command="{Binding HistoryViewActionCommand}">历史记录</Button>
                     <Rectangle Height="10"/>
                     <Button Background="{Binding SettingBrush}" Width="108" Height="32" Command="{Binding SettingViewActionCommand}">设置</Button>
+                    <Rectangle Height="10"/>
+                    <Button Background="{Binding AboutBrush}" Width="108" Height="32" Command="{Binding AboutViewActionCommand}">关于</Button>
                 </StackPanel>
             </Grid>
         </Border>

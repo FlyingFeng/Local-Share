@@ -1,0 +1,50 @@
+﻿<UserControl x:Class="LocalShare.Desktop.Views.AboutView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:LocalShare.Desktop.Views"
+             mc:Ignorable="d" 
+             Loaded="UserControl_Loaded"
+             d:DesignHeight="750" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="140"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Border>
+            <Image Source="/Res/thunder.png" Height="108"/>
+        </Border>
+        <StackPanel Grid.Row="1">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="LocalShare" FontSize="28" FontWeight="Bold"/>
+            </StackPanel>
+            <Rectangle Height="15"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="LocalShare 是一款可以在局域网内实现文件传输的开源软件，同时提供简单的文字交流功能。"/>
+            </StackPanel>
+            <Rectangle Height="15"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBox IsReadOnly="True" BorderThickness="0" Text="联系作者： flyingjiajian@163.com"/>
+            </StackPanel>
+            <Rectangle Height="15"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="代码地址：" VerticalAlignment="Center"/>
+                <TextBox Text="https://github.com/FlyingFeng/Local-Share" BorderThickness="0" IsReadOnly="True"/>
+            </StackPanel>
+            <Rectangle Height="15"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="最新版本："/>
+                <TextBlock x:Name="TbVersion" Text="V1.0.0"/>
+            </StackPanel>
+            <Rectangle Height="15"/>
+            <TextBlock Text="支持作者" HorizontalAlignment="Center"/>
+            <Rectangle Height="20"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Image Source="/Res/alipay.jpg" Height="350"/>
+                <Rectangle Width="130"/>
+                <Image Source="/Res/wechat.jpg" Height="350"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>
