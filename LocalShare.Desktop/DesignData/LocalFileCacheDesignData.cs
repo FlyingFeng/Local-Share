@@ -28,7 +28,7 @@ namespace LocalShare.Desktop.DesignData
                 IsSelected = false,
                 Md5 = "12324343",
                 IsOpenFromDir = false,
-                FileSize = 4561313351,
+                FileSize = 456131342351,
                 FileName = "test.txt",
                 FilePath = "D:\\1\\3\\test.txt"
             });

@@ -32,9 +32,9 @@
 
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="4*"/>
             </Grid.ColumnDefinitions>
 
             <GroupBox Header="文件列表" Margin="1">
@@ -92,7 +92,14 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="文件大小" Width="120" DisplayMemberBinding="{Binding FileSize,Converter={StaticResource Long2FileSizeConverter}}"/>
+                                <GridViewColumn Header="文件大小" Width="80" DisplayMemberBinding="{Binding FileSize,Converter={StaticResource Long2FileSizeConverter}}"/>
+                                <GridViewColumn Header="操作">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Style="{StaticResource ButtonPrimary.Small}">分享</Button>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
                                 <!--<GridViewColumn Header="md5" Width="90">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -102,18 +109,6 @@
                                                        ToolTipService.InitialShowDelay="500"
                                                        ToolTipService.ShowDuration="5000"
                                                        ToolTip="{Binding Md5}"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>-->
-                                <!--<GridViewColumn Header="操作" Width="90">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Command="{Binding DataContext.OpenDirectoryCommand,
-                                                    RelativeSource={RelativeSource Mode=FindAncestor,
-                                                    AncestorType={x:Type UserControl}}}"
-                                                    CommandParameter="{Binding FilePath}">
-                                                打开路径
-                                            </Button>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>-->
@@ -164,12 +159,17 @@
                                 <GridViewColumn Header="节点名称" Width="100" >
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding NodeName}"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       ToolTipService.ShowOnDisabled="True"
-                                                       ToolTipService.InitialShowDelay="500"
-                                                       ToolTipService.ShowDuration="5000"
-                                                       ToolTip="{Binding NodeName}"/>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding NodeName}"
+                                                           FontSize="13"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTipService.ShowOnDisabled="True"
+                                                           ToolTipService.InitialShowDelay="500"
+                                                           ToolTipService.ShowDuration="5000"
+                                                           ToolTip="{Binding NodeName}"/>
+                                                <Rectangle Height="3"/>
+                                                <TextBlock Text="{Binding IpAddress}" FontSize="10"/>
+                                            </StackPanel>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
@@ -214,10 +214,10 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="文件大小" Width="100" DisplayMemberBinding="{Binding TotalSize,Converter={StaticResource Long2FileSizeConverter}}"/>
-                                <GridViewColumn Header="进度(%)" Width="100" DisplayMemberBinding="{Binding Progress}"/>
-                                <GridViewColumn Header="状态" Width="100" DisplayMemberBinding="{Binding State,Converter={StaticResource FileTaskStateConverter}}"/>
-                                <GridViewColumn Header="操作" Width="180">
+                                <GridViewColumn Header="文件大小" Width="80" DisplayMemberBinding="{Binding TotalSize,Converter={StaticResource Long2FileSizeConverter}}"/>
+                                <GridViewColumn Header="状态" Width="80" DisplayMemberBinding="{Binding State,Converter={StaticResource FileTaskStateConverter}}"/>
+                                <GridViewColumn Header="进度(%)" Width="70" DisplayMemberBinding="{Binding Progress}"/>
+                                <GridViewColumn Header="操作" Width="120">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

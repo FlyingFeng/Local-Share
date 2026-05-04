@@ -47,12 +47,16 @@ namespace LocalShare.Desktop.Models.Sends
         private Channel? _channel;
         private CancellationTokenSource? _tokenSource;
         private readonly Dictionary<string, SendFileHandler> sendFileTasks = new Dictionary<string, SendFileHandler>();
+        private bool isShowChatWindow = false;
 
         public bool IsSending => sendFileTasks.Count > 0;
 
         public void ReceiveChatMessage(ChatRequest request)
         {
-            ShowBadge = true;
+            if (!isShowChatWindow)
+            {
+                ShowBadge = true;
+            }
             var messageInfo = new MessageInfo
             {
                 ChatId = request.ChatId,
@@ -102,12 +106,21 @@ namespace LocalShare.Desktop.Models.Sends
         [RelayCommand]
         private void ShowChatWindow()
         {
-            ChatWindow window = new ChatWindow();
-            window.NodeChannel = _channel;
-            window.Node = this;
-            window.Title = NodeName;
-            ShowBadge = false;
-            window.ShowDialog();
+            try
+            {
+                isShowChatWindow = true;
+                ChatWindow window = new ChatWindow();
+                window.NodeChannel = _channel;
+                window.Node = this;
+                window.Title = NodeName;
+                window.Owner = Application.Current.MainWindow;
+                ShowBadge = false;
+                window.ShowDialog();
+            }
+            catch
+            {
+                isShowChatWindow = false;
+            }
         }
 
         [RelayCommand]
