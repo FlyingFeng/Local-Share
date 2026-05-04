@@ -7,16 +7,9 @@ using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.DataContext.Entities;
 using LocalShare.Desktop.FileHandler;
 using LocalShare.Protocol.Define;
-using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace LocalShare.Desktop.Models.Sends

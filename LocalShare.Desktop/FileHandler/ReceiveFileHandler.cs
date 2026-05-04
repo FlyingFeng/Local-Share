@@ -7,15 +7,7 @@ using LocalShare.Desktop.Models.Receives;
 using LocalShare.Protocol.Define;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using static Grpc.Core.Metadata;
 
 namespace LocalShare.Desktop.FileHandler
 {

@@ -5,6 +5,8 @@ using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.KeepStates;
 using LocalShare.Desktop.ViewModels;
 using LocalShare.Desktop.Views;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -79,8 +81,21 @@ namespace LocalShare.Desktop
                 //}
 
                 _host = Host.CreateDefaultBuilder()
+                    .ConfigureWebHostDefaults(webBuilder =>
+                    {
+                        webBuilder.UseUrls("http://0.0.0.0:17894");
+                        webBuilder.Configure((app) =>
+                        {
+                            app.UseRouting();
+                            app.UseEndpoints(endpoints =>
+                            {
+                                endpoints.MapControllers();
+                            });
+                        });
+                    })
                     .ConfigureServices((context, services) =>
                     {
+                        services.AddControllers();
                         services.AddSingleton<MainViewModel>();
                         services.AddSingleton<MainWindow>();
                         services.AddSingleton<UdpMulticastDiscoveryService>();
@@ -96,11 +111,6 @@ namespace LocalShare.Desktop
                         services.AddTransient<SendAndReceiveHistoryView>();
                         services.AddTransient<SendAndReceiveHistoryViewModel>();
 
-                        //var dbPath = Path.Combine(AppContext.BaseDirectory, "Db", "LocalShare.db");
-                        //services.AddDbContextFactory<LocalDataContext>(opt =>
-                        //{
-                        //    opt.UseSqlite($"Data Source={dbPath}");
-                        //});
                     }).Build();
             }
             catch (Exception ex)

@@ -3,15 +3,9 @@ using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.DataContext.Entities;
 using LocalShare.Desktop.Models.Sends;
 using LocalShare.Protocol.Define;
-using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LocalShare.Desktop.FileHandler
 {

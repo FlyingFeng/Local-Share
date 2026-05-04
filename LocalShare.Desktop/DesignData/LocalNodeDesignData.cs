@@ -1,11 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using LocalShare.Desktop.Models.Sends;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using LocalShare.Desktop.Models.Sends;
 
 namespace LocalShare.Desktop.DesignData
 {

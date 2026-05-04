@@ -2,21 +2,14 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using HandyControl.Controls;
-using HandyControl.Data;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using Serilog;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms;
 
 namespace LocalShare.Desktop.ViewModels
 {

@@ -1,10 +1,5 @@
 ﻿using LocalShare.Desktop.FileHandler;
 using LocalShare.Protocol.Define;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LocalShare.Desktop.KeepStates
 {

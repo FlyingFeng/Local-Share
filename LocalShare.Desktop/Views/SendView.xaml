@@ -126,7 +126,8 @@
                                 <GridViewColumn Header="操作">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Style="{StaticResource ButtonPrimary.Small}">分享</Button>
+                                            <Button Style="{StaticResource ButtonPrimary.Small}"
+                                                    Command="{Binding ShowDownloadLinkCommand}">分享</Button>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>

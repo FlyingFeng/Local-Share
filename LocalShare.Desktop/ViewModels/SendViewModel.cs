@@ -2,8 +2,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using HandyControl.Controls;
-using HandyControl.Data;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.KeepStates;
 using LocalShare.Desktop.Models;
@@ -11,15 +9,8 @@ using LocalShare.Desktop.Models.Sends;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using Serilog;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 using System.Windows;
 using MessageBox = HandyControl.Controls.MessageBox;
 
@@ -115,7 +106,7 @@ namespace LocalShare.Desktop.ViewModels
                     var nodeCaches = _udpDiscoveryService?.GetNodeModelCaches() ?? [];
                     nodeCaches.ForEach(async e =>
                     {
-                        var matched = HomeDataHolder!.GetNode(nodeName: e.NodeName); //HomeDataHolder.Nodes.FirstOrDefault(s => e.NodeName == s.NodeName);
+                        var matched = HomeDataHolder!.GetNode(nodeName: e.NodeName);
                         if (matched == null)
                         {
                             var node = new LocalNode()
@@ -130,8 +121,6 @@ namespace LocalShare.Desktop.ViewModels
                             };
                             HomeDataHolder!.AddNode(node);
                             await node.InitAsync();
-                            //await node.InitAsync();
-                            //HomeDataHolder.Nodes.Add(node);
                         }
                     });
 
@@ -465,7 +454,6 @@ namespace LocalShare.Desktop.ViewModels
         {
             if (args != null && args is LocalNode node)
             {
-                //CurrentNodeFileTasks = node.FileTasks;
                 CurrentNodeFileTasks.Clear();
                 foreach (var item in node.FileTasks)
                 {
@@ -485,7 +473,7 @@ namespace LocalShare.Desktop.ViewModels
                 }
                 isHandle = true;
 
-                var matched = HomeDataHolder!.GetNode(obj.IpAddress, obj.Port); //HomeDataHolder!.Nodes.FirstOrDefault(s => s.IpAddress == obj.IpAddress && s.Port == obj.Port);
+                var matched = HomeDataHolder!.GetNode(obj.IpAddress, obj.Port);
                 if (matched == null)
                 {
                     var node = new LocalNode()

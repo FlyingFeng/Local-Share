@@ -1,11 +1,4 @@
-﻿using LocalShare.Desktop.Models;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace LocalShare.Desktop
 {
     internal static class GlobalShared
