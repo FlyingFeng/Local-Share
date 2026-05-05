@@ -58,7 +58,7 @@
                 </behavior:EventTrigger>
             </behavior:Interaction.Triggers>
             <TabItem Header="发送记录">
-                <ListView ItemsSource="{Binding SendHistoryRecords}">
+                <ListView ItemsSource="{Binding SendHistoryRecords}" ItemContainerStyle="{StaticResource ListViewItemStyle}">
                     <ListView.View>
                         <GridView AllowsColumnReorder="True">
                             <GridViewColumn Header="任务编号" Width="100">
@@ -94,7 +94,7 @@
                 </ListView>
             </TabItem>
             <TabItem Header="接收记录">
-                <ListView ItemsSource="{Binding ReceiveHistoryRecords}">
+                <ListView ItemsSource="{Binding ReceiveHistoryRecords}" ItemContainerStyle="{StaticResource ListViewItemStyle}">
                     <ListView.View>
                         <GridView AllowsColumnReorder="True">
                             <GridViewColumn Header="任务编号" Width="100">

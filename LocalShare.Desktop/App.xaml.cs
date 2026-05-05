@@ -24,7 +24,7 @@ namespace LocalShare.Desktop
     /// </summary>
     public partial class App : Application
     {
-        private readonly IHost? _host;
+        private IHost? _host;
         private TaskbarIcon? _trayIcon;
 
         // ── 阻止休眠 API ─────────────────────────────────────────────
@@ -75,44 +75,6 @@ namespace LocalShare.Desktop
                 }
                 GlobalShared.NodeName = ChineseNameGenerator.Generate(NameLength.Two);
                 GlobalShared.DownloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "LocalShare");
-                //if (!Directory.Exists(GlobalShared.DownloadPath))
-                //{
-                //    Directory.CreateDirectory(GlobalShared.DownloadPath);
-                //}
-
-                _host = Host.CreateDefaultBuilder()
-                    .ConfigureWebHostDefaults(webBuilder =>
-                    {
-                        webBuilder.UseUrls("http://0.0.0.0:17894");
-                        webBuilder.Configure((app) =>
-                        {
-                            app.UseRouting();
-                            app.UseEndpoints(endpoints =>
-                            {
-                                endpoints.MapControllers();
-                            });
-                        });
-                    })
-                    .ConfigureServices((context, services) =>
-                    {
-                        services.AddControllers();
-                        services.AddSingleton<MainViewModel>();
-                        services.AddSingleton<MainWindow>();
-                        services.AddSingleton<UdpMulticastDiscoveryService>();
-                        services.AddSingleton<SendDataHolder>();
-                        services.AddSingleton<ReceiveDataHolder>();
-
-                        services.AddTransient<SendView>();
-                        services.AddTransient<SendViewModel>();
-                        services.AddTransient<ReceiveView>();
-                        services.AddTransient<ReceiveViewModel>();
-                        services.AddTransient<LocalSettingView>();
-                        services.AddTransient<LocalSettingViewModel>();
-                        services.AddTransient<SendAndReceiveHistoryView>();
-                        services.AddTransient<SendAndReceiveHistoryViewModel>();
-                        services.AddTransient<AboutView>();
-
-                    }).Build();
             }
             catch (Exception ex)
             {
@@ -140,34 +102,61 @@ namespace LocalShare.Desktop
 
         protected override async void OnStartup(StartupEventArgs e)
         {
-            if (_host != null)
-            {
-                _trayIcon = (TaskbarIcon)FindResource("TrayIcon");
-                var contextMenu = new System.Windows.Controls.ContextMenu();
+            // 禁用休眠
+            PreventSleep();
+            _trayIcon = (TaskbarIcon)FindResource("TrayIcon");
+            var contextMenu = new System.Windows.Controls.ContextMenu();
 
-                var showItem = new System.Windows.Controls.MenuItem { Header = "恢复主窗口" };
-                showItem.Click += (s, args) => ShowMainWindow();
+            var showItem = new System.Windows.Controls.MenuItem { Header = "恢复主窗口" };
+            showItem.Click += (s, args) => ShowMainWindow();
 
-                var exitItem = new System.Windows.Controls.MenuItem { Header = "关闭程序" };
-                exitItem.Click += (s, args) => ExitApp();
+            var exitItem = new System.Windows.Controls.MenuItem { Header = "关闭程序" };
+            exitItem.Click += (s, args) => ExitApp();
 
-                contextMenu.Items.Add(showItem);
-                contextMenu.Items.Add(new System.Windows.Controls.Separator());
-                contextMenu.Items.Add(exitItem);
-                _trayIcon.ContextMenu = contextMenu;
-                _trayIcon.TrayMouseDoubleClick += (s, args) => ShowMainWindow();
+            contextMenu.Items.Add(showItem);
+            contextMenu.Items.Add(new System.Windows.Controls.Separator());
+            contextMenu.Items.Add(exitItem);
+            _trayIcon.ContextMenu = contextMenu;
+            _trayIcon.TrayMouseDoubleClick += (s, args) => ShowMainWindow();
+            await LoadData();
+            GlobalShared.HttpPort = GlobalShared.ServerPort;
+            _host = Host.CreateDefaultBuilder()
+             .ConfigureWebHostDefaults(webBuilder =>
+             {
+                 webBuilder.UseUrls($"http://0.0.0.0:{GlobalShared.HttpPort}");
+                 webBuilder.Configure((app) =>
+                 {
+                     app.UseRouting();
+                     app.UseEndpoints(endpoints =>
+                     {
+                         endpoints.MapControllers();
+                     });
+                 });
+             })
+             .ConfigureServices((context, services) =>
+             {
+                 services.AddControllers();
+                 services.AddSingleton<MainViewModel>();
+                 services.AddSingleton<MainWindow>();
+                 services.AddSingleton<UdpMulticastDiscoveryService>();
+                 services.AddSingleton<SendDataHolder>();
+                 services.AddSingleton<ReceiveDataHolder>();
 
-                // 禁用休眠
-                PreventSleep();
-                await _host.StartAsync();
-                await LoadData();
-                var window = _host.Services.GetRequiredService<MainWindow>();
-                window.Show();
-            }
-            else
-            {
-                Log.Error($"OnStartup failed, host is null");
-            }
+                 services.AddTransient<SendView>();
+                 services.AddTransient<SendViewModel>();
+                 services.AddTransient<ReceiveView>();
+                 services.AddTransient<ReceiveViewModel>();
+                 services.AddTransient<LocalSettingView>();
+                 services.AddTransient<LocalSettingViewModel>();
+                 services.AddTransient<SendAndReceiveHistoryView>();
+                 services.AddTransient<SendAndReceiveHistoryViewModel>();
+                 services.AddTransient<AboutView>();
+
+             }).Build();
+
+            await _host.StartAsync();
+            var window = _host.Services.GetRequiredService<MainWindow>();
+            window.Show();
         }
 
         protected override async void OnExit(ExitEventArgs e)

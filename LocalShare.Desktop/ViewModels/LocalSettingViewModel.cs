@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommonTool;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using HandyControl.Controls;
@@ -83,6 +84,12 @@ namespace LocalShare.Desktop.ViewModels
         [Required(ErrorMessage = "【文件保存路径】不能为空")]
         private string downloadPath = string.Empty;
 
+
+        public bool AnySelected => ServerPortSelected || BrocastPortSelected || SendNodeMaxCountSelected ||
+                                    SameNodeMaxSendFileCountSelected || DownloadPathSelected || MulticastAddressSelected ||
+                                    TransferSpeedSelected;
+
+
         [RelayCommand]
         private void ChooseDownloadPath()
         {
@@ -91,6 +98,22 @@ namespace LocalShare.Desktop.ViewModels
             if (flag == true)
             {
                 DownloadPath = dialog.FolderName;
+            }
+        }
+
+        [RelayCommand]
+        private void GoToDownloadPath()
+        {
+            try
+            {
+                if (Directory.Exists(DownloadPath))
+                {
+                    ExplorerHelper.OpenFolder(DownloadPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"LocalSettingViewModel.GoToDownloadPath error, {ex.Message}\n{ex.StackTrace}");
             }
         }
 
@@ -161,7 +184,14 @@ namespace LocalShare.Desktop.ViewModels
                     });
                 }
 
-                Growl.Info("应用成功");
+                if (AnySelected)
+                {
+                    Growl.Info("应用成功");
+                }
+                else
+                {
+                    Growl.Info("没有选中应用项");
+                }
             }
         }
 

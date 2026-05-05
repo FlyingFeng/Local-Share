@@ -21,7 +21,7 @@
             </StackPanel>
             <Rectangle Height="15"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <TextBlock Text="LocalShare 是一款可以在局域网内实现文件传输的开源软件，同时提供简单的文字交流功能。"/>
+                <TextBlock Text="LocalShare 是一款可以在局域网内实现文件传输的开源Windows软件，同时提供简单的文字交流功能。"/>
             </StackPanel>
             <Rectangle Height="15"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

@@ -25,7 +25,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <ListView Grid.Row="1" ItemsSource="{Binding CacheData}" d:DataContext="{d:DesignInstance Type=design:ReceiveFileTaskDesignData,IsDesignTimeCreatable=True}">
+        <ListView Grid.Row="1" ItemsSource="{Binding CacheData}" ItemContainerStyle="{StaticResource ListViewItemStyle}" d:DataContext="{d:DesignInstance Type=design:ReceiveFileTaskDesignData,IsDesignTimeCreatable=True}">
             <ListView.View>
                 <GridView AllowsColumnReorder="True">
                     <GridViewColumn Header="任务编号" Width="120">

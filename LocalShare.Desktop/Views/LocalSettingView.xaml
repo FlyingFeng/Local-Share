@@ -58,6 +58,8 @@
                 <ScrollViewer Grid.Column="1">
                     <StackPanel Orientation="Vertical">
                         <Rectangle Height="10"/>
+                        <TextBlock Text="应用之后，立即生效，配置不会持久化；保存之后，重启生效，配置会持久化。"/>
+                        <Rectangle Height="20"/>
                         <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding SelectedAll}" Content="应用所有" VerticalAlignment="Center"/>
                         </StackPanel>
@@ -112,7 +114,15 @@
                         <Rectangle Height="10"/>
                         <StackPanel Orientation="Horizontal">
                             <Rectangle Width="20"/>
-                            <TextBox Width="600" Text="{Binding DownloadPath}" IsReadOnly="True" VerticalContentAlignment="Center"/>
+                            <Border Height="30" BorderThickness="0,0,0,1" BorderBrush="Gray" Cursor="Hand">
+                                <TextBlock Width="600" Text="{Binding DownloadPath}" d:Text="9999999" VerticalAlignment="Center" FontSize="14">
+                                <behavior:Interaction.Triggers>
+                                    <behavior:EventTrigger EventName="MouseLeftButtonDown">
+                                        <behavior:InvokeCommandAction Command="{Binding GoToDownloadPathCommand}"/>
+                                    </behavior:EventTrigger>
+                                </behavior:Interaction.Triggers>
+                                </TextBlock>
+                            </Border>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>

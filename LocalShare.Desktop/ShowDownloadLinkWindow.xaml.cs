@@ -47,7 +47,7 @@ namespace LocalShare.Desktop
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            var url = $"http://{GlobalShared.IpAddress}:17894/api/local/download/{Id}";
+            var url = $"http://{GlobalShared.IpAddress}:{GlobalShared.HttpPort}/api/local/download/{Id}";
             TxtLink.Text = url;
         }
     }
