@@ -74,6 +74,7 @@ namespace LocalShare.Desktop.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show($"添加节点失败\n{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                Log.Error($"SendViewModel.AddLocalNode error, {ex.Message}\n{ex.StackTrace}");
             }
         }
 

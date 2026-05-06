@@ -109,13 +109,13 @@ namespace LocalShare.Desktop.FileHandler
                     }
                     while (await request.MoveNext(_tokenSource.Token))
                     {
+                        await fs.WriteAsync(request.Current.Data.ToByteArray(), _tokenSource.Token);
+                        TaskModel!.CurrentSize += request.Current.Data.Length;
                         if (_tokenSource.IsCancellationRequested)
                         {
                             hasError = true;
                             break;
                         }
-                        await fs.WriteAsync(request.Current.Data.ToByteArray(), _tokenSource.Token);
-                        TaskModel!.CurrentSize += request.Current.Data.Length;
                     }
                     if (TaskModel!.CurrentSize != TaskModel!.TotalSize)
                     {
@@ -138,18 +138,17 @@ namespace LocalShare.Desktop.FileHandler
                     TaskModel!.State = 4;
                     receiveDataHolder.NotifyReceiveFileTaskRemoved(this);
                     receiveDataHolder.RemoveReceiveFileHandler(TaskId);
-                    Growl.Info($"文件接收错误，文件名：{entity!.FileName}");
                 }
                 else
                 {
                     entity!.State = 3;
                     entity.LastUpdateTime = DateTime.UtcNow;
                     TaskModel!.State = 3;
-                    Growl.Info($"文件接收完成，文件名：{entity!.FileName}");
                 }
                 using var dbContext = new LocalDataContext();
                 dbContext.ReceiveFileTasks.Update(entity!);
                 await dbContext.SaveChangesAsync();
+                Growl.Info($"文件接收完成，文件名：{entity!.FileName}");
             }
         }
     }

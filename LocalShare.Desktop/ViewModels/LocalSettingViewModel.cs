@@ -113,6 +113,7 @@ namespace LocalShare.Desktop.ViewModels
             }
             catch (Exception ex)
             {
+                HandyControl.Controls.MessageBox.Show("跳转失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 Log.Error($"LocalSettingViewModel.GoToDownloadPath error, {ex.Message}\n{ex.StackTrace}");
             }
         }
@@ -244,6 +245,7 @@ namespace LocalShare.Desktop.ViewModels
                 }
                 catch (Exception ex)
                 {
+                    Log.Error($"Save error, {ex.Message}\n{ex.StackTrace}");
                     HandyControl.Controls.MessageBox.Show($"保存失败\n{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }

@@ -67,6 +67,8 @@ namespace LocalShare.Desktop
             try
             {
                 Log.Information("Application started");
+                DispatcherUnhandledException += App_DispatcherUnhandledException;
+
                 GlobalShared.IpAddress = NetworkHelper.GetLocalIPByUdp();
                 if (string.IsNullOrEmpty(GlobalShared.IpAddress))
                 {
@@ -83,6 +85,12 @@ namespace LocalShare.Desktop
             }
         }
 
+        private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            e.Handled = true;
+            Log.Error(e.Exception?.Message ?? "no message");
+            Log.Error(e.Exception?.StackTrace ?? "no stackTrace");
+        }
 
         private void ExitApp()
         {
@@ -102,61 +110,71 @@ namespace LocalShare.Desktop
 
         protected override async void OnStartup(StartupEventArgs e)
         {
-            // 禁用休眠
-            PreventSleep();
-            _trayIcon = (TaskbarIcon)FindResource("TrayIcon");
-            var contextMenu = new System.Windows.Controls.ContextMenu();
+            try
+            {
 
-            var showItem = new System.Windows.Controls.MenuItem { Header = "恢复主窗口" };
-            showItem.Click += (s, args) => ShowMainWindow();
 
-            var exitItem = new System.Windows.Controls.MenuItem { Header = "关闭程序" };
-            exitItem.Click += (s, args) => ExitApp();
+                // 禁用休眠
+                PreventSleep();
+                _trayIcon = (TaskbarIcon)FindResource("TrayIcon");
+                var contextMenu = new System.Windows.Controls.ContextMenu();
 
-            contextMenu.Items.Add(showItem);
-            contextMenu.Items.Add(new System.Windows.Controls.Separator());
-            contextMenu.Items.Add(exitItem);
-            _trayIcon.ContextMenu = contextMenu;
-            _trayIcon.TrayMouseDoubleClick += (s, args) => ShowMainWindow();
-            await LoadData();
-            GlobalShared.HttpPort = GlobalShared.ServerPort;
-            _host = Host.CreateDefaultBuilder()
-             .ConfigureWebHostDefaults(webBuilder =>
-             {
-                 webBuilder.UseUrls($"http://0.0.0.0:{GlobalShared.HttpPort}");
-                 webBuilder.Configure((app) =>
+                var showItem = new System.Windows.Controls.MenuItem { Header = "恢复主窗口" };
+                showItem.Click += (s, args) => ShowMainWindow();
+
+                var exitItem = new System.Windows.Controls.MenuItem { Header = "关闭程序" };
+                exitItem.Click += (s, args) => ExitApp();
+
+                contextMenu.Items.Add(showItem);
+                contextMenu.Items.Add(new System.Windows.Controls.Separator());
+                contextMenu.Items.Add(exitItem);
+                _trayIcon.ContextMenu = contextMenu;
+                _trayIcon.TrayMouseDoubleClick += (s, args) => ShowMainWindow();
+                await LoadData();
+                GlobalShared.HttpPort = GlobalShared.ServerPort;
+                _host = Host.CreateDefaultBuilder()
+                 .ConfigureWebHostDefaults(webBuilder =>
                  {
-                     app.UseRouting();
-                     app.UseEndpoints(endpoints =>
+                     webBuilder.UseUrls($"http://0.0.0.0:{GlobalShared.HttpPort}");
+                     webBuilder.Configure((app) =>
                      {
-                         endpoints.MapControllers();
+                         app.UseRouting();
+                         app.UseEndpoints(endpoints =>
+                         {
+                             endpoints.MapControllers();
+                         });
                      });
-                 });
-             })
-             .ConfigureServices((context, services) =>
-             {
-                 services.AddControllers();
-                 services.AddSingleton<MainViewModel>();
-                 services.AddSingleton<MainWindow>();
-                 services.AddSingleton<UdpMulticastDiscoveryService>();
-                 services.AddSingleton<SendDataHolder>();
-                 services.AddSingleton<ReceiveDataHolder>();
+                 })
+                 .ConfigureServices((context, services) =>
+                 {
+                     services.AddControllers();
+                     services.AddSingleton<MainViewModel>();
+                     services.AddSingleton<MainWindow>();
+                     services.AddSingleton<UdpMulticastDiscoveryService>();
+                     services.AddSingleton<SendDataHolder>();
+                     services.AddSingleton<ReceiveDataHolder>();
 
-                 services.AddTransient<SendView>();
-                 services.AddTransient<SendViewModel>();
-                 services.AddTransient<ReceiveView>();
-                 services.AddTransient<ReceiveViewModel>();
-                 services.AddTransient<LocalSettingView>();
-                 services.AddTransient<LocalSettingViewModel>();
-                 services.AddTransient<SendAndReceiveHistoryView>();
-                 services.AddTransient<SendAndReceiveHistoryViewModel>();
-                 services.AddTransient<AboutView>();
+                     services.AddTransient<SendView>();
+                     services.AddTransient<SendViewModel>();
+                     services.AddTransient<ReceiveView>();
+                     services.AddTransient<ReceiveViewModel>();
+                     services.AddTransient<LocalSettingView>();
+                     services.AddTransient<LocalSettingViewModel>();
+                     services.AddTransient<SendAndReceiveHistoryView>();
+                     services.AddTransient<SendAndReceiveHistoryViewModel>();
+                     services.AddTransient<AboutView>();
 
-             }).Build();
+                 }).Build();
 
-            await _host.StartAsync();
-            var window = _host.Services.GetRequiredService<MainWindow>();
-            window.Show();
+                await _host.StartAsync();
+                var window = _host.Services.GetRequiredService<MainWindow>();
+                window.Show();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message);
+                throw;
+            }
         }
 
         protected override async void OnExit(ExitEventArgs e)

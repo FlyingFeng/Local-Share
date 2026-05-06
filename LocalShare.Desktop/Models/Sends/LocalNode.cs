@@ -63,6 +63,10 @@ namespace LocalShare.Desktop.Models.Sends
 
         private async Task CheckAlive()
         {
+            if (State == 0)
+            {
+                return;
+            }
             while (true)
             {
                 try
@@ -105,8 +109,9 @@ namespace LocalShare.Desktop.Models.Sends
                 ShowBadge = false;
                 window.ShowDialog();
             }
-            catch
+            catch (Exception e)
             {
+                Log.Error($"ShowChatWindow error, {e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -161,6 +166,7 @@ namespace LocalShare.Desktop.Models.Sends
                 catch (Exception ex)
                 {
                     HandyControl.Controls.MessageBox.Show($"取消发送失败，文件名：{args}\n错误信息：{ex.Message}");
+                    Log.Error($"CancelFileTask.outter error, {ex.Message}\n{ex.StackTrace}");
                 }
             }
         }
@@ -216,7 +222,6 @@ namespace LocalShare.Desktop.Models.Sends
             catch (Exception ex)
             {
                 Log.Error($"LocalNode.InitAsync error, IpAddress={IpAddress}, Port={Port}\n{ex.Message}\n{ex.StackTrace}");
-                throw;
             }
         }
 

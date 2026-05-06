@@ -10,8 +10,7 @@ namespace LocalShare.Desktop
     public class UdpMulticastDiscoveryService : IDisposable
     {
         private const int BroadcastInterval = 3000; // 3秒
-        //private const string MulticastGroup = "239.255.255.250"; // 组播地址
-        private const int MulticastTtl = 32; // 组播 TTL
+        private const int MulticastTtl = 3; // 组播 TTL
 
         private UdpClient? _listener;
         private CancellationTokenSource? _cts;

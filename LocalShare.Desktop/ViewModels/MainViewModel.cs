@@ -293,6 +293,7 @@ namespace LocalShare.Desktop.ViewModels
             }
             catch (Exception ex)
             {
+                HandyControl.Controls.MessageBox.Show("加载失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 Log.Error($"MainViewModel.Loaded error, {ex.Message}\n{ex.StackTrace}");
             }
         }
@@ -352,10 +353,11 @@ namespace LocalShare.Desktop.ViewModels
                 _server.Start();
                 Growl.Info("服务启动成功");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 _server = null;
-                throw;
+                MessageBox.Show("启动服务失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                Log.Error($"StartServer.Start error, {ex.Message}\n{ex.StackTrace}");
             }
         }
 

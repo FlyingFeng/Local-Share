@@ -3,6 +3,7 @@ using Grpc.Core;
 using LocalShare.Desktop.Models;
 using LocalShare.Desktop.Models.Sends;
 using LocalShare.Protocol.Define;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,8 +61,9 @@ namespace LocalShare.Desktop
             {
                 await SendMessage();
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Error($"Send chat message error, {ex.Message}\n{ex.StackTrace}");
                 HandyControl.Controls.MessageBox.Show("发送失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -140,9 +142,9 @@ namespace LocalShare.Desktop
                     });
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                Log.Error($"Receive chat message error, {ex.Message}\n{ex.StackTrace}");
             }
         }
 
@@ -177,8 +179,9 @@ namespace LocalShare.Desktop
                     TxtSendMessage.Focus();
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Error($"Load chat window error, {ex.Message}\n{ex.StackTrace}");
             }
         }
 
@@ -195,9 +198,10 @@ namespace LocalShare.Desktop
                 {
                     await SendMessage();
                 }
-                catch
+                catch(Exception ex)
                 {
                     HandyControl.Controls.MessageBox.Show("发送失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Log.Error($"Send chat message error(key down), {ex.Message}\n{ex.StackTrace}");
                 }
             }
             else if (e.Key == Key.Escape)

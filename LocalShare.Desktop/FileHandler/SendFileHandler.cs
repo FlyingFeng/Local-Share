@@ -50,7 +50,7 @@ namespace LocalShare.Desktop.FileHandler
                     var response = await StartFileTask(fi, model);
                     await Task.Delay(1000, _tokenSource.Token);
                     await ReadAndSendFile(fi, response, model);
-                    await Task.Delay(2000, _tokenSource.Token);
+                    await Task.Delay(1000, _tokenSource.Token);
                     await _node.FinishSendFile(model);
                     flag = true;
                 }
@@ -113,19 +113,20 @@ namespace LocalShare.Desktop.FileHandler
                 }
                 //await Task.Delay(3000, _tokenSource.Token);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                Log.Error($"ReadAndSendFile error, {ex.Message}\n{ex.StackTrace}");
                 throw;
             }
             finally
             {
+                ArrayPool<byte>.Shared.Return(buffer);
                 if (request != null)
                 {
+                    await Task.Delay(1000);
                     await request.RequestStream.CompleteAsync();
                     request.Dispose();
                 }
-                ArrayPool<byte>.Shared.Return(buffer);
             }
         }
 
