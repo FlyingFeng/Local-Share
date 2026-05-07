@@ -135,7 +135,7 @@ namespace LocalShare.Desktop
                 _host = Host.CreateDefaultBuilder()
                  .ConfigureWebHostDefaults(webBuilder =>
                  {
-                     webBuilder.UseUrls($"http://{GlobalShared.IpAddress}:{GlobalShared.HttpPort}");
+                     webBuilder.UseUrls($"http://0.0.0.0:{GlobalShared.HttpPort}");
                      webBuilder.Configure((app) =>
                      {
                          app.UseRouting();
