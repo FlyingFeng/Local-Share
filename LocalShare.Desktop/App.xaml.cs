@@ -66,7 +66,6 @@ namespace LocalShare.Desktop
                 .CreateLogger();
             try
             {
-                Log.Information("Application started");
                 DispatcherUnhandledException += App_DispatcherUnhandledException;
 
                 GlobalShared.IpAddress = NetworkHelper.GetLocalIPByUdp();
@@ -112,8 +111,7 @@ namespace LocalShare.Desktop
         {
             try
             {
-
-
+                Log.Information("Application started");
                 // 禁用休眠
                 PreventSleep();
                 _trayIcon = (TaskbarIcon)FindResource("TrayIcon");
@@ -131,7 +129,7 @@ namespace LocalShare.Desktop
                 _trayIcon.ContextMenu = contextMenu;
                 _trayIcon.TrayMouseDoubleClick += (s, args) => ShowMainWindow();
                 await LoadData();
-                GlobalShared.HttpPort = GlobalShared.ServerPort;
+                GlobalShared.HttpPort = GlobalShared.ServerPort + 10;
                 _host = Host.CreateDefaultBuilder()
                  .ConfigureWebHostDefaults(webBuilder =>
                  {
@@ -167,6 +165,7 @@ namespace LocalShare.Desktop
                  }).Build();
 
                 await _host.StartAsync();
+                Log.Information($"Listen at 0.0.0.0:{GlobalShared.HttpPort}");
                 var window = _host.Services.GetRequiredService<MainWindow>();
                 window.Show();
             }
