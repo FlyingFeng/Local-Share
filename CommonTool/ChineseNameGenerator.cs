@@ -8,7 +8,7 @@ namespace CommonTool
 {
     public static class ChineseNameGenerator
     {
-        private static readonly Random _random = new(DateTime.UtcNow.Millisecond + DateTime.UtcNow.Second);
+        //private static readonly Random _random = new(DateTime.UtcNow.Millisecond + DateTime.UtcNow.Second);
 
         #region 形容词库
 
@@ -172,12 +172,12 @@ namespace CommonTool
         // 一字形容词 + 一字名词
         private static string GenerateTwo()
         {
-            var adj = Adjectives[_random.Next(Adjectives.Length)];
-            var noun = Nouns[_random.Next(Nouns.Length)];
+            var adj = Adjectives[Random.Shared.Next(Adjectives.Length)];
+            var noun = Nouns[Random.Shared.Next(Nouns.Length)];
 
             // 避免两字相同
             while (noun == adj)
-                noun = Nouns[_random.Next(Nouns.Length)];
+                noun = Nouns[Random.Shared.Next(Nouns.Length)];
 
             return adj + noun;
         }
@@ -185,15 +185,15 @@ namespace CommonTool
         // 两字形容词 + 两字名词
         private static string GenerateFour()
         {
-            var adj1 = Adjectives[_random.Next(Adjectives.Length)];
-            var adj2 = Adjectives[_random.Next(Adjectives.Length)];
+            var adj1 = Adjectives[Random.Shared.Next(Adjectives.Length)];
+            var adj2 = Adjectives[Random.Shared.Next(Adjectives.Length)];
             while (adj2 == adj1)
-                adj2 = Adjectives[_random.Next(Adjectives.Length)];
+                adj2 = Adjectives[Random.Shared.Next(Adjectives.Length)];
 
-            var noun1 = Nouns[_random.Next(Nouns.Length)];
-            var noun2 = Nouns[_random.Next(Nouns.Length)];
+            var noun1 = Nouns[Random.Shared.Next(Nouns.Length)];
+            var noun2 = Nouns[Random.Shared.Next(Nouns.Length)];
             while (noun2 == noun1)
-                noun2 = Nouns[_random.Next(Nouns.Length)];
+                noun2 = Nouns[Random.Shared.Next(Nouns.Length)];
 
             return adj1 + adj2 + noun1 + noun2;
         }
