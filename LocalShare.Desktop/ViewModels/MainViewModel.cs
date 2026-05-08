@@ -28,6 +28,7 @@ namespace LocalShare.Desktop.ViewModels
         private readonly SolidColorBrush unSelectedBrushColor = new SolidColorBrush(Colors.White);
         private LocalServer? _localServer;
         private Grpc.Core.Server? _server;
+        private bool loaded = false;
         public MainViewModel() { }
 
         public MainViewModel(UdpMulticastDiscoveryService udpDiscoveryService,
@@ -282,17 +283,24 @@ namespace LocalShare.Desktop.ViewModels
         [RelayCommand]
         private async Task Loaded()
         {
+            if (loaded)
+            {
+                return;
+            }
             try
             {
+                loaded = true;
                 NodeName = GlobalShared.NodeName!;
                 IpAddress = GlobalShared.IpAddress!;
                 _localServer = new LocalServer(_receiveDataHolder!, _sendDataHolder!);
                 await StartServer();
                 StartMulticast();
+                loaded = true;
                 //StartBrocast();
             }
             catch (Exception ex)
             {
+                loaded = false;
                 HandyControl.Controls.MessageBox.Show("加载失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 Log.Error($"MainViewModel.Loaded error, {ex.Message}\n{ex.StackTrace}");
             }

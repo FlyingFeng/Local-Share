@@ -105,9 +105,9 @@ namespace LocalShare.Desktop.ViewModels
                     });
 
                     var nodeCaches = _udpDiscoveryService?.GetNodeModelCaches() ?? [];
-                    nodeCaches.ForEach(async e =>
+                    foreach (var e in nodeCaches)
                     {
-                        var matched = HomeDataHolder!.GetNode(nodeName: e.NodeName);
+                        var matched = HomeDataHolder!.GetNode(ipAddress: e.IpAddress, port: e.Port);
                         if (matched == null)
                         {
                             var node = new LocalNode()
@@ -123,7 +123,7 @@ namespace LocalShare.Desktop.ViewModels
                             HomeDataHolder!.AddNode(node);
                             await node.InitAsync();
                         }
-                    });
+                    }
 
                     if (HomeDataHolder.Nodes!.Count > 0)
                     {
@@ -466,12 +466,12 @@ namespace LocalShare.Desktop.ViewModels
         private bool isHandle = false;
         private async void UdpDiscoveryService_ClientDiscovered(Protocol.Define.NodeModel obj)
         {
+            if (isHandle)
+            {
+                return;
+            }
             try
             {
-                if (isHandle)
-                {
-                    return;
-                }
                 isHandle = true;
 
                 var matched = HomeDataHolder!.GetNode(obj.IpAddress, obj.Port);
@@ -494,7 +494,7 @@ namespace LocalShare.Desktop.ViewModels
                 {
                     matched.NodeName = obj.NodeName;
                     matched.LastSeenTime = obj.Time;
-                    await matched.UpdateNodeStateAsync();
+                    //await matched.UpdateNodeStateAsync();
                 }
             }
             catch (Exception ex)

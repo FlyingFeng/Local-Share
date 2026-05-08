@@ -4,6 +4,7 @@ using Serilog;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.Json;
 
 namespace LocalShare.Desktop
 {
@@ -81,6 +82,9 @@ namespace LocalShare.Desktop
                         };
                         var data = nodeModel.ToByteArray();
                         await sender.SendAsync(data, data.Length, multicastEndPoint);
+#if DEBUG
+                        Log.Information($"Sended node: name= {nodeModel.NodeName}, ip= {nodeModel.IpAddress}, port= {nodeModel.Port}");
+#endif
                     }
                 }
                 catch (OperationCanceledException)
@@ -124,6 +128,9 @@ namespace LocalShare.Desktop
         private void HandleMessage(UdpReceiveResult result)
         {
             var data = NodeModel.Parser.ParseFrom(result.Buffer);
+#if DEBUG
+            Log.Information($"Received node: name= {data.NodeName}, ip= {data.IpAddress}, port= {data.Port}");
+#endif
             if (data != null &&
                 (data.IpAddress != GlobalShared.IpAddress ||
                  data.Port != GlobalShared.ServerPort ||

@@ -37,8 +37,9 @@ namespace LocalShare.Desktop.Models.Sends
 
         public ObservableCollection<FileTaskModel> FileTasks { get; set; } = [];
 
+        private readonly SemaphoreSlim _initSlim = new SemaphoreSlim(1, 1);
         private Channel? _channel;
-        private CancellationTokenSource? _tokenSource;
+        //private CancellationTokenSource? _tokenSource;
         private readonly Dictionary<string, SendFileHandler> sendFileTasks = new Dictionary<string, SendFileHandler>();
 
         public bool IsSending => sendFileTasks.Count > 0;
@@ -63,34 +64,27 @@ namespace LocalShare.Desktop.Models.Sends
 
         private async Task CheckAlive()
         {
-            if (State == 0)
-            {
-                return;
-            }
+            Log.Information($"Start CheckAlive()");
             while (true)
             {
                 try
                 {
-                    if (_tokenSource == null || _tokenSource.IsCancellationRequested)
-                    {
-                        break;
-                    }
+                    //if (_tokenSource == null || _tokenSource.IsCancellationRequested)
+                    //{
+                    //    break;
+                    //}
 
                     LocalShareService.LocalShareServiceClient _client = new LocalShareService.LocalShareServiceClient(_channel);
-                    await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(10));
+                    await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(3));
                     State = 0;
-                    await Task.Delay(3000, _tokenSource.Token);
-                }
-                catch (TaskCanceledException)
-                {
-                    break;
+                    await Task.Delay(3000);
                 }
                 catch (Exception ex)
                 {
                     State = 1;
-                    Close();
+                    //Close();
                     Log.Error($"LocalNode.CheckAlive error, nodeName= {NodeName},{ex.Message}\n{ex.StackTrace}");
-                    break;
+                    //break;
                 }
 
             }
@@ -101,6 +95,12 @@ namespace LocalShare.Desktop.Models.Sends
         {
             try
             {
+                if (State == 1)
+                {
+                    HandyControl.Controls.MessageBox.Show("节点已经下线", "警告", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 ChatWindow window = new ChatWindow();
                 window.NodeChannel = _channel;
                 window.Node = this;
@@ -172,49 +172,50 @@ namespace LocalShare.Desktop.Models.Sends
         }
 
 
-        public async Task UpdateNodeStateAsync()
-        {
-            try
-            {
-                if (State == 1)
-                {
-                    State = 0;
-                    _tokenSource = new CancellationTokenSource();
-                    if (_channel == null)
-                    {
-                        _channel = new Channel($"{IpAddress}:{Port}", ChannelCredentials.Insecure);
-                    }
-                    await _channel.ConnectAsync(DateTime.UtcNow.AddSeconds(5));
-                    if (_channel.State == ChannelState.Ready)
-                    {
-                        State = 0;
-                        _ = CheckAlive();
-                        //_ = RunLoop();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                State = 1;
-                _tokenSource?.Cancel();
-                Log.Error($"LocalNode.UpdateNodeStateAsync error, IpAddress={IpAddress}, Port={Port}\n{ex.Message}\n{ex.StackTrace}");
-                throw;
-            }
-            finally
-            {
+        //public async Task UpdateNodeStateAsync()
+        //{
+        //    try
+        //    {
+        //        if (State == 1)
+        //        {
+        //            State = 0;
+        //            //_tokenSource = new CancellationTokenSource();
+        //            if (_channel == null)
+        //            {
+        //                _channel = new Channel($"{IpAddress}:{Port}", ChannelCredentials.Insecure);
+        //            }
+        //            await _channel.ConnectAsync(DateTime.UtcNow.AddSeconds(5));
+        //            if (_channel.State == ChannelState.Ready)
+        //            {
+        //                State = 0;
+        //                _ = CheckAlive();
+        //                //_ = RunLoop();
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        State = 1;
+        //        _tokenSource?.Cancel();
+        //        Log.Error($"LocalNode.UpdateNodeStateAsync error, IpAddress={IpAddress}, Port={Port}\n{ex.Message}\n{ex.StackTrace}");
+        //        throw;
+        //    }
+        //    finally
+        //    {
 
-            }
-        }
+        //    }
+        //}
 
         public async Task InitAsync()
         {
             try
             {
-                _tokenSource = new CancellationTokenSource();
-                _channel = new Channel($"{IpAddress}:{Port}", ChannelCredentials.Insecure);
-                await _channel.ConnectAsync();
-                if (_channel.State == ChannelState.Ready)
+                await _initSlim.WaitAsync();
+                //_tokenSource = new CancellationTokenSource();
+                if (_channel == null)
                 {
+                    _channel = new Channel($"{IpAddress}:{Port}", ChannelCredentials.Insecure);
+                    await _channel.ConnectAsync(DateTime.UtcNow.AddSeconds(5));
                     _ = RunLoop();
                     _ = CheckAlive();
                 }
@@ -222,6 +223,10 @@ namespace LocalShare.Desktop.Models.Sends
             catch (Exception ex)
             {
                 Log.Error($"LocalNode.InitAsync error, IpAddress={IpAddress}, Port={Port}\n{ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                _initSlim.Release();
             }
         }
 
@@ -259,11 +264,11 @@ namespace LocalShare.Desktop.Models.Sends
             {
                 try
                 {
-                    if (State != 0)
-                    {
-                        await Task.Delay(1000);
-                        continue;
-                    }
+                    //if (State != 0)
+                    //{
+                    //    await Task.Delay(1000);
+                    //    continue;
+                    //}
 
                     var currentScheduleCount = sendFileTasks.Count;
                     var validCount = GlobalShared.SameNodeMaxSendFileCount - currentScheduleCount;
@@ -271,11 +276,14 @@ namespace LocalShare.Desktop.Models.Sends
                     var tmp = FileTasks!.Where(s => s.State == (int)SendFileTaskState.WaitForSchedule).Take(validCount).ToList();
                     if (tmp != null && tmp.Count > 0)
                     {
+                        var client = new LocalShareService.LocalShareServiceClient(_channel);
+                        await client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(5));
                         using var dbContext = new LocalDataContext();
                         foreach (var item in tmp)
                         {
                             if (File.Exists(item.FullFileName))
                             {
+
                                 FileInfo fi = new FileInfo(item.FullFileName);
                                 var entity = new SendFileTaskEntity
                                 {
@@ -312,25 +320,25 @@ namespace LocalShare.Desktop.Models.Sends
 
 
 
-        public void Close()
-        {
-            try
-            {
-                Log.Information($"Close LocalNode, NodeName={NodeName}, IpAddress={IpAddress}, Port={Port}");
-                _tokenSource?.Cancel();
-                //if (_channel != null)
-                //{
-                //    await _channel.ShutdownAsync();
-                //}
-                //_channel = null;
-                _tokenSource = null;
-                //FileTasks?.Clear();
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"LocalNode.CloseAsync error, NodeName={NodeName}, IpAddress={IpAddress}, Port={Port}\n{ex.Message}\n{ex.StackTrace}");
-            }
-        }
+        //public void Close()
+        //{
+        //    try
+        //    {
+        //        Log.Information($"Close LocalNode, NodeName={NodeName}, IpAddress={IpAddress}, Port={Port}");
+        //        _tokenSource?.Cancel();
+        //        //if (_channel != null)
+        //        //{
+        //        //    await _channel.ShutdownAsync();
+        //        //}
+        //        //_channel = null;
+        //        _tokenSource = null;
+        //        //FileTasks?.Clear();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Log.Error($"LocalNode.CloseAsync error, NodeName={NodeName}, IpAddress={IpAddress}, Port={Port}\n{ex.Message}\n{ex.StackTrace}");
+        //    }
+        //}
 
     }
 }
