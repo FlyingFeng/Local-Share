@@ -77,7 +77,6 @@ namespace LocalShare.Desktop.Models.Sends
                     LocalShareService.LocalShareServiceClient _client = new LocalShareService.LocalShareServiceClient(_channel);
                     await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(3));
                     State = 0;
-                    await Task.Delay(3000);
                 }
                 catch (Exception ex)
                 {
@@ -85,6 +84,10 @@ namespace LocalShare.Desktop.Models.Sends
                     //Close();
                     Log.Error($"LocalNode.CheckAlive error, nodeName= {NodeName},{ex.Message}\n{ex.StackTrace}");
                     //break;
+                }
+                finally
+                {
+                    await Task.Delay(3000);
                 }
 
             }
@@ -308,12 +311,14 @@ namespace LocalShare.Desktop.Models.Sends
                             await Task.Delay(500);
                         }
                     }
-
-                    await Task.Delay(1000);
                 }
                 catch (Exception ex)
                 {
                     Log.Error($"LocalNode.RunLoop error, nodeName= {NodeName},{ex.Message}\n{ex.StackTrace}");
+                }
+                finally
+                {
+                    await Task.Delay(1000);
                 }
             }
         }
