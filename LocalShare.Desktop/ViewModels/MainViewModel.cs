@@ -57,6 +57,8 @@ namespace LocalShare.Desktop.ViewModels
         [ObservableProperty]
         private bool isAbout = false;
         [ObservableProperty]
+        private bool isBrowser = false;
+        [ObservableProperty]
         private string nodeName = string.Empty;
         [ObservableProperty]
         private string ipAddress = string.Empty;
@@ -71,10 +73,11 @@ namespace LocalShare.Desktop.ViewModels
         private SolidColorBrush? historyBrush;
         [ObservableProperty]
         private SolidColorBrush? aboutBrush;
+        [ObservableProperty]
+        private SolidColorBrush? browserBrush;
 
         [ObservableProperty]
         private object? mainContent;
-
 
 
         [RelayCommand]
@@ -145,11 +148,13 @@ namespace LocalShare.Desktop.ViewModels
                 IsReceive = false;
                 IsHistory = false;
                 IsAbout = false;
+                IsBrowser = false;
                 SendBrush = selectedBrushColor;
                 ReceiveBrush = unSelectedBrushColor;
                 SettingBrush = unSelectedBrushColor;
                 HistoryBrush = unSelectedBrushColor;
                 AboutBrush = unSelectedBrushColor;
+                BrowserBrush = unSelectedBrushColor;
 
                 var view = _services!.CreateScope().ServiceProvider.GetRequiredService<SendView>();
                 MainContent = view;
@@ -175,11 +180,13 @@ namespace LocalShare.Desktop.ViewModels
                 IsSetting = false;
                 IsHistory = false;
                 IsAbout = false;
+                IsBrowser = false;
                 ReceiveBrush = selectedBrushColor;
                 SendBrush = unSelectedBrushColor;
                 SettingBrush = unSelectedBrushColor;
                 HistoryBrush = unSelectedBrushColor;
                 AboutBrush = unSelectedBrushColor;
+                BrowserBrush = unSelectedBrushColor;
 
                 var view = _services!.CreateScope().ServiceProvider.GetRequiredService<ReceiveView>();
                 MainContent = view;
@@ -204,11 +211,13 @@ namespace LocalShare.Desktop.ViewModels
                 IsSetting = false;
                 IsReceive = false;
                 IsAbout = false;
+                IsBrowser = false;
                 HistoryBrush = selectedBrushColor;
                 SendBrush = unSelectedBrushColor;
                 SettingBrush = unSelectedBrushColor;
                 ReceiveBrush = unSelectedBrushColor;
                 AboutBrush = unSelectedBrushColor;
+                BrowserBrush = unSelectedBrushColor;
 
                 var view = _services!.CreateScope().ServiceProvider.GetRequiredService<SendAndReceiveHistoryView>();
                 MainContent = view;
@@ -234,11 +243,13 @@ namespace LocalShare.Desktop.ViewModels
                 IsSend = false;
                 IsHistory = false;
                 IsAbout = false;
+                IsBrowser = false;
                 SettingBrush = selectedBrushColor;
                 SendBrush = unSelectedBrushColor;
                 ReceiveBrush = unSelectedBrushColor;
                 HistoryBrush = unSelectedBrushColor;
                 AboutBrush = unSelectedBrushColor;
+                BrowserBrush = unSelectedBrushColor;
 
                 var view = _services!.CreateScope().ServiceProvider.GetRequiredService<LocalSettingView>();
                 MainContent = view;
@@ -264,13 +275,47 @@ namespace LocalShare.Desktop.ViewModels
                 IsSend = false;
                 IsHistory = false;
                 IsSetting = false;
+                IsBrowser = false;
                 AboutBrush = selectedBrushColor;
                 SettingBrush = unSelectedBrushColor;
                 SendBrush = unSelectedBrushColor;
                 ReceiveBrush = unSelectedBrushColor;
                 HistoryBrush = unSelectedBrushColor;
+                BrowserBrush = unSelectedBrushColor;
 
                 var view = _services!.CreateScope().ServiceProvider.GetRequiredService<AboutView>();
+                MainContent = view;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"AboutViewAction error, {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
+        [RelayCommand]
+        private void BrowserViewAction()
+        {
+            try
+            {
+                if (IsAbout)
+                {
+                    return;
+                }
+
+                IsBrowser = true;
+                IsAbout = false;
+                IsReceive = false;
+                IsSend = false;
+                IsHistory = false;
+                IsSetting = false;
+                BrowserBrush = selectedBrushColor;
+                SettingBrush = unSelectedBrushColor;
+                SendBrush = unSelectedBrushColor;
+                ReceiveBrush = unSelectedBrushColor;
+                HistoryBrush = unSelectedBrushColor;
+                AboutBrush = unSelectedBrushColor;
+
+                var view = _services!.CreateScope().ServiceProvider.GetRequiredService<BrowserView>();
                 MainContent = view;
             }
             catch (Exception ex)

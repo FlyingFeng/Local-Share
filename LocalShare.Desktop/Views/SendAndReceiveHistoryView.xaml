@@ -10,6 +10,7 @@
              xmlns:local="clr-namespace:LocalShare.Desktop.Views"
              mc:Ignorable="d" 
              Unloaded="UserControl_Unloaded"
+             Background="#eeeeee"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <myConverter:FileTaskStateConverter x:Key="FileTaskStateConverter"/>

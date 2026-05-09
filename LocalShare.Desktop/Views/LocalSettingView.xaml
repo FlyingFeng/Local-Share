@@ -9,6 +9,7 @@
              xmlns:lc="clr-namespace:LocalShare.Desktop.LocalConverters"
              xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
              Unloaded="UserControl_Unloaded"
+             Background="#eeeeee"
              d:DataContext="{d:DesignInstance Type=vm:LocalSettingViewModel,IsDesignTimeCreatable=True}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">

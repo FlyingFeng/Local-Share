@@ -421,6 +421,14 @@ namespace LocalShare.Desktop.ViewModels
                 return;
             }
 
+            foreach (var eachFile in selectedFiles)
+            {
+                if (!File.Exists(eachFile.FilePath))
+                {
+                    MessageBox.Show($"文件不存在: 【{eachFile.FilePath}】", "警告", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
 
             foreach (var eachNode in selectedNodes)
             {

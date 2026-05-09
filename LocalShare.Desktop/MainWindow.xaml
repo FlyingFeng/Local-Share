@@ -56,6 +56,8 @@
                     <Rectangle Height="10"/>
                     <Button Background="{Binding ReceiveBrush}" Width="108" Height="32" Command="{Binding ReceiveViewActionCommand}">接收</Button>
                     <Rectangle Height="10"/>
+                    <Button Background="{Binding BrowserBrush}" Width="108" Height="32" Command="{Binding BrowserViewActionCommand}">浏览</Button>
+                    <Rectangle Height="10"/>
                     <Button Background="{Binding HistoryBrush}" Width="108" Height="32" Command="{Binding HistoryViewActionCommand}">历史记录</Button>
                     <Rectangle Height="10"/>
                     <Button Background="{Binding SettingBrush}" Width="108" Height="32" Command="{Binding SettingViewActionCommand}">设置</Button>

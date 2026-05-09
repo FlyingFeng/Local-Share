@@ -22,6 +22,7 @@
         <myConverter:SendFileProgressConverter x:Key="SendFileProgressConverter"/>
         <myConverter:FileTaskStateConverter x:Key="FileTaskStateConverter"/>
         <myConverter:NodeStateConverter x:Key="NodeStateConverter"/>
+        <myConverter:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
     </UserControl.Resources>
     <Grid Margin="2">
         <Grid.RowDefinitions>
@@ -174,14 +175,20 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="状态" Width="80" DisplayMemberBinding="{Binding State,Converter={StaticResource NodeStateConverter}}"/>
-                                <GridViewColumn Header="操作" Width="80">
+                                <GridViewColumn Header="状态" Width="70" DisplayMemberBinding="{Binding State,Converter={StaticResource NodeStateConverter}}"/>
+                                <GridViewColumn Header="操作" Width="100">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <hc:Badge Status="Processing" Background="Red" ShowBadge="{Binding ShowBadge}">
-                                                <Button Style="{StaticResource ButtonInfo.Small}"
+                                            <StackPanel Orientation="Horizontal">
+                                                <hc:Badge Status="Processing" Background="Red" ShowBadge="{Binding ShowBadge}">
+                                                    <Button Style="{StaticResource ButtonInfo.Small}"
                                                         Command="{Binding ShowChatWindowCommand}">对话</Button>
-                                            </hc:Badge>
+                                                </hc:Badge>
+                                                <Rectangle Width="10"/>
+                                                <Button Visibility="{Binding State,Converter={StaticResource IntToVisibilityConverter}}"
+                                                        Style="{StaticResource ButtonPrimary.Small}"
+                                                        Command="{Binding CheckConnectionCommand}">探测</Button>
+                                            </StackPanel>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>

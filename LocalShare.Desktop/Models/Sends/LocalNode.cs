@@ -35,6 +35,7 @@ namespace LocalShare.Desktop.Models.Sends
         [ObservableProperty]
         private bool showBadge = false;
 
+        private int checkDuration = 3000;
         public ObservableCollection<FileTaskModel> FileTasks { get; set; } = [];
 
         private readonly SemaphoreSlim _initSlim = new SemaphoreSlim(1, 1);
@@ -77,19 +78,49 @@ namespace LocalShare.Desktop.Models.Sends
                     LocalShareService.LocalShareServiceClient _client = new LocalShareService.LocalShareServiceClient(_channel);
                     await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(3));
                     State = 0;
+                    checkDuration = 3000;
                 }
                 catch (Exception ex)
                 {
                     State = 1;
+                    checkDuration += 1000;
+                    if (checkDuration >= 60 * 1000)
+                    {
+                        checkDuration = 3000;
+                    }
                     //Close();
                     Log.Error($"LocalNode.CheckAlive error, nodeName= {NodeName},{ex.Message}\n{ex.StackTrace}");
                     //break;
                 }
                 finally
                 {
-                    await Task.Delay(3000);
+                    await Task.Delay(checkDuration);
                 }
 
+            }
+        }
+
+        [RelayCommand]
+        private async Task CheckConnection()
+        {
+            try
+            {
+                LocalShareService.LocalShareServiceClient _client = new LocalShareService.LocalShareServiceClient(_channel);
+                await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(3));
+                State = 0;
+                checkDuration = 3000;
+                HandyControl.Controls.MessageBox.Show($"节点【{NodeName}】已经在线", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                State = 1;
+                checkDuration += 1000;
+                if (checkDuration >= 60 * 1000)
+                {
+                    checkDuration = 3000;
+                }
+                Log.Error($"CheckConnection error, {ex.Message}\n{ex.StackTrace}");
+                HandyControl.Controls.MessageBox.Show($"节点【{NodeName}】不在线", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
