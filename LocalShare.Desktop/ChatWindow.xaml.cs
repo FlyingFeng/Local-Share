@@ -198,7 +198,7 @@ namespace LocalShare.Desktop
                 {
                     await SendMessage();
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     HandyControl.Controls.MessageBox.Show("发送失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                     Log.Error($"Send chat message error(key down), {ex.Message}\n{ex.StackTrace}");

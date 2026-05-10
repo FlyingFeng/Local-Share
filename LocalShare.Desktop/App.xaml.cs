@@ -151,6 +151,7 @@ namespace LocalShare.Desktop
                      services.AddSingleton<UdpMulticastDiscoveryService>();
                      services.AddSingleton<SendDataHolder>();
                      services.AddSingleton<ReceiveDataHolder>();
+                     services.AddSingleton<RpcChannelHolder>();
 
                      services.AddTransient<SendView>();
                      services.AddTransient<SendViewModel>();

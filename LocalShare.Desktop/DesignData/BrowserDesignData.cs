@@ -30,7 +30,8 @@ namespace LocalShare.Desktop.DesignData
                   {
                        new RemoteNodeItem
                        {
-                            NodeName="子节点1"
+                            NodeName="子节点1",
+                            FileSize=999999
                        }
                   }
             });

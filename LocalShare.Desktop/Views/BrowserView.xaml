@@ -6,12 +6,13 @@
              xmlns:local="clr-namespace:LocalShare.Desktop.Views"
              xmlns:design="clr-namespace:LocalShare.Desktop.DesignData"
              xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
+             xmlns:model="clr-namespace:LocalShare.Desktop.Models.Browsers"
              xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:BrowserViewModel,IsDesignTimeCreatable=True}"
              Background="#eeeeee"
              Unloaded="UserControl_Unloaded"
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="1000">
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
             <behavior:InvokeCommandAction Command="{Binding LoadedCommand}"/>
@@ -35,12 +36,43 @@
             </StackPanel>
 
             <ScrollViewer Grid.Row="1">
-                <TreeView ItemsSource="{Binding FileNodes}" d:DataContext="{d:DesignInstance Type=design:BrowserDesignData, IsDesignTimeCreatable=True}" d:ItemsSource="{Binding Nodes}">
+                <TreeView  ItemsSource="{Binding FileNodes}" d:DataContext="{d:DesignInstance Type=design:BrowserDesignData, IsDesignTimeCreatable=True}" d:ItemsSource="{Binding Nodes}">
+                    <TreeView.ItemContainerStyle>
+                        <Style TargetType="TreeViewItem" BasedOn="{StaticResource TreeViewItemBaseStyle}">
+                            <Setter Property="ContextMenu" Value="{x:Null}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsLeaf}" Value="True">
+                                    <Setter Property="ContextMenu">
+                                        <Setter.Value>
+                                            <ContextMenu>
+                                                <MenuItem Header="下载"
+                                                          Command="{Binding DownloadFileCommand}"
+                                                          CommandParameter="{Binding NodeName}"/>
+                                            </ContextMenu>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TreeView.ItemContainerStyle>
                     <TreeView.ItemTemplate>
-                        <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                            <Border>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type model:RemoteNodeItem}">
+                            <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding NodeName}"/>
-                            </Border>
+                                <Rectangle Width="5"/>
+                                <TextBlock Text="{Binding FileSize,Converter={StaticResource Long2FileSizeConverter}}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockDefaultInfo}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLeaf}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
                         </HierarchicalDataTemplate>
                     </TreeView.ItemTemplate>
                 </TreeView>
@@ -52,7 +84,28 @@
 
 
         <Border Grid.Column="1">
-
+            <ListView ItemsSource="{Binding DownloadDataHolder.DownloadItems}">
+                <ListView.View>
+                    <GridView AllowsColumnReorder="True">
+                        <GridViewColumn Header="文件名称" Width="150">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding FileName}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTipService.ShowOnDisabled="True"
+                                               ToolTipService.InitialShowDelay="500"
+                                               ToolTipService.ShowDuration="5000"
+                                               ToolTip="{Binding FileName}">
+                                    </TextBlock>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="节点名称" Width="80" DisplayMemberBinding="{Binding NodeName}"/>
+                        <GridViewColumn Header="文件大小" Width="80" DisplayMemberBinding="{Binding TotalSize,Converter={StaticResource Long2FileSizeConverter}}"/>
+                        <GridViewColumn Header="进度(%)" Width="70" DisplayMemberBinding="{Binding Progress}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
         </Border>
 
     </Grid>

@@ -8,14 +8,14 @@ namespace LocalShare.Desktop.DesignData
 
         public LocalNodeDesignData()
         {
-            Nodes.Add(new LocalNode
+            Nodes.Add(new LocalNode(null)
             {
                 IpAddress = "1.1.1.1",
                 IsSelected = false,
                 NodeName = "测试1",
                 State = 0
             });
-            Nodes.Add(new LocalNode
+            Nodes.Add(new LocalNode(null)
             {
                 IpAddress = "1.1.1.2",
                 IsSelected = true,

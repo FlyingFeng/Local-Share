@@ -6,6 +6,7 @@ using HandyControl.Controls;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.DataContext.Entities;
 using LocalShare.Desktop.FileHandler;
+using LocalShare.Desktop.KeepStates;
 using LocalShare.Protocol.Define;
 using Serilog;
 using System.Collections.ObjectModel;
@@ -39,11 +40,18 @@ namespace LocalShare.Desktop.Models.Sends
         public ObservableCollection<FileTaskModel> FileTasks { get; set; } = [];
 
         private readonly SemaphoreSlim _initSlim = new SemaphoreSlim(1, 1);
-        private Channel? _channel;
+        //private Channel? _channel;
         private readonly Dictionary<string, SendFileHandler> sendFileTasks = new Dictionary<string, SendFileHandler>();
         private readonly List<FileItemInfo> _cacheShareFiles = new List<FileItemInfo>();
 
         public bool IsSending => sendFileTasks.Count > 0;
+
+        private readonly RpcChannelHolder? _rpcChannelHolder;
+        public LocalNode(RpcChannelHolder? rpcChannelHolder)
+        {
+            _rpcChannelHolder = rpcChannelHolder;
+        }
+
 
         public void ReceiveChatMessage(ChatRequest request)
         {
@@ -74,8 +82,8 @@ namespace LocalShare.Desktop.Models.Sends
                     //{
                     //    break;
                     //}
-
-                    LocalShareService.LocalShareServiceClient _client = new LocalShareService.LocalShareServiceClient(_channel);
+                    var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
+                    var _client = new LocalShareService.LocalShareServiceClient(channel);
                     await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(3));
                     State = 0;
                     checkDuration = 3000;
@@ -105,7 +113,8 @@ namespace LocalShare.Desktop.Models.Sends
         {
             try
             {
-                LocalShareService.LocalShareServiceClient _client = new LocalShareService.LocalShareServiceClient(_channel);
+                var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
+                var _client = new LocalShareService.LocalShareServiceClient(channel);
                 await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(3));
                 State = 0;
                 checkDuration = 3000;
@@ -136,7 +145,7 @@ namespace LocalShare.Desktop.Models.Sends
                 }
 
                 ChatWindow window = new ChatWindow();
-                window.NodeChannel = _channel;
+                window.NodeChannel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
                 window.Node = this;
                 window.Title = NodeName;
                 window.Owner = Application.Current.MainWindow;
@@ -165,7 +174,8 @@ namespace LocalShare.Desktop.Models.Sends
                             sendFileTasks.Remove(matchedFile.TaskId);
                         }
 
-                        LocalShareService.LocalShareServiceClient client = new LocalShareService.LocalShareServiceClient(_channel);
+                        var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
+                        var client = new LocalShareService.LocalShareServiceClient(channel);
                         try
                         {
                             await client.OperateFileTaskAsync(new FileOperationRequest
@@ -245,11 +255,10 @@ namespace LocalShare.Desktop.Models.Sends
             try
             {
                 await _initSlim.WaitAsync();
-                //_tokenSource = new CancellationTokenSource();
-                if (_channel == null)
+                var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
+                if (channel != null)
                 {
-                    _channel = new Channel($"{IpAddress}:{Port}", ChannelCredentials.Insecure);
-                    await _channel.ConnectAsync(DateTime.UtcNow.AddSeconds(5));
+                    await channel.ConnectAsync(DateTime.UtcNow.AddSeconds(5));
                     _ = RunLoop();
                     _ = CheckAlive();
                 }
@@ -312,7 +321,8 @@ namespace LocalShare.Desktop.Models.Sends
                     var tmp = FileTasks!.Where(s => s.State == (int)SendFileTaskState.WaitForSchedule).Take(validCount).ToList();
                     if (tmp != null && tmp.Count > 0)
                     {
-                        var client = new LocalShareService.LocalShareServiceClient(_channel);
+                        var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
+                        var client = new LocalShareService.LocalShareServiceClient(channel);
                         await client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(5));
                         using var dbContext = new LocalDataContext();
                         foreach (var item in tmp)
@@ -336,7 +346,7 @@ namespace LocalShare.Desktop.Models.Sends
                                 };
                                 await dbContext!.AddAsync(entity);
                                 await dbContext!.SaveChangesAsync();
-                                SendFileHandler handler = new SendFileHandler(_channel!, NodeName, this);
+                                SendFileHandler handler = new SendFileHandler(channel!, NodeName, this);
                                 _ = handler.SendFile(item, entity);
                                 item.State = (int)SendFileTaskState.Transferring;
                                 sendFileTasks[item.TaskId] = handler;
@@ -382,7 +392,8 @@ namespace LocalShare.Desktop.Models.Sends
             var list = new List<FileItemInfo>();
             try
             {
-                var client = new LocalShareService.LocalShareServiceClient(_channel);
+                var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
+                var client = new LocalShareService.LocalShareServiceClient(channel);
                 var response = await client.ListFilesAsync(new EmptyMessage());
                 if (response.Files.Count > 0)
                 {

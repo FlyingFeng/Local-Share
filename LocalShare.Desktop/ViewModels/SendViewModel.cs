@@ -20,13 +20,15 @@ namespace LocalShare.Desktop.ViewModels
     {
         public SendViewModel() { }
         private readonly UdpMulticastDiscoveryService? _udpDiscoveryService;
+        private readonly RpcChannelHolder? _channelHolder;
         public SendViewModel(UdpMulticastDiscoveryService udpDiscoveryService,
-            SendDataHolder sendDataHolder
-            )
+            SendDataHolder sendDataHolder,
+            RpcChannelHolder rpcChannelHolder)
         {
+            _channelHolder = rpcChannelHolder;
+            SendDataHolder = sendDataHolder;
             _udpDiscoveryService = udpDiscoveryService;
             _udpDiscoveryService.ClientDiscovered += UdpDiscoveryService_ClientDiscovered;
-            SendDataHolder = sendDataHolder;
             WeakReferenceMessenger.Default.Register<MessageModel>(this);
         }
 
@@ -46,7 +48,7 @@ namespace LocalShare.Desktop.ViewModels
         {
             try
             {
-                AddLocalNodeWindow window = new AddLocalNodeWindow();
+                AddLocalNodeWindow window = new AddLocalNodeWindow(_channelHolder);
                 var flag = window.ShowDialog();
                 if (flag == true)
                 {
@@ -55,7 +57,7 @@ namespace LocalShare.Desktop.ViewModels
                         var matched = SendDataHolder!.GetNode(ipAddress: window.NodeInfo.IpAddress, port: window.NodeInfo.Port);//HomeDataHolder!.Nodes.FirstOrDefault(s => s.IpAddress == window.NodeInfo.IpAddress && s.Port == window.NodeInfo.Port);
                         if (matched == null)
                         {
-                            var node = new LocalNode()
+                            var node = new LocalNode(_channelHolder!)
                             {
                                 InBlackList = false,
                                 InWhiteList = false,
@@ -110,7 +112,7 @@ namespace LocalShare.Desktop.ViewModels
                         var matched = SendDataHolder!.GetNode(ipAddress: e.IpAddress, port: e.Port);
                         if (matched == null)
                         {
-                            var node = new LocalNode()
+                            var node = new LocalNode(_channelHolder!)
                             {
                                 InBlackList = false,
                                 InWhiteList = false,
@@ -485,7 +487,7 @@ namespace LocalShare.Desktop.ViewModels
                 var matched = SendDataHolder!.GetNode(obj.IpAddress, obj.Port);
                 if (matched == null)
                 {
-                    var node = new LocalNode()
+                    var node = new LocalNode(_channelHolder!)
                     {
                         InBlackList = false,
                         InWhiteList = false,

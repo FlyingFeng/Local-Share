@@ -1,4 +1,5 @@
 ﻿using Grpc.Core;
+using LocalShare.Desktop.KeepStates;
 using LocalShare.Protocol.Define;
 using System;
 using System.Collections.Generic;
@@ -22,9 +23,11 @@ namespace LocalShare.Desktop
     /// </summary>
     public partial class AddLocalNodeWindow : Window
     {
-        public AddLocalNodeWindow()
+        private readonly RpcChannelHolder? _channelHolder;
+        public AddLocalNodeWindow(RpcChannelHolder? channelHolder)
         {
             InitializeComponent();
+            _channelHolder = channelHolder;
         }
 
         public NodeModel? NodeInfo { get; set; }
@@ -59,7 +62,7 @@ namespace LocalShare.Desktop
             try
             {
                 BtnAddNode.IsEnabled = false;
-                channel = new Channel($"{ipAddress}:{port}", ChannelCredentials.Insecure);
+                channel = await _channelHolder!.AddAndCloseOldChannel(ipAddress, int.Parse(port));
                 await channel.ConnectAsync(DateTime.UtcNow.AddSeconds(5));
                 LocalShareService.LocalShareServiceClient client = new LocalShareService.LocalShareServiceClient(channel);
                 var nodeInfo = await client.GetServerNodeInfoAsync(new EmptyMessage());
