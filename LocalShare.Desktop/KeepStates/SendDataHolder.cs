@@ -12,6 +12,58 @@ namespace LocalShare.Desktop.KeepStates
         private readonly object locker = new object();
 
 
+        public List<FileCache> GetFiles(bool isSelected)
+        {
+            lock (locker)
+            {
+                var result = new List<FileCache>();
+                var query = FileCaches.AsQueryable();
+                query = query.Where(s => s.IsSelected == isSelected);
+                result.AddRange(query.ToList());
+                return result;
+            }
+        }
+
+        public FileCache? GetFile(string filePath = "")
+        {
+            lock (locker)
+            {
+                var query = FileCaches.AsQueryable();
+                if (!string.IsNullOrEmpty(filePath))
+                {
+                    query = query.Where(s => s.FilePath == filePath);
+                }
+                var matched = query.FirstOrDefault();
+                return matched;
+            }
+        }
+
+
+        public void AddFile(FileCache file)
+        {
+            lock (locker)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    FileCaches.Add(file);
+                });
+            }
+        }
+
+
+        public List<FileCache> GetAllFiles()
+        {
+            lock (locker)
+            {
+                var result = new List<FileCache>();
+                foreach (var item in FileCaches)
+                {
+                    result.Add(item);
+                }
+                return result;
+            }
+        }
+
         public LocalNode? GetNode(string ipAddress = "", int port = 0, string nodeName = "")
         {
             lock (locker)
@@ -33,6 +85,20 @@ namespace LocalShare.Desktop.KeepStates
 
                 node = query.FirstOrDefault();
                 return node;
+            }
+        }
+
+
+        public List<LocalNode> GetAllNodes()
+        {
+            lock (locker)
+            {
+                var result = new List<LocalNode>();
+                foreach (var item in Nodes)
+                {
+                    result.Add(item);
+                }
+                return result;
             }
         }
 

@@ -4,11 +4,56 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:LocalShare.Desktop.Views"
-             mc:Ignorable="d" 
+             xmlns:design="clr-namespace:LocalShare.Desktop.DesignData"
+             xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
+             xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:BrowserViewModel,IsDesignTimeCreatable=True}"
              Background="#eeeeee"
              Unloaded="UserControl_Unloaded"
              d:DesignHeight="450" d:DesignWidth="800">
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:InvokeCommandAction Command="{Binding LoadedCommand}"/>
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
     <Grid>
-        <TextBlock Text="开发中" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Width="10"/>
+                <ComboBox Width="220" Height="32" ItemsSource="{Binding LocalNodes}" SelectedIndex="{Binding SelectedIndex}"></ComboBox>
+                <Rectangle Width="18"/>
+                <Button Width="108" Height="32" Style="{StaticResource ButtonPrimary}" Command="{Binding RefreshFileCommand}">刷新</Button>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1">
+                <TreeView ItemsSource="{Binding FileNodes}" d:DataContext="{d:DesignInstance Type=design:BrowserDesignData, IsDesignTimeCreatable=True}" d:ItemsSource="{Binding Nodes}">
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                            <Border>
+                                <TextBlock Text="{Binding NodeName}"/>
+                            </Border>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </ScrollViewer>
+
+
+        </Grid>
+
+
+
+        <Border Grid.Column="1">
+
+        </Border>
+
     </Grid>
 </UserControl>

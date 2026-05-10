@@ -13,7 +13,7 @@ enum FileTaskStatus{
 
 	FILE_TASK_STATUS_IN_BLACK_LIST       = 50;   //在黑名单中
 	FILE_TASK_STATUS_NOT_IN_WHITE_LIST   = 51;   //不在白名单中
-	FILE_TASK_STATUS_PASSWORD_ERROR      = 52;   //密码错误	
+	FILE_TASK_STATUS_PASSWORD_ERROR      = 52;   //密码错误
 }
 
 
@@ -98,15 +98,30 @@ message FileChunk{
 	bytes  data             = 1;  //分片二进制数据
 }
 
+message DownloadFileRequest{
+	string     file_name          = 1;
+	int64      start_byte_index   = 2;
+}
 
+message FileItemInfo{
+	string file_name        = 1;   //文件名称，带后缀
+	string file_ext         = 2;   //文件后缀
+	int64  total_size       = 3;   //文件总大小
+	string md5              = 4;   //文件md5值
+	string relative_path    = 5;   //相对路径（目录传输时使用）：subdir/doc.pdf
+}
 
+message FileItemInfoArray{
+	repeated FileItemInfo         files      = 1;
+}
 
 service LocalShareService{
 	rpc GetServerNodeInfo(EmptyMessage) returns(NodeModel);
 	rpc PreStartFileTask(PreStartFileTaskRequest) returns(PreStartFileTaskResponse);
 	rpc StartFileTask(StartFileTaskRequest) returns(StartFileTaskResponse);
 	rpc SendFile(stream FileChunk) returns(EmptyMessage);
-	rpc DownloadFile(EmptyMessage) returns(stream FileChunk);
+	rpc DownloadFile(DownloadFileRequest) returns(stream FileChunk);
 	rpc OperateFileTask(FileOperationRequest) returns(CommonResponse);
 	rpc Chat(ChatRequest) returns(CommonResponse);
+	rpc ListFiles(EmptyMessage) returns(FileItemInfoArray);
 }

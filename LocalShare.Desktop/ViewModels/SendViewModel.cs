@@ -21,19 +21,19 @@ namespace LocalShare.Desktop.ViewModels
         public SendViewModel() { }
         private readonly UdpMulticastDiscoveryService? _udpDiscoveryService;
         public SendViewModel(UdpMulticastDiscoveryService udpDiscoveryService,
-            SendDataHolder homeDataHolder
+            SendDataHolder sendDataHolder
             )
         {
             _udpDiscoveryService = udpDiscoveryService;
             _udpDiscoveryService.ClientDiscovered += UdpDiscoveryService_ClientDiscovered;
-            HomeDataHolder = homeDataHolder;
+            SendDataHolder = sendDataHolder;
             WeakReferenceMessenger.Default.Register<MessageModel>(this);
         }
 
 
         public ObservableCollection<FileTaskModel> CurrentNodeFileTasks { get; set; } = [];
 
-        public SendDataHolder? HomeDataHolder { get; set; }
+        public SendDataHolder? SendDataHolder { get; set; }
         [ObservableProperty]
         private bool isSelectAll;
         [ObservableProperty]
@@ -52,7 +52,7 @@ namespace LocalShare.Desktop.ViewModels
                 {
                     if (window.NodeInfo != null)
                     {
-                        var matched = HomeDataHolder!.GetNode(ipAddress: window.NodeInfo.IpAddress, port: window.NodeInfo.Port);//HomeDataHolder!.Nodes.FirstOrDefault(s => s.IpAddress == window.NodeInfo.IpAddress && s.Port == window.NodeInfo.Port);
+                        var matched = SendDataHolder!.GetNode(ipAddress: window.NodeInfo.IpAddress, port: window.NodeInfo.Port);//HomeDataHolder!.Nodes.FirstOrDefault(s => s.IpAddress == window.NodeInfo.IpAddress && s.Port == window.NodeInfo.Port);
                         if (matched == null)
                         {
                             var node = new LocalNode()
@@ -66,7 +66,7 @@ namespace LocalShare.Desktop.ViewModels
                                 LastSeenTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                             };
                             await node.InitAsync();
-                            HomeDataHolder!.Nodes.Add(node);
+                            SendDataHolder!.Nodes.Add(node);
                         }
                     }
                 }
@@ -83,16 +83,16 @@ namespace LocalShare.Desktop.ViewModels
         {
             try
             {
-                if (HomeDataHolder != null)
+                if (SendDataHolder != null)
                 {
                     using var _dbContext = new LocalDataContext();
                     var files = await _dbContext!.LocalFiles.ToListAsync() ?? [];
                     files.ForEach((e) =>
                     {
-                        var matched = HomeDataHolder.FileCaches.FirstOrDefault(s => s.FilePath == e.FileFullPath);
+                        var matched = SendDataHolder.FileCaches.FirstOrDefault(s => s.FilePath == e.FileFullPath);
                         if (matched == null)
                         {
-                            HomeDataHolder.FileCaches.Add(new FileCache
+                            SendDataHolder.FileCaches.Add(new FileCache
                             {
                                 FileName = e.FileName,
                                 FilePath = e.FileFullPath,
@@ -107,7 +107,7 @@ namespace LocalShare.Desktop.ViewModels
                     var nodeCaches = _udpDiscoveryService?.GetNodeModelCaches() ?? [];
                     foreach (var e in nodeCaches)
                     {
-                        var matched = HomeDataHolder!.GetNode(ipAddress: e.IpAddress, port: e.Port);
+                        var matched = SendDataHolder!.GetNode(ipAddress: e.IpAddress, port: e.Port);
                         if (matched == null)
                         {
                             var node = new LocalNode()
@@ -120,14 +120,14 @@ namespace LocalShare.Desktop.ViewModels
                                 Port = e.Port,
                                 LastSeenTime = e.Time
                             };
-                            HomeDataHolder!.AddNode(node);
+                            SendDataHolder!.AddNode(node);
                             await node.InitAsync();
                         }
                     }
 
-                    if (HomeDataHolder.Nodes!.Count > 0)
+                    if (SendDataHolder.Nodes!.Count > 0)
                     {
-                        var firstNode = HomeDataHolder.Nodes.First();
+                        var firstNode = SendDataHolder.Nodes.First();
                         CurrentNodeFileTasks.Clear();
                         foreach (var item in firstNode.FileTasks)
                         {
@@ -148,13 +148,13 @@ namespace LocalShare.Desktop.ViewModels
         {
             try
             {
-                var selected = HomeDataHolder!.FileCaches.Where(s => s.IsSelected).ToList();
+                var selected = SendDataHolder!.FileCaches.Where(s => s.IsSelected).ToList();
                 if (selected.Count > 0)
                 {
                     using var _dbContext = new LocalDataContext();
                     foreach (var item in selected)
                     {
-                        HomeDataHolder!.FileCaches.Remove(item);
+                        SendDataHolder!.FileCaches.Remove(item);
                         var matched = _dbContext!.LocalFiles.FirstOrDefault(s => s.FileFullPath == item.FilePath);
                         if (matched != null)
                         {
@@ -232,7 +232,7 @@ namespace LocalShare.Desktop.ViewModels
                                     });
                                 }
 
-                                var matched = HomeDataHolder!.FileCaches.FirstOrDefault(s => s.FilePath == info.FullName);
+                                var matched = SendDataHolder!.FileCaches.FirstOrDefault(s => s.FilePath == info.FullName);
                                 if (matched == null)
                                 {
                                     matched = new FileCache
@@ -244,7 +244,7 @@ namespace LocalShare.Desktop.ViewModels
                                         Md5 = md5,
                                         IsOpenFromDir = true
                                     };
-                                    HomeDataHolder!.FileCaches.Add(matched);
+                                    SendDataHolder!.FileCaches.Add(matched);
                                 }
                             }
                             catch (Exception ex)
@@ -303,7 +303,7 @@ namespace LocalShare.Desktop.ViewModels
                                 });
                             }
 
-                            var matched = HomeDataHolder!.FileCaches.FirstOrDefault(s => s.FilePath == info.FullName);
+                            var matched = SendDataHolder!.FileCaches.FirstOrDefault(s => s.FilePath == info.FullName);
                             if (matched == null)
                             {
                                 matched = new FileCache
@@ -315,7 +315,7 @@ namespace LocalShare.Desktop.ViewModels
                                     Md5 = md5,
                                     IsOpenFromDir = false
                                 };
-                                HomeDataHolder!.FileCaches.Add(matched);
+                                SendDataHolder!.FileCaches.Add(matched);
                             }
                         }
                         catch (Exception ex)
@@ -347,7 +347,7 @@ namespace LocalShare.Desktop.ViewModels
                 }
                 else
                 {
-                    if (HomeDataHolder!.FileCaches.All(s => s.IsSelected))
+                    if (SendDataHolder!.FileCaches.All(s => s.IsSelected))
                     {
                         IsSelectAll = true;
                     }
@@ -366,7 +366,7 @@ namespace LocalShare.Desktop.ViewModels
                 }
                 else
                 {
-                    if (HomeDataHolder!.Nodes.All(s => s.IsSelected))
+                    if (SendDataHolder!.Nodes.All(s => s.IsSelected))
                     {
                         IsNodeSelectAll = true;
                     }
@@ -380,7 +380,7 @@ namespace LocalShare.Desktop.ViewModels
         {
             if (parameter is bool b)
             {
-                foreach (var item in HomeDataHolder!.FileCaches)
+                foreach (var item in SendDataHolder!.FileCaches)
                 {
                     item.IsSelected = b;
                 }
@@ -392,7 +392,7 @@ namespace LocalShare.Desktop.ViewModels
         {
             if (parameter is bool b)
             {
-                foreach (var item in HomeDataHolder!.Nodes)
+                foreach (var item in SendDataHolder!.Nodes)
                 {
                     item.IsSelected = b;
                 }
@@ -402,8 +402,8 @@ namespace LocalShare.Desktop.ViewModels
         [RelayCommand]
         private void SendFile()
         {
-            var selectedFiles = HomeDataHolder!.FileCaches.Where(s => s.IsSelected).ToList();
-            var selectedNodes = HomeDataHolder.Nodes.Where(s => s.IsSelected).ToList();
+            var selectedFiles = SendDataHolder!.FileCaches.Where(s => s.IsSelected).ToList();
+            var selectedNodes = SendDataHolder.Nodes.Where(s => s.IsSelected).ToList();
             if (selectedNodes.Count > GlobalShared.SendNodeMaxCount)
             {
                 HandyControl.Controls.MessageBox.Show($"最多只能选择{GlobalShared.SendNodeMaxCount}个节点", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
@@ -414,7 +414,7 @@ namespace LocalShare.Desktop.ViewModels
                 HandyControl.Controls.MessageBox.Show($"每个节点最多只能选择{GlobalShared.SameNodeMaxSendFileCount}个文件", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
-            var sendFileNodeCount = HomeDataHolder!.Nodes.Where(s => s.IsSending).Count();
+            var sendFileNodeCount = SendDataHolder!.Nodes.Where(s => s.IsSending).Count();
             if (sendFileNodeCount > GlobalShared.SendNodeMaxCount)
             {
                 HandyControl.Controls.MessageBox.Show($"同时发送文件的节点最多只能有{GlobalShared.SendNodeMaxCount}个", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
@@ -451,7 +451,7 @@ namespace LocalShare.Desktop.ViewModels
                     }
                 }
             }
-            if (HomeDataHolder.Nodes.Count > 0)
+            if (SendDataHolder.Nodes.Count > 0)
             {
                 SelectedNodeIndex = -1;
                 SelectedNodeIndex = 0;
@@ -482,7 +482,7 @@ namespace LocalShare.Desktop.ViewModels
             {
                 isHandle = true;
 
-                var matched = HomeDataHolder!.GetNode(obj.IpAddress, obj.Port);
+                var matched = SendDataHolder!.GetNode(obj.IpAddress, obj.Port);
                 if (matched == null)
                 {
                     var node = new LocalNode()
@@ -495,7 +495,7 @@ namespace LocalShare.Desktop.ViewModels
                         IpAddress = obj.IpAddress,
                         LastSeenTime = obj.Time
                     };
-                    HomeDataHolder!.AddNode(node);
+                    SendDataHolder!.AddNode(node);
                     await node.InitAsync();
                 }
                 else

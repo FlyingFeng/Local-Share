@@ -52,7 +52,7 @@
                         <Button Style="{StaticResource ButtonDanger}" Width="88" Height="32" Command="{Binding RemoveSelectedFileCommand}">移除选中</Button>
                     </StackPanel>
 
-                    <ListView Grid.Row="1" ItemContainerStyle="{StaticResource ListViewItemStyle}" ItemsSource="{Binding HomeDataHolder.FileCaches}" d:DataContext="{d:DesignInstance Type=design:LocalFileCacheDesignData,IsDesignTimeCreatable=True}" d:ItemsSource="{Binding FileCaches}">
+                    <ListView Grid.Row="1" ItemContainerStyle="{StaticResource ListViewItemStyle}" ItemsSource="{Binding SendDataHolder.FileCaches}" d:DataContext="{d:DesignInstance Type=design:LocalFileCacheDesignData,IsDesignTimeCreatable=True}" d:ItemsSource="{Binding FileCaches}">
                         <ListView.View>
                             <GridView AllowsColumnReorder="True">
                                 <GridViewColumn Width="70">
@@ -133,7 +133,7 @@
                         <Button Style="{StaticResource ButtonPrimary}" Width="88" Height="32" Command="{Binding AddLocalNodeCommand}">添加节点</Button>
                     </StackPanel>
 
-                    <ListView x:Name="ListNodes" ItemContainerStyle="{StaticResource ListViewItemStyle}" Grid.Row="1" SelectedIndex="{Binding SelectedNodeIndex}" ItemsSource="{Binding HomeDataHolder.Nodes}" d:ItemsSource="{Binding Nodes}" d:DataContext="{d:DesignInstance Type=design:LocalNodeDesignData,IsDesignTimeCreatable=True}">
+                    <ListView x:Name="ListNodes" ItemContainerStyle="{StaticResource ListViewItemStyle}" Grid.Row="1" SelectedIndex="{Binding SelectedNodeIndex}" ItemsSource="{Binding SendDataHolder.Nodes}" d:ItemsSource="{Binding Nodes}" d:DataContext="{d:DesignInstance Type=design:LocalNodeDesignData,IsDesignTimeCreatable=True}">
                         <behavior:Interaction.Triggers>
                             <behavior:EventTrigger EventName="SelectionChanged">
                                 <behavior:InvokeCommandAction Command="{Binding NodeSelectionChangedCommand}"

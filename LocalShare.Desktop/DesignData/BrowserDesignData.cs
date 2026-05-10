@@ -1,0 +1,40 @@
+﻿using LocalShare.Desktop.Models.Browsers;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace LocalShare.Desktop.DesignData
+{
+    public class BrowserDesignData
+    {
+        public ObservableCollection<RemoteNodeItem> Nodes { get; set; } = [];
+
+
+        public BrowserDesignData()
+        {
+            Nodes.Add(new RemoteNodeItem
+            {
+                NodeName = "根节点1"
+            });
+            Nodes.Add(new RemoteNodeItem()
+            {
+                NodeName = "根节点2"
+            });
+            Nodes.Add(new RemoteNodeItem
+            {
+                NodeName = "根节点3",
+                Children = new ObservableCollection<RemoteNodeItem>
+                  {
+                       new RemoteNodeItem
+                       {
+                            NodeName="子节点1"
+                       }
+                  }
+            });
+        }
+
+    }
+}

@@ -40,8 +40,8 @@ namespace LocalShare.Desktop.Models.Sends
 
         private readonly SemaphoreSlim _initSlim = new SemaphoreSlim(1, 1);
         private Channel? _channel;
-        //private CancellationTokenSource? _tokenSource;
         private readonly Dictionary<string, SendFileHandler> sendFileTasks = new Dictionary<string, SendFileHandler>();
+        private readonly List<FileItemInfo> _cacheShareFiles = new List<FileItemInfo>();
 
         public bool IsSending => sendFileTasks.Count > 0;
 
@@ -294,6 +294,8 @@ namespace LocalShare.Desktop.Models.Sends
 
         private async Task RunLoop()
         {
+            await RefreshCacheFiles();
+
             while (true)
             {
                 try
@@ -354,6 +356,50 @@ namespace LocalShare.Desktop.Models.Sends
             }
         }
 
+        public async Task<List<FileItemInfo>> GetCacheFiles()
+        {
+            var list = new List<FileItemInfo>();
+            try
+            {
+                if (_cacheShareFiles.Count == 0)
+                {
+                    await RefreshCacheFiles();
+                }
+                foreach (var item in _cacheShareFiles)
+                {
+                    list.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Node= {NodeName}, GetCacheFiles error, {ex.Message}\n{ex.StackTrace}");
+            }
+            return list;
+        }
+
+        public async Task<List<FileItemInfo>> RefreshCacheFiles()
+        {
+            var list = new List<FileItemInfo>();
+            try
+            {
+                var client = new LocalShareService.LocalShareServiceClient(_channel);
+                var response = await client.ListFilesAsync(new EmptyMessage());
+                if (response.Files.Count > 0)
+                {
+                    _cacheShareFiles.Clear();
+                    foreach (var eachFile in response.Files)
+                    {
+                        _cacheShareFiles.Add(eachFile);
+                        list.Add(eachFile);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Node= {NodeName}, RefreshCacheFiles error, {ex.Message}\n{ex.StackTrace}");
+            }
+            return list;
+        }
 
 
         //public void Close()

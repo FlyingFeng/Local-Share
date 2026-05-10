@@ -103,6 +103,12 @@ namespace LocalShare.Desktop.ViewModels
         {
             try
             {
+                if (NodeName.Length > 8)
+                {
+                    MessageBox.Show("节点名称的长度不能超过8", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
                 using var _dbContext = new LocalDataContext();
                 var matched = _dbContext!.LocalNodes.FirstOrDefault();
                 if (matched != null)

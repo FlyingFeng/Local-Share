@@ -3,6 +3,7 @@ using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.KeepStates;
 using LocalShare.Protocol.Define;
 using Serilog;
+using System.IO;
 
 namespace LocalShare.Desktop.Server
 {
@@ -90,11 +91,49 @@ namespace LocalShare.Desktop.Server
             return new EmptyMessage();
         }
 
-        public override Task DownloadFile(EmptyMessage request, IServerStreamWriter<FileChunk> responseStream, ServerCallContext context)
+        public override Task DownloadFile(DownloadFileRequest request, IServerStreamWriter<FileChunk> responseStream, ServerCallContext context)
         {
             return base.DownloadFile(request, responseStream, context);
         }
 
+        public override Task<FileItemInfoArray> ListFiles(EmptyMessage request, ServerCallContext context)
+        {
+            FileItemInfoArray result = new FileItemInfoArray()
+            {
+                Files = { }
+            };
+            try
+            {
+                var allFiles = _sendDataHolder.GetAllFiles();
+                var data = new List<FileItemInfo>();
+                foreach (var file in allFiles)
+                {
+                    if (File.Exists(file.FilePath))
+                    {
+                        var fi = new FileInfo(file.FilePath);
+                        string relativeName = string.Empty;
+                        if (fi.Directory != null && file.IsOpenFromDir)
+                        {
+                            relativeName = fi.FullName.Split(fi.Directory.Root.Name)[1];
+                        }
+                        var each = new FileItemInfo
+                        {
+                            FileExt = fi.Extension,
+                            FileName = fi.Name,
+                            TotalSize = fi.Length,
+                            RelativePath = relativeName
+                        };
+                        data.Add(each);
+                    }
+                }
+                result.Files.Add(data);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"ListFiles error, {ex.Message}\n{ex.StackTrace}");
+            }
+            return Task.FromResult(result);
+        }
 
         public override Task<NodeModel> GetServerNodeInfo(EmptyMessage request, ServerCallContext context)
         {
