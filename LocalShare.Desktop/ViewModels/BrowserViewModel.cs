@@ -1,7 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using HandyControl.Controls;
+using LocalShare.Desktop.FileHandler;
 using LocalShare.Desktop.KeepStates;
+using LocalShare.Desktop.Models;
 using LocalShare.Desktop.Models.Browsers;
 using LocalShare.Desktop.Models.Sends;
 using LocalShare.Protocol.Define;
@@ -17,7 +20,7 @@ using System.Windows;
 
 namespace LocalShare.Desktop.ViewModels
 {
-    public partial class BrowserViewModel : ObservableObject, IClosable
+    public partial class BrowserViewModel : ObservableObject, IClosable, IRecipient<MessageModel>
     {
         public ObservableCollection<RemoteNodeItem> FileNodes { get; set; } = [];
         public ObservableCollection<string> LocalNodes { get; set; } = [];
@@ -28,21 +31,20 @@ namespace LocalShare.Desktop.ViewModels
         [ObservableProperty]
         private int selectedIndex = -1;
 
-        public DownloadDataHolder? DownloadDataHolder { get; set; }
 
-        public BrowserViewModel()
-        {
-
-        }
+        public BrowserViewModel() { }
 
         public BrowserViewModel(SendDataHolder? sendDataHolder, DownloadDataHolder? downloadDataHolder)
         {
             _sendDataHolder = sendDataHolder;
             DownloadDataHolder = downloadDataHolder;
+            WeakReferenceMessenger.Default.Register<MessageModel>(this);
         }
+        public DownloadDataHolder? DownloadDataHolder { get; set; }
 
         public void Close()
         {
+            WeakReferenceMessenger.Default.Unregister<MessageModel>(this);
         }
 
         [RelayCommand]
@@ -59,7 +61,7 @@ namespace LocalShare.Desktop.ViewModels
                         return;
                     }
                     var files = await matchedNode.RefreshCacheFiles();
-                    GenerateTreeViewData(files);
+                    GenerateTreeViewData(files, matchedNode.NodeName);
                 }
             }
             catch (Exception ex)
@@ -94,7 +96,7 @@ namespace LocalShare.Desktop.ViewModels
                     SelectedIndex = 0;
                     var matchedNode = allNodes[0];
                     var files = await matchedNode.GetCacheFiles();
-                    GenerateTreeViewData(files);
+                    GenerateTreeViewData(files, matchedNode.NodeName);
                 }
             }
             catch (Exception ex)
@@ -104,7 +106,7 @@ namespace LocalShare.Desktop.ViewModels
         }
 
 
-        private void GenerateTreeViewData(List<FileItemInfo> files)
+        private void GenerateTreeViewData(List<FileItemInfo> files, string localNodeName)
         {
             if (files == null || files.Count == 0)
             {
@@ -132,7 +134,8 @@ namespace LocalShare.Desktop.ViewModels
                                         {
                                             NodeName = eachPart[0],
                                             Children = new ObservableCollection<RemoteNodeItem>(),
-                                            FileSize = 0
+                                            FileSize = 0,
+                                            LocalNodeName = localNodeName
                                         };
                                         FileNodes.Add(node);
                                     }
@@ -147,7 +150,8 @@ namespace LocalShare.Desktop.ViewModels
                                         {
                                             eachNode = new RemoteNodeItem
                                             {
-                                                NodeName = eachPart[i]
+                                                NodeName = eachPart[i],
+                                                LocalNodeName = localNodeName
                                             };
                                             if (eachPart[i] != item.FileName)
                                             {
@@ -169,7 +173,8 @@ namespace LocalShare.Desktop.ViewModels
                             FileNodes.Add(new RemoteNodeItem
                             {
                                 NodeName = item.FileName,
-                                FileSize = item.TotalSize
+                                FileSize = item.TotalSize,
+                                LocalNodeName = localNodeName
                             });
                         }
                     }
@@ -178,7 +183,8 @@ namespace LocalShare.Desktop.ViewModels
                         FileNodes.Add(new RemoteNodeItem
                         {
                             NodeName = item.FileName,
-                            FileSize = item.TotalSize
+                            FileSize = item.TotalSize,
+                            LocalNodeName = localNodeName
                         });
                     }
                 }
@@ -192,12 +198,53 @@ namespace LocalShare.Desktop.ViewModels
             }
         }
 
-        [RelayCommand]
-        private void DownloadFile(object args)
+        private async Task HandleDownloadFile(DownloadTaskModel model)
         {
-            HandyControl.Controls.MessageBox.Show(999.ToString());
+            try
+            {
+                var node = _nodeCaches.FirstOrDefault(s => s.NodeName == model.NodeName);
+                if (node != null)
+                {
+                    if (node.State == 1)
+                    {
+                        Growl.Warning($"【{node.NodeName}】已经下线");
+                        return;
+                    }
+
+                    var matchedFile = await node.GetCacheFile(model.FileName);
+                    if (matchedFile != null)
+                    {
+                        var item = new DownloadFileTaskItem
+                        {
+                            FileName = matchedFile.FileName,
+                            NodeName = model.NodeName,
+                            TotalSize = matchedFile.TotalSize,
+                            CurrentSize = 0,
+                            Id = Guid.NewGuid().ToString()
+                        };
+                        DownloadFileHandler handler = new DownloadFileHandler(node, item);
+                        DownloadDataHolder!.Add(item);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"HandleDownloadFile error, {ex.Message}\n{ex.StackTrace}");
+            }
+
         }
 
+        public void Receive(MessageModel message)
+        {
+            if (message.MessageType != MessageType.DownloadFile)
+            {
+                return;
+            }
+            if (message.Data is DownloadTaskModel model)
+            {
+                _ = HandleDownloadFile(model);
+            }
 
+        }
     }
 }

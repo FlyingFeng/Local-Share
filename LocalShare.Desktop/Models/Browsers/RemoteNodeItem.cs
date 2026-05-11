@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,6 +12,7 @@ namespace LocalShare.Desktop.Models.Browsers
 {
     public partial class RemoteNodeItem : ObservableObject
     {
+        public string LocalNodeName { get; set; } = string.Empty;
         public string NodeName { get; set; } = string.Empty;
         public bool IsLeaf => Children == null || Children.Count == 0;
         public long FileSize { get; set; }
@@ -21,11 +23,18 @@ namespace LocalShare.Desktop.Models.Browsers
         [RelayCommand]
         private void DownloadFile(object args)
         {
-            if (IsLeaf)
+            if (IsLeaf && args != null && args is string fileName)
             {
-                HandyControl.Controls.MessageBox.Show(args.ToString());
+                WeakReferenceMessenger.Default.Send(new MessageModel
+                {
+                    MessageType = MessageType.DownloadFile,
+                    Data = new DownloadTaskModel
+                    {
+                        FileName = fileName,
+                        NodeName = LocalNodeName
+                    }
+                });
             }
         }
-
     }
 }

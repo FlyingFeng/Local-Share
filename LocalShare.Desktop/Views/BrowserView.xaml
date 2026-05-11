@@ -12,7 +12,7 @@
              d:DataContext="{d:DesignInstance Type=vm:BrowserViewModel,IsDesignTimeCreatable=True}"
              Background="#eeeeee"
              Unloaded="UserControl_Unloaded"
-             d:DesignHeight="450" d:DesignWidth="1000">
+             d:DesignHeight="450" d:DesignWidth="1200">
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
             <behavior:InvokeCommandAction Command="{Binding LoadedCommand}"/>
@@ -84,7 +84,7 @@
 
 
         <Border Grid.Column="1">
-            <ListView ItemsSource="{Binding DownloadDataHolder.DownloadItems}">
+            <ListView ItemsSource="{Binding DownloadDataHolder.DownloadItems}" d:DataContext="{d:DesignInstance Type=design:BrowserDesignData, IsDesignTimeCreatable=True}" d:ItemsSource="{Binding DownloadFileTasks}">
                 <ListView.View>
                     <GridView AllowsColumnReorder="True">
                         <GridViewColumn Header="文件名称" Width="150">

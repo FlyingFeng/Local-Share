@@ -366,6 +366,25 @@ namespace LocalShare.Desktop.Models.Sends
             }
         }
 
+
+        public async Task<FileItemInfo?> GetCacheFile(string fileName)
+        {
+            FileItemInfo? file = null;
+            try
+            {
+                if (_cacheShareFiles.Count == 0)
+                {
+                    await RefreshCacheFiles();
+                }
+                file = _cacheShareFiles.FirstOrDefault(s => s.FileName == fileName);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Node= {NodeName}, GetCacheFiles error, {ex.Message}\n{ex.StackTrace}");
+            }
+            return file;
+        }
+
         public async Task<List<FileItemInfo>> GetCacheFiles()
         {
             var list = new List<FileItemInfo>();

@@ -21,12 +21,10 @@ namespace LocalShare.Desktop.Views
     /// </summary>
     public partial class BrowserView : UserControl
     {
-        private readonly BrowserViewModel _vm;
         public BrowserView(BrowserViewModel vm)
         {
             InitializeComponent();
             DataContext = vm;
-            _vm = vm;
         }
 
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)

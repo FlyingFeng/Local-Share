@@ -9,6 +9,9 @@ namespace LocalShare.Desktop.Models.Browsers
 {
     public partial class DownloadFileTaskItem : ObservableObject
     {
+
+        public string Id { get; set; } = string.Empty;
+
         [ObservableProperty]
         private string nodeName = string.Empty;
         [ObservableProperty]

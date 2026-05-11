@@ -10,7 +10,8 @@ namespace LocalShare.Desktop.Models
         RestartBrocast,
         RemoveCurrentNodeFinishedSendFileTask,
         RestartMulticast,
-        ChatMessageArrived
+        ChatMessageArrived,
+        DownloadFile
     }
 
 

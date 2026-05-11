@@ -521,6 +521,7 @@ namespace LocalShare.Desktop.ViewModels
         {
             // 取消订阅，切断单例对本对象的引用
             _udpDiscoveryService!.ClientDiscovered -= UdpDiscoveryService_ClientDiscovered;
+            WeakReferenceMessenger.Default.Unregister<MessageModel>(this);
         }
 
         public void Receive(MessageModel message)
