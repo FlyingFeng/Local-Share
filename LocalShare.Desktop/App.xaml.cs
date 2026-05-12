@@ -176,7 +176,8 @@ namespace LocalShare.Desktop
             catch (Exception ex)
             {
                 Log.Error(ex.Message);
-                throw;
+                HandyControl.Controls.MessageBox.Show(ex.Message, "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                Application.Current.Shutdown();
             }
         }
 

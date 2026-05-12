@@ -32,6 +32,19 @@ namespace LocalShare.Desktop.KeepStates
         }
 
 
+        public DownloadFileTaskItem? Get(string fileName)
+        {
+            var matched = DownloadItems.FirstOrDefault(s => s.FileName == fileName);
+            return matched;
+        }
+
+        public bool Exist(string fileName)
+        {
+            var matched = DownloadItems.FirstOrDefault(s => s.FileName == fileName);
+            return matched != null;
+        }
+
+
         public void Remove(string id)
         {
             lock (locker)

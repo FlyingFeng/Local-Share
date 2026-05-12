@@ -18,7 +18,15 @@ namespace LocalShare.Desktop.FileHandler
 
         }
 
-        public DownloadFileTaskItem? DownloadItem { get; set; }
+        public DownloadFileTaskItem? DownloadItem { get; private set; }
+
+
+
+        public void Start()
+        {
+
+        }
+
 
     }
 }

@@ -8,15 +8,8 @@ using LocalShare.Desktop.Models;
 using LocalShare.Desktop.Models.Browsers;
 using LocalShare.Desktop.Models.Sends;
 using LocalShare.Protocol.Define;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Serilog;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 
 namespace LocalShare.Desktop.ViewModels
 {
@@ -26,7 +19,9 @@ namespace LocalShare.Desktop.ViewModels
         public ObservableCollection<string> LocalNodes { get; set; } = [];
 
         private readonly SendDataHolder? _sendDataHolder;
-        private readonly List<LocalNode> _nodeCaches = new List<LocalNode>();
+        private readonly List<LocalNode> _nodeCaches = [];
+        private readonly Dictionary<string, DownloadFileHandler> _downloadTask = new Dictionary<string, DownloadFileHandler>();
+
 
         [ObservableProperty]
         private int selectedIndex = -1;
@@ -52,17 +47,7 @@ namespace LocalShare.Desktop.ViewModels
         {
             try
             {
-                if (SelectedIndex >= 0 && SelectedIndex < _nodeCaches.Count)
-                {
-                    var matchedNode = _nodeCaches[SelectedIndex];
-                    if (matchedNode.State == 1)
-                    {
-                        HandyControl.Controls.MessageBox.Show("节点已经离线", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-                        return;
-                    }
-                    var files = await matchedNode.RefreshCacheFiles();
-                    GenerateTreeViewData(files, matchedNode.NodeName);
-                }
+                await LoadData();
             }
             catch (Exception ex)
             {
@@ -71,33 +56,42 @@ namespace LocalShare.Desktop.ViewModels
         }
 
 
+        private async Task LoadData()
+        {
+            var allNodes = _sendDataHolder!.GetAllNodes();
+            if (allNodes.Count > 0)
+            {
+                foreach (var item in allNodes)
+                {
+                    var str = item.NodeName;
+                    if (item.State == 1)
+                    {
+                        str += " - 离线";
+                    }
+                    var matched = _nodeCaches.FirstOrDefault(s => s.NodeName == item.NodeName);
+                    if (matched == null)
+                    {
+                        _nodeCaches.Add(item);
+                    }
+                    var nameMatched = LocalNodes.FirstOrDefault(s => s == str);
+                    if (nameMatched == null)
+                    {
+                        LocalNodes.Add(str);
+                    }
+                }
+                SelectedIndex = 0;
+                var matchedNode = allNodes[0];
+                var files = await matchedNode.GetCacheFiles();
+                GenerateTreeViewData(files, matchedNode.NodeName);
+            }
+        }
+
         [RelayCommand]
         private async Task Loaded()
         {
             try
             {
-                var allNodes = _sendDataHolder!.GetAllNodes();
-                if (allNodes.Count > 0)
-                {
-                    _nodeCaches.Clear();
-                    LocalNodes.Clear();
-                    foreach (var item in allNodes)
-                    {
-                        if (item.State == 0) //onlone
-                        {
-                            LocalNodes.Add(item.NodeName);
-                        }
-                        else //offline
-                        {
-                            LocalNodes.Add($"{item.NodeName} - 离线");
-                        }
-                        _nodeCaches.Add(item);
-                    }
-                    SelectedIndex = 0;
-                    var matchedNode = allNodes[0];
-                    var files = await matchedNode.GetCacheFiles();
-                    GenerateTreeViewData(files, matchedNode.NodeName);
-                }
+                await LoadData();
             }
             catch (Exception ex)
             {
@@ -207,7 +201,14 @@ namespace LocalShare.Desktop.ViewModels
                 {
                     if (node.State == 1)
                     {
-                        Growl.Warning($"【{node.NodeName}】已经下线");
+                        Growl.Warning($"【{node.NodeName}】已经下线，无法下载【{model.FileName}】");
+                        return;
+                    }
+
+                    var existed = DownloadDataHolder!.Exist(model.FileName);
+                    if (existed)
+                    {
+                        Growl.Warning($"【{model.FileName}】已经在下载中");
                         return;
                     }
 
@@ -231,7 +232,6 @@ namespace LocalShare.Desktop.ViewModels
             {
                 Log.Error($"HandleDownloadFile error, {ex.Message}\n{ex.StackTrace}");
             }
-
         }
 
         public void Receive(MessageModel message)
