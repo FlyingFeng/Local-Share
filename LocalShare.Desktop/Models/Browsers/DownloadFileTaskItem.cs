@@ -22,6 +22,15 @@ namespace LocalShare.Desktop.Models.Browsers
         private long currentSize = 0;
         [ObservableProperty]
         private int progress = 0;
+        /// <summary>
+        /// 0:wait for schedule
+        /// 1:sending/receiving/downloading
+        /// 2:stop
+        /// 3:finish
+        /// 4:error
+        /// </summary>
+        [ObservableProperty]
+        private int state;
 
         partial void OnCurrentSizeChanged(long value)
         {

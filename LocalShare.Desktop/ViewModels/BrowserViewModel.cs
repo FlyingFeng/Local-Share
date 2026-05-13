@@ -224,7 +224,9 @@ namespace LocalShare.Desktop.ViewModels
                             Id = Guid.NewGuid().ToString()
                         };
                         DownloadFileHandler handler = new DownloadFileHandler(node, item);
+                        _downloadTask.Add($"{item.NodeName}#{item.FileName}", handler);
                         DownloadDataHolder!.Add(item);
+                        _ = handler.Start();
                     }
                 }
             }

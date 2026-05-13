@@ -130,7 +130,10 @@ namespace LocalShare.Desktop.FileHandler
             }
             finally
             {
-                fs?.Dispose();
+                if (fs != null)
+                {
+                    await fs.DisposeAsync();
+                }
                 if (hasError)
                 {
                     entity!.State = 4;

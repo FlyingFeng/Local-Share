@@ -21,7 +21,7 @@ namespace LocalShare.Desktop.DataContext.Entities
         public string FileName { get; set; } = string.Empty;
         /// <summary>
         /// 0:wait for schedule
-        /// 1:sending/receiving
+        /// 1:sending/receiving/downloading
         /// 2:stop
         /// 3:finish
         /// 4:error

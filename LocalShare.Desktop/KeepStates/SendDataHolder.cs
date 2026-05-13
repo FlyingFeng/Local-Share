@@ -24,18 +24,9 @@ namespace LocalShare.Desktop.KeepStates
             }
         }
 
-        public FileCache? GetFile(string filePath = "")
+        public FileCache? GetFile(string fileName)
         {
-            lock (locker)
-            {
-                var query = FileCaches.AsQueryable();
-                if (!string.IsNullOrEmpty(filePath))
-                {
-                    query = query.Where(s => s.FilePath == filePath);
-                }
-                var matched = query.FirstOrDefault();
-                return matched;
-            }
+            return FileCaches.FirstOrDefault(s => s.FileName == fileName);
         }
 
 

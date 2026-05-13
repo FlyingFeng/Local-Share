@@ -52,6 +52,13 @@ namespace LocalShare.Desktop.Models.Sends
             _rpcChannelHolder = rpcChannelHolder;
         }
 
+        public Channel? GetRpcChannel()
+        {
+            var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
+            return channel;
+        }
+
+
 
         public void ReceiveChatMessage(ChatRequest request)
         {

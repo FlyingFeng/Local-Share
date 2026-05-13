@@ -3,6 +3,7 @@ using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.KeepStates;
 using LocalShare.Protocol.Define;
 using Serilog;
+using System.Buffers;
 using System.IO;
 
 namespace LocalShare.Desktop.Server
@@ -91,9 +92,46 @@ namespace LocalShare.Desktop.Server
             return new EmptyMessage();
         }
 
-        public override Task DownloadFile(DownloadFileRequest request, IServerStreamWriter<FileChunk> responseStream, ServerCallContext context)
+        public override async Task DownloadFile(DownloadFileRequest request, IServerStreamWriter<FileChunk> responseStream, ServerCallContext context)
         {
-            return base.DownloadFile(request, responseStream, context);
+            FileStream? fs = null;
+            var buffer = ArrayPool<byte>.Shared.Rent(1024 * 256);
+            try
+            {
+                var startIndex = request.StartByteIndex;
+                var matchedFile = _sendDataHolder.GetFile(request.FileName);
+                if (matchedFile != null && File.Exists(matchedFile.FilePath))
+                {
+                    fs = new FileStream(matchedFile.FilePath, FileMode.Open, FileAccess.Read);
+                    fs.Position = startIndex;
+                    while (true)
+                    {
+                        var read = await fs.ReadAsync(buffer);
+                        if (read <= 0)
+                        {
+                            break;
+                        }
+                        var chunkData = new FileChunk
+                        {
+                            Data = Google.Protobuf.ByteString.CopyFrom(buffer, 0, read)
+                        };
+                        await responseStream.WriteAsync(chunkData);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"DownloadFile(server) error, {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+                if (fs != null)
+                {
+                    await fs.DisposeAsync();
+                }
+            }
+
         }
 
         public override Task<FileItemInfoArray> ListFiles(EmptyMessage request, ServerCallContext context)

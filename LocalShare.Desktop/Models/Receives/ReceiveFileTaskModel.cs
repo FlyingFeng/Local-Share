@@ -12,7 +12,7 @@ namespace LocalShare.Desktop.Models.Receives
         private long currentSize = 0;
         /// <summary>
         /// 0:wait for schedule
-        /// 1:sending/receiving
+        /// 1:sending/receiving/downloading
         /// 2:stop
         /// 3:finish
         /// 4:error

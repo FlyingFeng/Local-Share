@@ -8,11 +8,15 @@
              xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
              xmlns:model="clr-namespace:LocalShare.Desktop.Models.Browsers"
              xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:localConverter="clr-namespace:LocalShare.Desktop.LocalConverters"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:BrowserViewModel,IsDesignTimeCreatable=True}"
              Background="#eeeeee"
              Unloaded="UserControl_Unloaded"
              d:DesignHeight="450" d:DesignWidth="1200">
+    <UserControl.Resources>
+        <localConverter:FileTaskStateConverter x:Key="FileTaskStateConverter"/>
+    </UserControl.Resources>
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
             <behavior:InvokeCommandAction Command="{Binding LoadedCommand}"/>
@@ -102,6 +106,7 @@
                         </GridViewColumn>
                         <GridViewColumn Header="节点名称" Width="80" DisplayMemberBinding="{Binding NodeName}"/>
                         <GridViewColumn Header="文件大小" Width="80" DisplayMemberBinding="{Binding TotalSize,Converter={StaticResource Long2FileSizeConverter}}"/>
+                        <GridViewColumn Header="状态" Width="100" DisplayMemberBinding="{Binding State,Converter={StaticResource FileTaskStateConverter}}"/>
                         <GridViewColumn Header="进度(%)" Width="70" DisplayMemberBinding="{Binding Progress}"/>
                     </GridView>
                 </ListView.View>
