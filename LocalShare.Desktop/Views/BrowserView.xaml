@@ -24,8 +24,8 @@
     </behavior:Interaction.Triggers>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="3*"/>
         </Grid.ColumnDefinitions>
         <Grid>
             <Grid.RowDefinitions>
@@ -108,6 +108,26 @@
                         <GridViewColumn Header="文件大小" Width="80" DisplayMemberBinding="{Binding TotalSize,Converter={StaticResource Long2FileSizeConverter}}"/>
                         <GridViewColumn Header="状态" Width="100" DisplayMemberBinding="{Binding State,Converter={StaticResource FileTaskStateConverter}}"/>
                         <GridViewColumn Header="进度(%)" Width="70" DisplayMemberBinding="{Binding Progress}"/>
+                        <GridViewColumn Header="操作" Width="200">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Style="{StaticResource ButtonDanger.Small}"
+                                                Command="{Binding Path=DataContext.CancelDownloadFileTaskCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}">取消</Button>
+                                        <Rectangle Width="10"/>
+                                        <Button Style="{StaticResource ButtonWarning.Small}"
+                                                Command="{Binding Path=DataContext.StopDownloadFileTaskCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}">停止</Button>
+                                        <Rectangle Width="10"/>
+                                        <Button Style="{StaticResource ButtonPrimary.Small}"
+                                                Command="{Binding Path=DataContext.StartDownloadFileTaskCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}">开始</Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
                     </GridView>
                 </ListView.View>
             </ListView>

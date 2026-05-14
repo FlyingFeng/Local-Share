@@ -10,6 +10,7 @@ using LocalShare.Desktop.Models.Sends;
 using LocalShare.Protocol.Define;
 using Serilog;
 using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace LocalShare.Desktop.ViewModels
 {
@@ -52,6 +53,65 @@ namespace LocalShare.Desktop.ViewModels
             catch (Exception ex)
             {
                 Log.Error($"RefreshFile error, {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
+        [RelayCommand]
+        private void CancelDownloadFileTask(object args)
+        {
+            if (args != null && args is DownloadFileTaskItem model)
+            {
+                var key = $"{model.NodeName}#{model.FileName}";
+                if (_downloadTask.TryGetValue(key, out var handler))
+                {
+                    handler.Cancel();
+                    _downloadTask.Remove(key);
+                }
+                var matched = DownloadDataHolder!.Get(model.FileName);
+                if (matched != null)
+                {
+                    DownloadDataHolder!.Remove(matched.Id);
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void StopDownloadFileTask(object args)
+        {
+            if (args != null && args is DownloadFileTaskItem model)
+            {
+                if (model.State == 1)
+                {
+                    var key = $"{model.NodeName}#{model.FileName}";
+                    if (_downloadTask.TryGetValue(key, out var handler))
+                    {
+                        handler.Stop();
+                        _downloadTask.Remove(key);
+                    }
+                }
+                else
+                {
+                    HandyControl.Controls.MessageBox.Show("当前不可以停止下载", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+            }
+        }
+
+        [RelayCommand]
+        private async Task StartDownloadFileTask(object args)
+        {
+            if (args != null && args is DownloadFileTaskItem model)
+            {
+                if (model.State == 0 ||
+                    model.State == 2)
+                {
+                    await HandleDownloadFile(model.FileName, model.NodeName);
+                }
+                else
+                {
+                    HandyControl.Controls.MessageBox.Show("当前不可以开始下载", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
             }
         }
 
@@ -192,40 +252,79 @@ namespace LocalShare.Desktop.ViewModels
             }
         }
 
-        private async Task HandleDownloadFile(DownloadTaskModel model)
+        private void HandleFinishDownloadFile(DownloadFileTaskItem model)
+        {
+            _downloadTask.Remove($"{model.NodeName}#{model.FileName}");
+        }
+
+        private void HandleDownloadError(DownloadFileTaskItem model)
+        {
+            _downloadTask.Remove($"{model.NodeName}#{model.FileName}");
+        }
+
+
+        private async Task HandleDownloadFile(string fileName, string nodeName)
         {
             try
             {
-                var node = _nodeCaches.FirstOrDefault(s => s.NodeName == model.NodeName);
+                var node = _nodeCaches.FirstOrDefault(s => s.NodeName == nodeName);
                 if (node != null)
                 {
                     if (node.State == 1)
                     {
-                        Growl.Warning($"【{node.NodeName}】已经下线，无法下载【{model.FileName}】");
+                        Growl.Warning($"【{node.NodeName}】已经下线，无法下载【{fileName}】");
                         return;
                     }
 
-                    var existed = DownloadDataHolder!.Exist(model.FileName);
-                    if (existed)
+                    var matchedTask = DownloadDataHolder!.Get(fileName);
+                    if (matchedTask != null)
                     {
-                        Growl.Warning($"【{model.FileName}】已经在下载中");
-                        return;
+                        if (matchedTask.State == 0 ||
+                            matchedTask.State == 1)
+                        {
+                            HandyControl.Controls.MessageBox.Show($"【{fileName}】已经在下载任务中", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                            return;
+                        }
+                        else if (matchedTask.State == 3)
+                        {
+                            HandyControl.Controls.MessageBox.Show($"【{fileName}】已完成", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                            return;
+                        }
+                        else if (matchedTask.State == 4)
+                        {
+                            HandyControl.Controls.MessageBox.Show($"有发生错误的任务，请先移除", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                            return;
+                        }
                     }
 
-                    var matchedFile = await node.GetCacheFile(model.FileName);
+                    var matchedFile = await node.GetCacheFile(fileName);
                     if (matchedFile != null)
                     {
-                        var item = new DownloadFileTaskItem
+                        if (matchedTask == null)
                         {
-                            FileName = matchedFile.FileName,
-                            NodeName = model.NodeName,
-                            TotalSize = matchedFile.TotalSize,
-                            CurrentSize = 0,
-                            Id = Guid.NewGuid().ToString()
-                        };
-                        DownloadFileHandler handler = new DownloadFileHandler(node, item);
-                        _downloadTask.Add($"{item.NodeName}#{item.FileName}", handler);
-                        DownloadDataHolder!.Add(item);
+                            matchedTask = new DownloadFileTaskItem
+                            {
+                                FileName = matchedFile.FileName,
+                                NodeName = nodeName,
+                                TotalSize = matchedFile.TotalSize,
+                                CurrentSize = 0,
+                                Id = Guid.NewGuid().ToString()
+                            };
+
+                            DownloadDataHolder!.Add(matchedTask);
+                        }
+                        else
+                        {
+                            matchedTask.State = 1;
+                        }
+                        var key = $"{matchedTask.NodeName}#{matchedTask.FileName}";
+                        if (_downloadTask.TryGetValue(key, out var handler))
+                        {
+                            handler.Cancel();
+                            _downloadTask.Remove(key);
+                        }
+                        handler = new DownloadFileHandler(node, matchedTask);
+                        _downloadTask.Add(key, handler);
                         _ = handler.Start();
                     }
                 }
@@ -238,15 +337,27 @@ namespace LocalShare.Desktop.ViewModels
 
         public void Receive(MessageModel message)
         {
-            if (message.MessageType != MessageType.DownloadFile)
+            switch (message.MessageType)
             {
-                return;
+                case MessageType.DownloadFile:
+                    if (message.Data is DownloadTaskModel model)
+                    {
+                        _ = HandleDownloadFile(model.FileName, model.NodeName);
+                    }
+                    break;
+                case MessageType.FinishDownloadFile:
+                    if (message.Data is DownloadFileTaskItem finishModel)
+                    {
+                        HandleFinishDownloadFile(finishModel);
+                    }
+                    break;
+                case MessageType.DownloadFileError:
+                    if (message.Data is DownloadFileTaskItem errorModel)
+                    {
+                        HandleDownloadError(errorModel);
+                    }
+                    break;
             }
-            if (message.Data is DownloadTaskModel model)
-            {
-                _ = HandleDownloadFile(model);
-            }
-
         }
     }
 }

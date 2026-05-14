@@ -95,7 +95,7 @@ namespace LocalShare.Desktop.Server
         public override async Task DownloadFile(DownloadFileRequest request, IServerStreamWriter<FileChunk> responseStream, ServerCallContext context)
         {
             FileStream? fs = null;
-            var buffer = ArrayPool<byte>.Shared.Rent(1024 * 256);
+            var buffer = ArrayPool<byte>.Shared.Rent(1024 * GlobalShared.TransferSpeed);
             try
             {
                 var startIndex = request.StartByteIndex;

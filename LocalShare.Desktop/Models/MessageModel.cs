@@ -11,7 +11,9 @@ namespace LocalShare.Desktop.Models
         RemoveCurrentNodeFinishedSendFileTask,
         RestartMulticast,
         ChatMessageArrived,
-        DownloadFile
+        DownloadFile,
+        FinishDownloadFile,
+        DownloadFileError
     }
 
 

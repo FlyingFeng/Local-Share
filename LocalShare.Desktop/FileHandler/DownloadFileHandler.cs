@@ -1,16 +1,11 @@
-﻿using Google.Protobuf;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using Grpc.Core;
-using LocalShare.Desktop.KeepStates;
+using LocalShare.Desktop.Models;
 using LocalShare.Desktop.Models.Browsers;
 using LocalShare.Desktop.Models.Sends;
 using LocalShare.Protocol.Define;
 using Serilog;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LocalShare.Desktop.FileHandler
 {
@@ -25,18 +20,28 @@ namespace LocalShare.Desktop.FileHandler
         }
 
         public DownloadFileTaskItem? DownloadItem { get; private set; }
+        private bool hasStop = false;
+        private bool hasCancel = false;
 
 
         public void Stop()
         {
+            hasStop = true;
             _token?.Cancel();
-            DownloadItem!.State = 2;
+            if (DownloadItem != null)
+            {
+                DownloadItem.State = 2;
+            }
         }
 
         public void Cancel()
         {
+            hasCancel = true;
             _token?.Cancel();
-            DownloadItem!.State = 4;
+            if (DownloadItem != null)
+            {
+                DownloadItem.State = 4;
+            }
         }
 
         public async Task Restart()
@@ -58,15 +63,15 @@ namespace LocalShare.Desktop.FileHandler
             try
             {
                 var channel = _node.GetRpcChannel();
-                if (channel != null)
+                if (channel != null && DownloadItem != null)
                 {
-                    var filePath = Path.Combine(GlobalShared.DownloadPath, DownloadItem!.FileName);
+                    var filePath = Path.Combine(GlobalShared.DownloadPath, DownloadItem.FileName);
                     long startByteIndex = 0;
                     if (File.Exists(filePath))
                     {
                         FileInfo fi = new FileInfo(filePath);
                         startByteIndex = fi.Length;
-                        DownloadItem!.CurrentSize = fi.Length;
+                        DownloadItem.CurrentSize = fi.Length;
                         fs = new FileStream(filePath, FileMode.Append, FileAccess.Write);
                     }
                     else
@@ -80,34 +85,45 @@ namespace LocalShare.Desktop.FileHandler
                     };
                     var client = new LocalShareService.LocalShareServiceClient(channel);
                     response = client.DownloadFile(request);
-                    DownloadItem!.State = 1;
+                    DownloadItem.State = 1;
                     while (await response.ResponseStream.MoveNext(_token.Token))
                     {
                         var eachPart = response.ResponseStream.Current.Data.ToByteArray();
                         await fs.WriteAsync(eachPart, _token.Token);
-                        DownloadItem!.CurrentSize += eachPart.Length;
+                        DownloadItem.CurrentSize += eachPart.Length;
                         if (_token.IsCancellationRequested)
                         {
                             break;
                         }
                     }
-                    if (DownloadItem!.TotalSize == DownloadItem!.CurrentSize)
+                    if (DownloadItem.TotalSize == DownloadItem.CurrentSize)
                     {
-                        DownloadItem!.State = 3;
-                    }
-                    else
-                    {
-                        DownloadItem!.State = 4;
+                        DownloadItem.State = 3;
+                        WeakReferenceMessenger.Default.Send(new MessageModel
+                        {
+                            MessageType = MessageType.FinishDownloadFile,
+                            Data = DownloadItem
+                        });
                     }
                 }
             }
             catch (Exception ex)
             {
-                DownloadItem!.State = 4;
+                if (DownloadItem != null && !hasCancel && !hasStop)
+                {
+                    DownloadItem.State = 4;
+                }
+                WeakReferenceMessenger.Default.Send(new MessageModel
+                {
+                    MessageType = MessageType.DownloadFileError,
+                    Data = DownloadItem
+                });
                 Log.Error($"Download file error, {ex.Message}\n{ex.StackTrace}");
             }
             finally
             {
+                hasStop = false;
+                hasCancel = false;
                 response?.Dispose();
                 if (fs != null)
                 {
