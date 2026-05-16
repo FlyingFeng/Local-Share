@@ -37,11 +37,20 @@ namespace LocalShare.Desktop.ViewModels
         [ObservableProperty]
         private bool sameNodeMaxSendFileCountSelected;
         [ObservableProperty]
-        private bool downloadPathSelected;
+        private bool saveFilePathSelected;
         [ObservableProperty]
         private bool multicastAddressSelected = false;
         [ObservableProperty]
         private bool transferSpeedSelected = false;
+        [ObservableProperty]
+        private bool downloadSpeedSelected = false;
+
+
+        [ObservableProperty]
+        [NotifyDataErrorInfo]
+        [Required(ErrorMessage = "【下载基准速率】不能为空")]
+        [Range(1, 1024, ErrorMessage = "【下载基准速率】必须处于[1,1024]区间")]
+        private string downloadSpeed = string.Empty;
 
         [ObservableProperty]
         [NotifyDataErrorInfo]
@@ -82,11 +91,11 @@ namespace LocalShare.Desktop.ViewModels
 
         [ObservableProperty]
         [Required(ErrorMessage = "【文件保存路径】不能为空")]
-        private string downloadPath = string.Empty;
+        private string saveFilePath = string.Empty;
 
 
         public bool AnySelected => ServerPortSelected || BrocastPortSelected || SendNodeMaxCountSelected ||
-                                    SameNodeMaxSendFileCountSelected || DownloadPathSelected || MulticastAddressSelected ||
+                                    SameNodeMaxSendFileCountSelected || SaveFilePathSelected || MulticastAddressSelected ||
                                     TransferSpeedSelected;
 
 
@@ -97,24 +106,24 @@ namespace LocalShare.Desktop.ViewModels
             var flag = dialog.ShowDialog();
             if (flag == true)
             {
-                DownloadPath = dialog.FolderName;
+                SaveFilePath = dialog.FolderName;
             }
         }
 
         [RelayCommand]
-        private void GoToDownloadPath()
+        private void GoToSaveFilePath()
         {
             try
             {
-                if (Directory.Exists(DownloadPath))
+                if (Directory.Exists(SaveFilePath))
                 {
-                    ExplorerHelper.OpenFolder(DownloadPath);
+                    ExplorerHelper.OpenFolder(SaveFilePath);
                 }
             }
             catch (Exception ex)
             {
                 HandyControl.Controls.MessageBox.Show("跳转失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                Log.Error($"LocalSettingViewModel.GoToDownloadPath error, {ex.Message}\n{ex.StackTrace}");
+                Log.Error($"LocalSettingViewModel.GoToSaveFilePath error, {ex.Message}\n{ex.StackTrace}");
             }
         }
 
@@ -145,6 +154,10 @@ namespace LocalShare.Desktop.ViewModels
                         });
                     }
                 }
+                if (DownloadSpeedSelected)
+                {
+                    GlobalShared.DownloadSpeed = int.Parse(DownloadSpeed);
+                }
                 if (SendNodeMaxCountSelected)
                 {
                     GlobalShared.SendNodeMaxCount = int.Parse(SendNodeMaxCount);
@@ -157,21 +170,21 @@ namespace LocalShare.Desktop.ViewModels
                 {
                     GlobalShared.TransferSpeed = int.Parse(TransferSpeed);
                 }
-                if (DownloadPathSelected)
+                if (SaveFilePathSelected)
                 {
-                    if (!string.IsNullOrEmpty(DownloadPath) &&
-                       !Directory.Exists(DownloadPath))
+                    if (!string.IsNullOrEmpty(SaveFilePath) &&
+                       !Directory.Exists(SaveFilePath))
                     {
                         try
                         {
-                            Directory.CreateDirectory(DownloadPath);
+                            Directory.CreateDirectory(SaveFilePath);
                         }
                         catch (Exception ex)
                         {
-                            Log.Error($"Create directory error, path: {DownloadPath}, message: {ex.Message}");
+                            Log.Error($"Create directory error, path: {SaveFilePath}, message: {ex.Message}");
                         }
                     }
-                    GlobalShared.DownloadPath = DownloadPath;
+                    GlobalShared.SaveFilePath = SaveFilePath;
                 }
                 if (MulticastAddressSelected)
                 {
@@ -191,7 +204,7 @@ namespace LocalShare.Desktop.ViewModels
                 }
                 else
                 {
-                    Growl.Info("没有选中应用项");
+                    Growl.Warning("没有选中应用项");
                 }
             }
         }
@@ -225,10 +238,10 @@ namespace LocalShare.Desktop.ViewModels
                     {
                         sameNodeSendFileCountEntity.Value = SameNodeMaxSendFileCount;
                     }
-                    var downloadPathEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyDownloadPath);
-                    if (downloadPathEntity != null)
+                    var saveFilePathEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeySaveFilePath);
+                    if (saveFilePathEntity != null)
                     {
-                        downloadPathEntity.Value = DownloadPath;
+                        saveFilePathEntity.Value = SaveFilePath;
                     }
                     var multicastAddressEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyMulticastAddress);
                     if (multicastAddressEntity != null)
@@ -239,6 +252,11 @@ namespace LocalShare.Desktop.ViewModels
                     if (transferSpeedEntity != null)
                     {
                         transferSpeedEntity.Value = TransferSpeed;
+                    }
+                    var downloadSpeedEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyDownloadSpeed);
+                    if (downloadSpeedEntity != null)
+                    {
+                        downloadSpeedEntity.Value = DownloadSpeed;
                     }
                     await dbContext.SaveChangesAsync();
                     Growl.Info("保存成功");
@@ -254,13 +272,32 @@ namespace LocalShare.Desktop.ViewModels
         [RelayCommand]
         private void Loaded()
         {
-            ServerPort = GlobalShared.ServerPort.ToString();
-            BrocastPort = GlobalShared.BroadcastPort.ToString();
-            SameNodeMaxSendFileCount = GlobalShared.SameNodeMaxSendFileCount.ToString();
-            SendNodeMaxCount = GlobalShared.SendNodeMaxCount.ToString();
-            DownloadPath = GlobalShared.DownloadPath!;
-            MulticastAddress = GlobalShared.MulticastAddress!;
-            TransferSpeed = GlobalShared.TransferSpeed.ToString();
+            try
+            {
+                WeakReferenceMessenger.Default.Send(new MessageModel
+                {
+                    MessageType = MessageType.ShowMask
+                });
+                ServerPort = GlobalShared.ServerPort.ToString();
+                BrocastPort = GlobalShared.BroadcastPort.ToString();
+                SameNodeMaxSendFileCount = GlobalShared.SameNodeMaxSendFileCount.ToString();
+                SendNodeMaxCount = GlobalShared.SendNodeMaxCount.ToString();
+                SaveFilePath = GlobalShared.SaveFilePath!;
+                MulticastAddress = GlobalShared.MulticastAddress!;
+                TransferSpeed = GlobalShared.TransferSpeed.ToString();
+                DownloadSpeed = GlobalShared.DownloadSpeed.ToString();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"LocalSettingViewModel.Loaded error, {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                WeakReferenceMessenger.Default.Send(new MessageModel
+                {
+                    MessageType = MessageType.CloseMask
+                });
+            }
         }
 
 

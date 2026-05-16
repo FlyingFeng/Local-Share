@@ -1,4 +1,5 @@
 ﻿using Grpc.Core;
+using HandyControl.Controls;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.DataContext.Entities;
 using LocalShare.Desktop.Models.Sends;
@@ -31,6 +32,9 @@ namespace LocalShare.Desktop.FileHandler
             _tokenSource = new CancellationTokenSource();
         }
 
+        public bool HasError { get; set; }
+
+
         public void CancelFileTask()
         {
             _tokenSource?.Cancel();
@@ -40,41 +44,71 @@ namespace LocalShare.Desktop.FileHandler
         public async Task SendFile(FileTaskModel model, SendFileTaskEntity entity)
         {
             using var dbContext = new LocalDataContext();
-            bool flag = false;
             try
             {
+                await dbContext.AddAsync(entity);
+                await dbContext.SaveChangesAsync();
                 if (File.Exists(model.FullFileName))
                 {
                     FileInfo fi = new FileInfo(model.FullFileName);
                     await PreStartFileTask(model);
                     var response = await StartFileTask(fi, model);
-                    await Task.Delay(1000, _tokenSource.Token);
                     await ReadAndSendFile(fi, response, model);
-                    await Task.Delay(1000, _tokenSource.Token);
-                    await _node.FinishSendFile(model);
-                    flag = true;
                 }
             }
             catch (Exception ex)
             {
-                flag = false;
+                HasError = true;
                 model.State = 4;
                 Log.Error($"SendFileHandler.SendFile error, {ex.Message}\n{ex.StackTrace}");
             }
             finally
             {
+                _node.FinishSendFile(model);
+            }
+            try
+            {
                 entity.LastUpdateTime = DateTime.UtcNow;
-                if (flag)
-                {
-                    entity.State = 3;
-                }
-                else
+                if (HasError)
                 {
                     entity.State = 4;
                 }
-                dbContext.SendFileTasks.Update(entity);
+                else
+                {
+                    entity.State = 3;
+                }
                 await dbContext.SaveChangesAsync();
             }
+            catch (Exception ex)
+            {
+                Log.Error($"SendFileHandler.db error, {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                if (HasError)
+                {
+                    Growl.Info($"文件发送失败，文件名：{model.FileName}");
+                }
+                else
+                {
+                    Growl.Info($"文件发送完成，文件名：{model.FileName}");
+                }
+            }
+            //finally
+            //{
+            //    using var dbContext = new LocalDataContext();
+            //    entity.LastUpdateTime = DateTime.UtcNow;
+            //    if (flag)
+            //    {
+            //        entity.State = 3;
+            //    }
+            //    else
+            //    {
+            //        entity.State = 4;
+            //    }
+            //    dbContext.SendFileTasks.Update(entity);
+            //    await dbContext.SaveChangesAsync();
+            //}
         }
 
 
@@ -102,6 +136,7 @@ namespace LocalShare.Desktop.FileHandler
                     }
                     if (_tokenSource.IsCancellationRequested)
                     {
+                        HasError = true;
                         break;
                     }
                     var chunkData = new FileChunk
@@ -111,10 +146,15 @@ namespace LocalShare.Desktop.FileHandler
                     await request.RequestStream.WriteAsync(chunkData);
                     model.CurrentSize += read;
                 }
+                if (model.CurrentSize == model.TotalSize)
+                {
+                    model.State = 3;
+                }
                 //await Task.Delay(3000, _tokenSource.Token);
             }
             catch (Exception ex)
             {
+                HasError = true;
                 Log.Error($"ReadAndSendFile error, {ex.Message}\n{ex.StackTrace}");
                 throw;
             }
@@ -123,7 +163,6 @@ namespace LocalShare.Desktop.FileHandler
                 ArrayPool<byte>.Shared.Return(buffer);
                 if (request != null)
                 {
-                    await Task.Delay(1000);
                     await request.RequestStream.CompleteAsync();
                     request.Dispose();
                 }

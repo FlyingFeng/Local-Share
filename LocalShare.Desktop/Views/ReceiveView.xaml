@@ -8,6 +8,8 @@
              xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
              xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:design="clr-namespace:LocalShare.Desktop.DesignData"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             Background="#eeeeee"
              d:DataContext="{d:DesignInstance Type=vm:ReceiveViewModel,IsDesignTimeCreatable=True}"
              Unloaded="UserControl_Unloaded"
              mc:Ignorable="d" 
@@ -19,6 +21,7 @@
     </behavior:Interaction.Triggers>
     <UserControl.Resources>
         <myConverter:FileTaskStateConverter x:Key="FileTaskStateConverter"/>
+        <myConverter:FileTaskStateToColorConverter x:Key="FileTaskStateToColorConverter"/>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -67,14 +70,26 @@
                     <GridViewColumn Header="文件大小" Width="100" DisplayMemberBinding="{Binding TotalSize,Converter={StaticResource Long2FileSizeConverter}}"/>
                     <GridViewColumn Header="发送节点名称" Width="100" DisplayMemberBinding="{Binding SendNodeName}"/>
                     <GridViewColumn Header="进度(%)" Width="80" DisplayMemberBinding="{Binding Progress}"/>
-                    <GridViewColumn Header="状态" Width="100" DisplayMemberBinding="{Binding State,Converter={StaticResource FileTaskStateConverter}}"/>
+                    <GridViewColumn Header="状态" Width="100">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding State,Converter={StaticResource FileTaskStateConverter}}"
+                                    Foreground="{Binding State,Converter={StaticResource FileTaskStateToColorConverter}}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                     <GridViewColumn Header="操作" Width="180">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <Button Command="{Binding Path=DataContext.RemoveFileTaskCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
                                             CommandParameter="{Binding TaskId}"
-                                            Style="{StaticResource ButtonDanger.Small}">移除</Button>
+                                            Style="{StaticResource ButtonDanger}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <iconPacks:PackIconFontAwesome Kind="TrashSolid" />
+                                            <TextBlock Text="移除" Margin="2,0,0,0"/>
+                                        </StackPanel>
+                                    </Button>
                                 </StackPanel>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>

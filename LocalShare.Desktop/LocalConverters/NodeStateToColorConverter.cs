@@ -4,23 +4,26 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Data;
 
 namespace LocalShare.Desktop.LocalConverters
 {
-    public class IntToVisibilityConverter : IValueConverter
+    public class NodeStateToColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is int i)
+            if (value is int state)
             {
-                if (i == 0)
+                if (state == 0)
                 {
-                    return Visibility.Hidden;
+                    return UIShared.Green;
+                }
+                else if (state == 1)
+                {
+                    return UIShared.Red;
                 }
             }
-            return Visibility.Visible;
+            return UIShared.Black;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -101,6 +101,7 @@ message FileChunk{
 message DownloadFileRequest{
 	string     file_name          = 1;
 	int64      start_byte_index   = 2;
+	int32      download_speed     = 3;
 }
 
 message FileItemInfo{

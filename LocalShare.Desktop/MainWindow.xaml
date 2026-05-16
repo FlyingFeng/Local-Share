@@ -7,6 +7,7 @@
         xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
         xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         mc:Ignorable="d"
         Closing="Window_Closing"
         WindowState="Maximized"
@@ -41,34 +42,81 @@
                     <Rectangle Height="4"/>
                     <TextBox Text="{Binding IpAddress}" Height="32" IsReadOnly="True" Margin="1" VerticalContentAlignment="Center"/>
                     <Rectangle Height="4"/>
-                    <TextBlock Text="节点名称" HorizontalAlignment="Center"/>
+                    <TextBlock Text="当前节点" HorizontalAlignment="Center"/>
                     <Rectangle Height="4"/>
                     <TextBox Text="{Binding NodeName}" Height="32" VerticalContentAlignment="Center" Margin="1"/>
                     <Rectangle Height="4"/>
-                    <Button Width="147" Height="32" Style="{StaticResource ButtonPrimary}" Command="{Binding RandomNodeNameCommand}">随机名称</Button>
+                    <Button Width="147" Height="32" Style="{StaticResource ButtonPrimary}" Command="{Binding RandomNodeNameCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconFeatherIcons Kind="Box" />
+                            <TextBlock Text="随机名称" Margin="5,0,0,0"/>
+                        </StackPanel>
+                    </Button>
                     <Rectangle Height="4"/>
-                    <Button Width="147" Height="32" Style="{StaticResource ButtonPrimary}" Command="{Binding UpdateNodeCommand}">保存</Button>
+                    <Button Width="147" Height="32" Style="{StaticResource ButtonPrimary}" Command="{Binding UpdateNodeCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconMaterial Kind="ContentSave" />
+                            <TextBlock Text="保存" Margin="5,0,0,0"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
                 <StackPanel Grid.Row="2">
                     <Rectangle Height="50"/>
-                    <Button Background="{Binding SendBrush}" Width="108" Height="32" Command="{Binding SendViewActionCommand}">发送</Button>
+                    <Button Background="{Binding SendBrush}" Width="147" Height="32" Command="{Binding SendViewActionCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconMaterial Kind="SendVariant" />
+                            <TextBlock Text="发送" Margin="5,0,0,0"/>
+                        </StackPanel>
+                    </Button>
                     <Rectangle Height="10"/>
-                    <Button Background="{Binding ReceiveBrush}" Width="108" Height="32" Command="{Binding ReceiveViewActionCommand}">接收</Button>
+                    <Button Background="{Binding ReceiveBrush}" Width="147" Height="32" Command="{Binding ReceiveViewActionCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconRemixIcon Kind="FolderReceivedLine" />
+                            <TextBlock Text="接收" Margin="5,0,0,0"/>
+                        </StackPanel>
+                    </Button>
                     <Rectangle Height="10"/>
-                    <Button Background="{Binding BrowserBrush}" Width="108" Height="32" Command="{Binding BrowserViewActionCommand}">浏览</Button>
+                    <Button Background="{Binding BrowserBrush}" Width="147" Height="32" Command="{Binding BrowserViewActionCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconFeatherIcons Kind="Globe" />
+                            <TextBlock Text="浏览" Margin="5,0,0,0"/>
+                        </StackPanel>
+                    </Button>
                     <Rectangle Height="10"/>
-                    <Button Background="{Binding HistoryBrush}" Width="108" Height="32" Command="{Binding HistoryViewActionCommand}">历史记录</Button>
+                    <Button Background="{Binding HistoryBrush}" Width="147" Height="32" Command="{Binding HistoryViewActionCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconPhosphorIcons Kind="ClockCounterClockwise" />
+                            <TextBlock Text="记录" Margin="5,0,0,0"/>
+                        </StackPanel>
+                    </Button>
                     <Rectangle Height="10"/>
-                    <Button Background="{Binding SettingBrush}" Width="108" Height="32" Command="{Binding SettingViewActionCommand}">设置</Button>
+                    <Button Background="{Binding SettingBrush}" Width="147" Height="32" Command="{Binding SettingViewActionCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconFeatherIcons Kind="Settings" />
+                            <TextBlock Text="设置" Margin="5,0,0,0"/>
+                        </StackPanel>
+                    </Button>
                     <Rectangle Height="10"/>
-                    <Button Background="{Binding AboutBrush}" Width="108" Height="32" Command="{Binding AboutViewActionCommand}">关于</Button>
+                    <Button Background="{Binding AboutBrush}" Width="147" Height="32" Command="{Binding AboutViewActionCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconMaterial Kind="InformationVariant" />
+                            <TextBlock Text="关于" Margin="5,0,0,0"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
         <Border Margin="1" Grid.Column="1">
-            <ContentControl Content="{Binding MainContent}"></ContentControl>
+            <Grid>
+                <ContentControl Content="{Binding MainContent}"></ContentControl>
+                <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalAlignment="Right">
+                    <StackPanel hc:Growl.GrowlParent="True" VerticalAlignment="Top">
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
         </Border>
 
         <Border Visibility="{Binding MaskVisibility}" Background="Transparent" Grid.ColumnSpan="2" CornerRadius="5" BorderBrush="Orange" BorderThickness="4">

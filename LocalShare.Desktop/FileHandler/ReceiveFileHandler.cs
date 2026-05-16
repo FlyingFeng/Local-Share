@@ -8,6 +8,7 @@ using LocalShare.Protocol.Define;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.IO;
+using System.Windows;
 
 namespace LocalShare.Desktop.FileHandler
 {
@@ -26,8 +27,8 @@ namespace LocalShare.Desktop.FileHandler
         public void CancelFileTask(string taskId, ReceiveDataHolder receiveDataHolder)
         {
             _tokenSource?.Cancel();
-            receiveDataHolder.NotifyReceiveFileTaskRemoved(this);
-            receiveDataHolder.RemoveReceiveFileHandler(taskId);
+            //receiveDataHolder.NotifyReceiveFileTaskRemoved(this);
+            //receiveDataHolder.RemoveReceiveFileHandler(taskId);
         }
 
         public async Task<StartFileTaskResponse> HandleStartFileTask(StartFileTaskRequest req)
@@ -54,11 +55,11 @@ namespace LocalShare.Desktop.FileHandler
                     SendIpAddress = SendNodeIp,
                     SendNodeName = SendNodeName,
                     State = 1,
-                    FileFullName = Path.Combine(GlobalShared.DownloadPath!, req.FileMetaData.FileName)
+                    FileFullName = Path.Combine(GlobalShared.SaveFilePath!, req.FileMetaData.FileName)
                 };
                 if (!string.IsNullOrWhiteSpace(req.FileMetaData.RelativePath))
                 {
-                    entity.FileFullName = Path.Combine(GlobalShared.DownloadPath!, req.FileMetaData.RelativePath);
+                    entity.FileFullName = Path.Combine(GlobalShared.SaveFilePath!, req.FileMetaData.RelativePath);
                 }
                 await dbContext.AddAsync(entity);
                 await dbContext.SaveChangesAsync();
@@ -139,6 +140,7 @@ namespace LocalShare.Desktop.FileHandler
                     entity!.State = 4;
                     entity.LastUpdateTime = DateTime.UtcNow;
                     TaskModel!.State = 4;
+                    Growl.Warning($"文件接收错误，文件名：{entity!.FileName}");
                     receiveDataHolder.NotifyReceiveFileTaskRemoved(this);
                     receiveDataHolder.RemoveReceiveFileHandler(TaskId);
                 }
@@ -147,11 +149,11 @@ namespace LocalShare.Desktop.FileHandler
                     entity!.State = 3;
                     entity.LastUpdateTime = DateTime.UtcNow;
                     TaskModel!.State = 3;
+                    Growl.Info($"文件接收完成，文件名：{entity!.FileName}");
                 }
                 using var dbContext = new LocalDataContext();
                 dbContext.ReceiveFileTasks.Update(entity!);
                 await dbContext.SaveChangesAsync();
-                Growl.Info($"文件接收完成，文件名：{entity!.FileName}");
             }
         }
     }

@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using LocalShare.Desktop.DataContext;
 using LocalShare.Desktop.Models;
 using Microsoft.EntityFrameworkCore;
@@ -151,43 +152,62 @@ namespace LocalShare.Desktop.ViewModels
         [RelayCommand]
         private async Task Loaded()
         {
-            using var dbContext = new LocalDataContext();
-            var sendData = await dbContext.SendFileTasks.AsNoTracking().Where(s => s.State == 3 || s.State == 4).OrderByDescending(s => s.InitTime).ToListAsync();
-            var receiveData = await dbContext.ReceiveFileTasks.AsNoTracking().Where(s => s.State == 3 || s.State == 4).OrderByDescending(s => s.InitTime).ToListAsync();
-
-            SendHistoryRecords.Clear();
-            foreach (var send in sendData)
+            try
             {
-                SendHistoryRecords.Add(new HistoryModel
+                WeakReferenceMessenger.Default.Send(new MessageModel
                 {
-                    FileFullName = send.FileFullName,
-                    FileName = send.FileName,
-                    InitTime = send.InitTime.ToLocalTime(),
-                    LastUpdateTime = send.LastUpdateTime.ToLocalTime(),
-                    ReceiveIpAddress = send.ReceiveIpAddress,
-                    ReceiveNodeName = send.ReceiveNodeName,
-                    SendIpAddress = send.SendIpAddress,
-                    SendNodeName = send.SendNodeName,
-                    State = send.State,
-                    TaskId = send.TaskId
+                    MessageType = MessageType.ShowMask
                 });
-            }
 
-            ReceiveHistoryRecords.Clear();
-            foreach (var receive in receiveData)
-            {
-                ReceiveHistoryRecords.Add(new HistoryModel
+                using var dbContext = new LocalDataContext();
+                var sendData = await dbContext.SendFileTasks.AsNoTracking().OrderByDescending(s => s.InitTime).ToListAsync();
+                var receiveData = await dbContext.ReceiveFileTasks.AsNoTracking().OrderByDescending(s => s.InitTime).ToListAsync();
+
+                SendHistoryRecords.Clear();
+                foreach (var send in sendData)
                 {
-                    FileFullName = receive.FileFullName,
-                    FileName = receive.FileName,
-                    InitTime = receive.InitTime.ToLocalTime(),
-                    LastUpdateTime = receive.LastUpdateTime.ToLocalTime(),
-                    ReceiveIpAddress = receive.ReceiveIpAddress,
-                    ReceiveNodeName = receive.ReceiveNodeName,
-                    SendIpAddress = receive.SendIpAddress,
-                    SendNodeName = receive.SendNodeName,
-                    State = receive.State,
-                    TaskId = receive.TaskId
+                    SendHistoryRecords.Add(new HistoryModel
+                    {
+                        FileFullName = send.FileFullName,
+                        FileName = send.FileName,
+                        InitTime = send.InitTime.ToLocalTime(),
+                        LastUpdateTime = send.LastUpdateTime.ToLocalTime(),
+                        ReceiveIpAddress = send.ReceiveIpAddress,
+                        ReceiveNodeName = send.ReceiveNodeName,
+                        SendIpAddress = send.SendIpAddress,
+                        SendNodeName = send.SendNodeName,
+                        State = send.State,
+                        TaskId = send.TaskId
+                    });
+                }
+
+                ReceiveHistoryRecords.Clear();
+                foreach (var receive in receiveData)
+                {
+                    ReceiveHistoryRecords.Add(new HistoryModel
+                    {
+                        FileFullName = receive.FileFullName,
+                        FileName = receive.FileName,
+                        InitTime = receive.InitTime.ToLocalTime(),
+                        LastUpdateTime = receive.LastUpdateTime.ToLocalTime(),
+                        ReceiveIpAddress = receive.ReceiveIpAddress,
+                        ReceiveNodeName = receive.ReceiveNodeName,
+                        SendIpAddress = receive.SendIpAddress,
+                        SendNodeName = receive.SendNodeName,
+                        State = receive.State,
+                        TaskId = receive.TaskId
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"SendAndReceiveHistoryViewModel.Loaded error, {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                WeakReferenceMessenger.Default.Send(new MessageModel
+                {
+                    MessageType = MessageType.CloseMask
                 });
             }
         }

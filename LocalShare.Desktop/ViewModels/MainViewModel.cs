@@ -410,6 +410,7 @@ namespace LocalShare.Desktop.ViewModels
             try
             {
                 _server.Start();
+                await Task.Delay(1500);
                 Growl.Info("服务启动成功");
             }
             catch (Exception ex)

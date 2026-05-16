@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using LocalShare.Desktop.KeepStates;
+using LocalShare.Desktop.Models;
 using LocalShare.Desktop.Models.Receives;
 using Serilog;
 using System.Collections.ObjectModel;
@@ -74,16 +76,33 @@ namespace LocalShare.Desktop.ViewModels
         [RelayCommand]
         private void Loaded()
         {
-            var allHandlers = _receiveDataHolder!.GetAllHandlers();
-            CacheData.Clear();
-            foreach (var item in allHandlers)
+            try
             {
-                if (item.TaskModel != null)
+                WeakReferenceMessenger.Default.Send(new MessageModel
                 {
-                    CacheData.Add(item.TaskModel);
+                    MessageType = MessageType.ShowMask
+                });
+                var allHandlers = _receiveDataHolder!.GetAllHandlers();
+                CacheData.Clear();
+                foreach (var item in allHandlers)
+                {
+                    if (item.TaskModel != null)
+                    {
+                        CacheData.Add(item.TaskModel);
+                    }
                 }
             }
-
+            catch (Exception ex)
+            {
+                Log.Error($"ReceiveViewModel.Loaded error, {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                WeakReferenceMessenger.Default.Send(new MessageModel
+                {
+                    MessageType = MessageType.CloseMask
+                });
+            }
         }
 
         [RelayCommand]

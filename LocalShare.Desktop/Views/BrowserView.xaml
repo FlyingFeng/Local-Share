@@ -5,8 +5,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:LocalShare.Desktop.Views"
              xmlns:design="clr-namespace:LocalShare.Desktop.DesignData"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
              xmlns:model="clr-namespace:LocalShare.Desktop.Models.Browsers"
+             xmlns:sendModel="clr-namespace:LocalShare.Desktop.Models.Sends"
              xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:localConverter="clr-namespace:LocalShare.Desktop.LocalConverters"
              mc:Ignorable="d"
@@ -16,6 +18,8 @@
              d:DesignHeight="450" d:DesignWidth="1200">
     <UserControl.Resources>
         <localConverter:FileTaskStateConverter x:Key="FileTaskStateConverter"/>
+        <localConverter:FileTaskStateToColorConverter x:Key="FileTaskStateToColorConverter"/>
+        <localConverter:NodeStateToColorConverter x:Key="NodeStateToColorConverter"/>
     </UserControl.Resources>
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
@@ -34,9 +38,25 @@
             </Grid.RowDefinitions>
             <StackPanel Orientation="Horizontal">
                 <Rectangle Width="10"/>
-                <ComboBox Width="200" Height="32" ItemsSource="{Binding LocalNodes}" SelectedIndex="{Binding SelectedIndex}"></ComboBox>
+                <ComboBox ItemContainerStyle="{StaticResource ComboBoxItemContainerStyle}" Width="200" Height="32" ItemsSource="{Binding SendDataHolder.Nodes}" SelectedIndex="{Binding NowIndex}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="sendModel:LocalNode">
+                            <TextBlock Text="{Binding NodeName}" Foreground="{Binding State,Converter={StaticResource NodeStateToColorConverter}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                    <behavior:Interaction.Triggers>
+                        <behavior:EventTrigger EventName="SelectionChanged">
+                            <behavior:InvokeCommandAction Command="{Binding NodeSelectionChangedCommand}"/>
+                        </behavior:EventTrigger>
+                    </behavior:Interaction.Triggers>
+                </ComboBox>
                 <Rectangle Width="18"/>
-                <Button Width="108" Height="32" Style="{StaticResource ButtonPrimary}" Command="{Binding RefreshFileCommand}">刷新</Button>
+                <Button Width="100" Height="32" IsEnabled="{Binding RefreshEnabled}" Style="{StaticResource ButtonPrimary}" Command="{Binding RefreshFileCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconPhosphorIcons Kind="ArrowsCounterClockwiseBold" />
+                        <TextBlock Text="刷新" Margin="2,0,0,0"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
 
             <ScrollViewer Grid.Row="1">
@@ -106,23 +126,48 @@
                         </GridViewColumn>
                         <GridViewColumn Header="节点名称" Width="80" DisplayMemberBinding="{Binding NodeName}"/>
                         <GridViewColumn Header="文件大小" Width="80" DisplayMemberBinding="{Binding TotalSize,Converter={StaticResource Long2FileSizeConverter}}"/>
-                        <GridViewColumn Header="状态" Width="100" DisplayMemberBinding="{Binding State,Converter={StaticResource FileTaskStateConverter}}"/>
+                        <GridViewColumn Header="状态" Width="100">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding State,Converter={StaticResource FileTaskStateConverter}}"
+                                        Foreground="{Binding State,Converter={StaticResource FileTaskStateToColorConverter}}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                         <GridViewColumn Header="进度(%)" Width="70" DisplayMemberBinding="{Binding Progress}"/>
-                        <GridViewColumn Header="操作" Width="200">
+                        <GridViewColumn Header="操作" Width="210">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
-                                        <Button Style="{StaticResource ButtonDanger.Small}"
+                                        <Button Style="{StaticResource ButtonDanger}"
+                                                Width="63"
                                                 Command="{Binding Path=DataContext.CancelDownloadFileTaskCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}">取消</Button>
-                                        <Rectangle Width="10"/>
-                                        <Button Style="{StaticResource ButtonWarning.Small}"
+                                                CommandParameter="{Binding}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <iconPacks:PackIconMaterialDesign Kind="Cancel" />
+                                                <TextBlock Text="取消" Margin="2,0,0,0"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Rectangle Width="3"/>
+                                        <Button Style="{StaticResource ButtonWarning}"
+                                                Width="63"
                                                 Command="{Binding Path=DataContext.StopDownloadFileTaskCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}">停止</Button>
-                                        <Rectangle Width="10"/>
-                                        <Button Style="{StaticResource ButtonPrimary.Small}"
+                                                CommandParameter="{Binding}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <iconPacks:PackIconMaterialDesign Kind="PauseCircleSharp" />
+                                                <TextBlock Text="停止" Margin="2,0,0,0"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Rectangle Width="3"/>
+                                        <Button Style="{StaticResource ButtonPrimary}"
+                                                Width="63"
                                                 Command="{Binding Path=DataContext.StartDownloadFileTaskCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}">开始</Button>
+                                                CommandParameter="{Binding}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <iconPacks:PackIconFontAwesome Kind="CirclePlayRegular" />
+                                                <TextBlock Text="开始" Margin="2,0,0,0"/>
+                                            </StackPanel>
+                                        </Button>
                                     </StackPanel>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>

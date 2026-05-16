@@ -10,6 +10,8 @@ using LocalShare.Desktop.Models.Sends;
 using LocalShare.Protocol.Define;
 using Serilog;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace LocalShare.Desktop.ViewModels
@@ -17,26 +19,26 @@ namespace LocalShare.Desktop.ViewModels
     public partial class BrowserViewModel : ObservableObject, IClosable, IRecipient<MessageModel>
     {
         public ObservableCollection<RemoteNodeItem> FileNodes { get; set; } = [];
-        public ObservableCollection<string> LocalNodes { get; set; } = [];
 
-        private readonly SendDataHolder? _sendDataHolder;
-        private readonly List<LocalNode> _nodeCaches = [];
         private readonly Dictionary<string, DownloadFileHandler> _downloadTask = new Dictionary<string, DownloadFileHandler>();
 
+        [ObservableProperty]
+        private int nowIndex = 0;
 
         [ObservableProperty]
-        private int selectedIndex = -1;
+        private bool refreshEnabled = true;
 
 
         public BrowserViewModel() { }
 
         public BrowserViewModel(SendDataHolder? sendDataHolder, DownloadDataHolder? downloadDataHolder)
         {
-            _sendDataHolder = sendDataHolder;
+            SendDataHolder = sendDataHolder;
             DownloadDataHolder = downloadDataHolder;
             WeakReferenceMessenger.Default.Register<MessageModel>(this);
         }
         public DownloadDataHolder? DownloadDataHolder { get; set; }
+        public SendDataHolder? SendDataHolder { get; set; }
 
         public void Close()
         {
@@ -48,11 +50,19 @@ namespace LocalShare.Desktop.ViewModels
         {
             try
             {
-                await LoadData();
+                RefreshEnabled = false;
+                if (SendDataHolder!.Nodes.Count > 0 && NowIndex >= 0)
+                {
+                    await LoadData();
+                }
             }
             catch (Exception ex)
             {
                 Log.Error($"RefreshFile error, {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                RefreshEnabled = true;
             }
         }
 
@@ -115,34 +125,23 @@ namespace LocalShare.Desktop.ViewModels
             }
         }
 
+        [RelayCommand]
+        private async Task NodeSelectionChanged(object args)
+        {
+            await LoadData();
+        }
+
 
         private async Task LoadData()
         {
-            var allNodes = _sendDataHolder!.GetAllNodes();
-            if (allNodes.Count > 0)
+            if (SendDataHolder!.Nodes.Count > NowIndex)
             {
-                foreach (var item in allNodes)
+                var matchedNode = SendDataHolder!.Nodes[NowIndex];
+                if (matchedNode != null)
                 {
-                    var str = item.NodeName;
-                    if (item.State == 1)
-                    {
-                        str += " - 离线";
-                    }
-                    var matched = _nodeCaches.FirstOrDefault(s => s.NodeName == item.NodeName);
-                    if (matched == null)
-                    {
-                        _nodeCaches.Add(item);
-                    }
-                    var nameMatched = LocalNodes.FirstOrDefault(s => s == str);
-                    if (nameMatched == null)
-                    {
-                        LocalNodes.Add(str);
-                    }
+                    var files = await matchedNode.GetCacheFiles();
+                    GenerateTreeViewData(files, matchedNode.NodeName);
                 }
-                SelectedIndex = 0;
-                var matchedNode = allNodes[0];
-                var files = await matchedNode.GetCacheFiles();
-                GenerateTreeViewData(files, matchedNode.NodeName);
             }
         }
 
@@ -151,24 +150,39 @@ namespace LocalShare.Desktop.ViewModels
         {
             try
             {
-                await LoadData();
+                WeakReferenceMessenger.Default.Send(new MessageModel
+                {
+                    MessageType = MessageType.ShowMask
+                });
+                if (SendDataHolder!.Nodes.Count > 0)
+                {
+                    NowIndex = 0;
+                    await LoadData();
+                }
             }
             catch (Exception ex)
             {
                 Log.Error($"BrowserViewModel.Loaded error, {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                WeakReferenceMessenger.Default.Send(new MessageModel
+                {
+                    MessageType = MessageType.CloseMask
+                });
             }
         }
 
 
         private void GenerateTreeViewData(List<FileItemInfo> files, string localNodeName)
         {
+            FileNodes.Clear();
             if (files == null || files.Count == 0)
             {
                 return;
             }
             try
             {
-                FileNodes.Clear();
                 foreach (var item in files)
                 {
                     if (!string.IsNullOrEmpty(item.RelativePath))
@@ -267,7 +281,7 @@ namespace LocalShare.Desktop.ViewModels
         {
             try
             {
-                var node = _nodeCaches.FirstOrDefault(s => s.NodeName == nodeName);
+                var node = SendDataHolder!.GetNode(nodeName: nodeName);//_nodeCaches.FirstOrDefault(s => s.NodeName == nodeName);
                 if (node != null)
                 {
                     if (node.State == 1)

@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LocalShare.Desktop"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         mc:Ignorable="d"
         Loaded="Window_Loaded"
         Title="下载链接" Height="128" Width="800">
@@ -15,9 +16,19 @@
         <TextBox x:Name="TxtLink" IsReadOnly="True" Width="666" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button x:Name="BtnCopy" Style="{StaticResource ButtonPrimary}" Click="BtnCopy_Click" Width="110">复制链接</Button>
+            <Button x:Name="BtnCopy" Style="{StaticResource ButtonPrimary}" Click="BtnCopy_Click" Width="100">
+                <StackPanel Orientation="Horizontal">
+                    <iconPacks:PackIconIonicons Kind="LinkiOS" />
+                    <TextBlock Text="复制链接" Margin="5,0,0,0"/>
+                </StackPanel>
+            </Button>
             <Rectangle Width="10"/>
-            <Button x:Name="BtnCancel" Style="{StaticResource ButtonPrimary}" Click="BtnCancel_Click" Width="100">关闭</Button>
+            <Button x:Name="BtnCancel" Style="{StaticResource ButtonPrimary}" Click="BtnCancel_Click" Width="100">
+                <StackPanel Orientation="Horizontal">
+                    <iconPacks:PackIconMaterial Kind="Close" Height="14"/>
+                    <TextBlock Text="退出" Margin="5,0,0,0"/>
+                </StackPanel>
+            </Button>
         </StackPanel>
     </Grid>
 </Window>

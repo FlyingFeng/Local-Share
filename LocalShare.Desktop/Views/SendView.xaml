@@ -8,8 +8,10 @@
              xmlns:myConverter="clr-namespace:LocalShare.Desktop.LocalConverters"
              xmlns:hc="https://handyorg.github.io/handycontrol"
              xmlns:design="clr-namespace:LocalShare.Desktop.DesignData"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              d:DataContext="{d:DesignInstance Type=vm:SendViewModel,IsDesignTimeCreatable=True}"
              xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+             Background="#eeeeee"
              mc:Ignorable="d" 
              Unloaded="UserControl_Unloaded"
              d:DesignHeight="800" d:DesignWidth="1300">
@@ -19,6 +21,8 @@
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
     <UserControl.Resources>
+        <myConverter:FileTaskStateToColorConverter x:Key="FileTaskStateToColorConverter"/>
+        <myConverter:NodeStateToColorConverter x:Key="NodeStateToColorConverter"/>
         <myConverter:SendFileProgressConverter x:Key="SendFileProgressConverter"/>
         <myConverter:FileTaskStateConverter x:Key="FileTaskStateConverter"/>
         <myConverter:NodeStateConverter x:Key="NodeStateConverter"/>
@@ -38,27 +42,41 @@
                 <ColumnDefinition Width="4*"/>
             </Grid.ColumnDefinitions>
 
-            <GroupBox Header="文件列表" Margin="1">
+            <GroupBox Header="共享文件列表" Margin="1">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="38"/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button Style="{StaticResource ButtonPrimary}" Width="88" Height="32" Command="{Binding OpenFilesCommand}">打开文件</Button>
+                        <Button Style="{StaticResource ButtonPrimary}" Width="98" Height="32" Command="{Binding OpenFilesCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconFontAwesome Kind="FileCirclePlusSolid" />
+                                <TextBlock Text="打开文件" Margin="2,0,0,0"/>
+                            </StackPanel>
+                        </Button>
                         <Rectangle Width="10"/>
-                        <Button Style="{StaticResource ButtonPrimary}" Width="88" Height="32" Command="{Binding OpenDirFilesCommand}">打开文件夹</Button>
+                        <Button Style="{StaticResource ButtonPrimary}" Width="108" Height="32" Command="{Binding OpenDirFilesCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconFontAwesome Kind="FolderPlusSolid" />
+                                <TextBlock Text="打开文件夹" Margin="2,0,0,0"/>
+                            </StackPanel>
+                        </Button>
                         <Rectangle Width="10"/>
-                        <Button Style="{StaticResource ButtonDanger}" Width="88" Height="32" Command="{Binding RemoveSelectedFileCommand}">移除选中</Button>
+                        <Button Style="{StaticResource ButtonDanger}" Width="98" Height="32" Command="{Binding RemoveSelectedFileCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconFontAwesome Kind="TrashSolid" />
+                                <TextBlock Text="移除选中" Margin="2,0,0,0"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
 
                     <ListView Grid.Row="1" ItemContainerStyle="{StaticResource ListViewItemStyle}" ItemsSource="{Binding SendDataHolder.FileCaches}" d:DataContext="{d:DesignInstance Type=design:LocalFileCacheDesignData,IsDesignTimeCreatable=True}" d:ItemsSource="{Binding FileCaches}">
                         <ListView.View>
                             <GridView AllowsColumnReorder="True">
-                                <GridViewColumn Width="70">
+                                <GridViewColumn Width="40">
                                     <GridViewColumn.Header>
-                                        <CheckBox Content="全选"
-                                                  IsChecked="{Binding IsSelectAll}"
+                                        <CheckBox IsChecked="{Binding IsSelectAll}"
                                                   Command="{Binding GlobalCheckedChangedCommand}"
                                                   CommandParameter="{Binding IsChecked,RelativeSource={RelativeSource Mode=Self}}"></CheckBox>
                                     </GridViewColumn.Header>
@@ -94,11 +112,15 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                                 <GridViewColumn Header="文件大小" Width="80" DisplayMemberBinding="{Binding FileSize,Converter={StaticResource Long2FileSizeConverter}}"/>
-                                <GridViewColumn Header="操作">
+                                <GridViewColumn Header="操作" Width="100">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Style="{StaticResource ButtonPrimary.Small}"
-                                                    Command="{Binding ShowDownloadLinkCommand}">分享</Button>
+                                            <Button Command="{Binding ShowDownloadLinkCommand}" Width="64">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <iconPacks:PackIconFontAwesome Kind="ShareNodesSolid" />
+                                                    <TextBlock Text="分享" Margin="2,0,0,0"/>
+                                                </StackPanel>
+                                            </Button>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
@@ -130,7 +152,12 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button Style="{StaticResource ButtonPrimary}" Width="88" Height="32" Command="{Binding AddLocalNodeCommand}">添加节点</Button>
+                        <Button Style="{StaticResource ButtonPrimary}" Width="88" Height="32" Command="{Binding AddLocalNodeCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterialDesign Kind="Add" Height="13"/>
+                                <TextBlock Text="添加节点" Margin="2,0,0,0"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
 
                     <ListView x:Name="ListNodes" ItemContainerStyle="{StaticResource ListViewItemStyle}" Grid.Row="1" SelectedIndex="{Binding SelectedNodeIndex}" ItemsSource="{Binding SendDataHolder.Nodes}" d:ItemsSource="{Binding Nodes}" d:DataContext="{d:DesignInstance Type=design:LocalNodeDesignData,IsDesignTimeCreatable=True}">
@@ -142,10 +169,9 @@
                         </behavior:Interaction.Triggers>
                         <ListView.View>
                             <GridView AllowsColumnReorder="True">
-                                <GridViewColumn Width="70">
+                                <GridViewColumn Width="40">
                                     <GridViewColumn.Header>
-                                        <CheckBox Content="全选"
-                                                  IsChecked="{Binding IsNodeSelectAll}"
+                                        <CheckBox IsChecked="{Binding IsNodeSelectAll}"
                                                   Command="{Binding GlobalNodeCheckedChangedCommand}"
                                                   CommandParameter="{Binding IsChecked,RelativeSource={RelativeSource Mode=Self}}"></CheckBox>
                                     </GridViewColumn.Header>
@@ -175,19 +201,34 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="状态" Width="70" DisplayMemberBinding="{Binding State,Converter={StaticResource NodeStateConverter}}"/>
-                                <GridViewColumn Header="操作" Width="100">
+                                <GridViewColumn Header="状态" Width="55">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding State,Converter={StaticResource NodeStateConverter}}"
+                                                       Foreground="{Binding State,Converter={StaticResource NodeStateToColorConverter}}"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="操作" Width="160">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
                                                 <hc:Badge Status="Processing" Background="Red" ShowBadge="{Binding ShowBadge}">
-                                                    <Button Style="{StaticResource ButtonInfo.Small}"
-                                                        Command="{Binding ShowChatWindowCommand}">对话</Button>
+                                                    <Button Width="64" Command="{Binding ShowChatWindowCommand}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <iconPacks:PackIconFontAwesome Kind="CommentDotsSolid" />
+                                                            <TextBlock Text="对话" Margin="2,0,0,0"/>
+                                                        </StackPanel>
+                                                    </Button>
                                                 </hc:Badge>
                                                 <Rectangle Width="10"/>
-                                                <Button Visibility="{Binding State,Converter={StaticResource IntToVisibilityConverter}}"
-                                                        Style="{StaticResource ButtonPrimary.Small}"
-                                                        Command="{Binding CheckConnectionCommand}">探测</Button>
+                                                <Button Width="64" Visibility="{Binding State,Converter={StaticResource IntToVisibilityConverter}}"
+                                                        Command="{Binding CheckConnectionCommand}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <iconPacks:PackIconMaterial Kind="Radar" />
+                                                        <TextBlock Text="探测" Margin="2,0,0,0"/>
+                                                    </StackPanel>
+                                                </Button>
                                             </StackPanel>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
@@ -202,7 +243,7 @@
             <GroupBox Grid.Column="2" Header="发送情况" Margin="1">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="38"/>
+                        <RowDefinition Height="auto"/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
 
@@ -223,16 +264,28 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                                 <GridViewColumn Header="文件大小" Width="80" DisplayMemberBinding="{Binding TotalSize,Converter={StaticResource Long2FileSizeConverter}}"/>
-                                <GridViewColumn Header="状态" Width="80" DisplayMemberBinding="{Binding State,Converter={StaticResource FileTaskStateConverter}}"/>
+                                <GridViewColumn Header="状态" Width="80">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding State,Converter={StaticResource FileTaskStateConverter}}"
+                                                Foreground="{Binding State,Converter={StaticResource FileTaskStateToColorConverter}}"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
                                 <GridViewColumn Header="进度(%)" Width="70" DisplayMemberBinding="{Binding Progress}"/>
                                 <GridViewColumn Header="操作" Width="120">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Content="取消"
-                                                        Style="{StaticResource ButtonDanger.Small}"
-                                                        Command="{Binding Parent.CancelFileTaskCommand}"
-                                                        CommandParameter="{Binding FileName}"/>
+                                                <Button Command="{Binding Parent.CancelFileTaskCommand}"
+                                                        Width="64"
+                                                        Style="{StaticResource ButtonDanger}"
+                                                        CommandParameter="{Binding FileName}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <iconPacks:PackIconMaterialDesign Kind="Cancel" />
+                                                        <TextBlock Text="取消" Margin="2,0,0,0"/>
+                                                    </StackPanel>
+                                                </Button>
                                             </StackPanel>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
@@ -248,7 +301,12 @@
 
         <Border Grid.Row="1">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Style="{StaticResource ButtonPrimary}" Height="30" Width="120" Command="{Binding SendFileCommand}" Content="发送"/>
+                <Button Style="{StaticResource ButtonPrimary}" Height="30" Width="100" Command="{Binding SendFileCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="SendVariant" />
+                        <TextBlock Text="发送" Margin="2,0,0,0"/>
+                    </StackPanel>
+                </Button>
                 <!--<Rectangle Width="10"/>
                 <Button Height="30" Width="120">暂停发送</Button>
                 <Rectangle Width="10"/>

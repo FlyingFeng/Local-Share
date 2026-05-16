@@ -75,7 +75,7 @@ namespace LocalShare.Desktop
                     return;
                 }
                 GlobalShared.NodeName = ChineseNameGenerator.Generate(NameLength.Two);
-                GlobalShared.DownloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "LocalShare");
+                GlobalShared.SaveFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "LocalShare");
             }
             catch (Exception ex)
             {
@@ -221,6 +221,21 @@ namespace LocalShare.Desktop
 
             var list = await dbContext.LocalSettings.ToListAsync();
 
+            var downloadSpeed = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeyDownloadSpeed);
+            if (downloadSpeed == null)
+            {
+                downloadSpeed = new DataContext.Entities.LocalSettingEntity
+                {
+                    Key = LocalSettingKey.KeyDownloadSpeed,
+                    Value = GlobalShared.DownloadSpeed.ToString()
+                };
+                await dbContext.LocalSettings.AddAsync(downloadSpeed);
+            }
+            else
+            {
+                GlobalShared.DownloadSpeed = int.Parse(downloadSpeed.Value);
+            }
+
             var transferSpeed = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeyTransferSpeed);
             if (transferSpeed == null)
             {
@@ -281,19 +296,19 @@ namespace LocalShare.Desktop
                 GlobalShared.ServerPort = int.Parse(serverPortSetting.Value);
             }
 
-            var downloadPathSetting = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeyDownloadPath);
-            if (downloadPathSetting == null)
+            var saveFilePathSetting = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeySaveFilePath);
+            if (saveFilePathSetting == null)
             {
-                downloadPathSetting = new DataContext.Entities.LocalSettingEntity
+                saveFilePathSetting = new DataContext.Entities.LocalSettingEntity
                 {
-                    Key = LocalSettingKey.KeyDownloadPath,
-                    Value = GlobalShared.DownloadPath!
+                    Key = LocalSettingKey.KeySaveFilePath,
+                    Value = GlobalShared.SaveFilePath!
                 };
-                await dbContext.LocalSettings.AddAsync(downloadPathSetting);
+                await dbContext.LocalSettings.AddAsync(saveFilePathSetting);
             }
             else
             {
-                GlobalShared.DownloadPath = downloadPathSetting.Value;
+                GlobalShared.SaveFilePath = saveFilePathSetting.Value;
             }
 
             var sameNodeMaxSendFileCountSetting = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeySameNodeMaxSendFileCount);
@@ -326,9 +341,9 @@ namespace LocalShare.Desktop
                 GlobalShared.SendNodeMaxCount = int.Parse(sendNodeMaxCountSetting.Value);
             }
 
-            if (!Directory.Exists(GlobalShared.DownloadPath))
+            if (!Directory.Exists(GlobalShared.SaveFilePath))
             {
-                Directory.CreateDirectory(GlobalShared.DownloadPath!);
+                Directory.CreateDirectory(GlobalShared.SaveFilePath!);
             }
             await dbContext.SaveChangesAsync();
         }

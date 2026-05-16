@@ -65,7 +65,7 @@ namespace LocalShare.Desktop.FileHandler
                 var channel = _node.GetRpcChannel();
                 if (channel != null && DownloadItem != null)
                 {
-                    var filePath = Path.Combine(GlobalShared.DownloadPath, DownloadItem.FileName);
+                    var filePath = Path.Combine(GlobalShared.SaveFilePath, DownloadItem.FileName);
                     long startByteIndex = 0;
                     if (File.Exists(filePath))
                     {
@@ -81,7 +81,8 @@ namespace LocalShare.Desktop.FileHandler
                     var request = new DownloadFileRequest
                     {
                         FileName = DownloadItem.FileName,
-                        StartByteIndex = startByteIndex
+                        StartByteIndex = startByteIndex,
+                        DownloadSpeed = GlobalShared.DownloadSpeed
                     };
                     var client = new LocalShareService.LocalShareServiceClient(channel);
                     response = client.DownloadFile(request);

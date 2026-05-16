@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LocalShare.Desktop"
         xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         mc:Ignorable="d"
         Loaded="Window_Loaded"
         Closing="Window_Closing"
@@ -40,9 +41,19 @@
             <StackPanel Orientation="Horizontal">
                 <TextBox x:Name="TxtSendMessage" Width="550" Height="30" KeyDown="TxtSendMessage_KeyDown"/>
                 <Rectangle Width="10"/>
-                <Button x:Name="BtnSend" Style="{StaticResource ButtonInfo}" Width="108" Height="40" Click="BtnSend_Click">发送</Button>
+                <Button x:Name="BtnSend" Style="{StaticResource ButtonInfo}" Width="108" Height="32" Click="BtnSend_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="SendVariant" />
+                        <TextBlock Text="发送" Margin="2,0,0,0"/>
+                    </StackPanel>
+                </Button>
                 <Rectangle Width="10"/>
-                <Button x:Name="BtnClose" Style="{StaticResource ButtonDanger}" Width="108" Height="40" Click="BtnClose_Click">关闭</Button>
+                <Button x:Name="BtnClose" Style="{StaticResource ButtonDanger}" Width="108" Height="32" Click="BtnClose_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterialDesign Kind="Cancel" />
+                        <TextBlock Text="关闭" Margin="2,0,0,0"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Border>
     </Grid>

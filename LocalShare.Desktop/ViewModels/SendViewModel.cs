@@ -28,7 +28,6 @@ namespace LocalShare.Desktop.ViewModels
             _channelHolder = rpcChannelHolder;
             SendDataHolder = sendDataHolder;
             _udpDiscoveryService = udpDiscoveryService;
-            _udpDiscoveryService.ClientDiscovered += UdpDiscoveryService_ClientDiscovered;
             WeakReferenceMessenger.Default.Register<MessageModel>(this);
         }
 
@@ -67,8 +66,8 @@ namespace LocalShare.Desktop.ViewModels
                                 IpAddress = window.NodeInfo.IpAddress,
                                 LastSeenTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                             };
-                            await node.InitAsync();
                             SendDataHolder!.Nodes.Add(node);
+                            await node.InitAsync();
                         }
                     }
                 }
@@ -85,6 +84,10 @@ namespace LocalShare.Desktop.ViewModels
         {
             try
             {
+                WeakReferenceMessenger.Default.Send(new MessageModel
+                {
+                    MessageType = MessageType.ShowMask
+                });
                 if (SendDataHolder != null)
                 {
                     using var _dbContext = new LocalDataContext();
@@ -122,8 +125,10 @@ namespace LocalShare.Desktop.ViewModels
                                 Port = e.Port,
                                 LastSeenTime = e.Time
                             };
-                            SendDataHolder!.AddNode(node);
-                            await node.InitAsync();
+                            if (SendDataHolder!.AddNode(node))
+                            {
+                                await node.InitAsync();
+                            }
                         }
                     }
 
@@ -142,6 +147,14 @@ namespace LocalShare.Desktop.ViewModels
             catch (Exception ex)
             {
                 Log.Error($"SendViewModel.Loaded error, {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                _udpDiscoveryService!.ClientDiscovered += UdpDiscoveryService_ClientDiscovered;
+                WeakReferenceMessenger.Default.Send(new MessageModel
+                {
+                    MessageType = MessageType.CloseMask
+                });
             }
         }
 
@@ -408,18 +421,23 @@ namespace LocalShare.Desktop.ViewModels
             var selectedNodes = SendDataHolder.Nodes.Where(s => s.IsSelected).ToList();
             if (selectedNodes.Count > GlobalShared.SendNodeMaxCount)
             {
-                HandyControl.Controls.MessageBox.Show($"最多只能选择{GlobalShared.SendNodeMaxCount}个节点", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                MessageBox.Show($"最多只能选择{GlobalShared.SendNodeMaxCount}个节点", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+            if (selectedNodes.Where(s => s.State == 1).Any())
+            {
+                MessageBox.Show($"有节点不在线", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
             if (selectedFiles.Count > GlobalShared.SameNodeMaxSendFileCount)
             {
-                HandyControl.Controls.MessageBox.Show($"每个节点最多只能选择{GlobalShared.SameNodeMaxSendFileCount}个文件", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                MessageBox.Show($"每个节点最多只能选择{GlobalShared.SameNodeMaxSendFileCount}个文件", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
             var sendFileNodeCount = SendDataHolder!.Nodes.Where(s => s.IsSending).Count();
             if (sendFileNodeCount > GlobalShared.SendNodeMaxCount)
             {
-                HandyControl.Controls.MessageBox.Show($"同时发送文件的节点最多只能有{GlobalShared.SendNodeMaxCount}个", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                MessageBox.Show($"同时发送文件的节点最多只能有{GlobalShared.SendNodeMaxCount}个", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
@@ -494,16 +512,20 @@ namespace LocalShare.Desktop.ViewModels
                         IsSelected = false,
                         NodeName = obj.NodeName,
                         Port = obj.Port,
+                        State = 0,
                         IpAddress = obj.IpAddress,
                         LastSeenTime = obj.Time
                     };
-                    SendDataHolder!.AddNode(node);
-                    await node.InitAsync();
+                    if (SendDataHolder!.AddNode(node))
+                    {
+                        await node.InitAsync();
+                    }
                 }
                 else
                 {
                     matched.NodeName = obj.NodeName;
                     matched.LastSeenTime = obj.Time;
+                    matched.State = 0;
                     //await matched.UpdateNodeStateAsync();
                 }
             }

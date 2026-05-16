@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:LocalShare.Desktop.Views"
              xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
              xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:lc="clr-namespace:LocalShare.Desktop.LocalConverters"
              xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
              Unloaded="UserControl_Unloaded"
@@ -54,12 +55,16 @@
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
-                    <RowDefinition Height="60"/>
+                    <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
                 <ScrollViewer Grid.Column="1">
                     <StackPanel Orientation="Vertical">
                         <Rectangle Height="10"/>
-                        <TextBlock Text="应用之后，立即生效，配置不会持久化；保存之后，重启生效，配置会持久化。"/>
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconFeatherIcons Kind="Info" Foreground="#5d6f8d"/>
+                            <Rectangle Width="10"/>
+                            <TextBlock Foreground="Black" FontStyle="Italic" Text="应用之后，立即生效，配置不会持久化；保存之后，重启生效，配置会持久化。"/>
+                        </StackPanel>
                         <Rectangle Height="20"/>
                         <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding SelectedAll}" Content="应用所有" VerticalAlignment="Center"/>
@@ -102,39 +107,61 @@
                         <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding TransferSpeedSelected}"/>
                             <Rectangle Width="10"/>
-                            <TextBlock Text="传输基准速率(KB)：" Width="200" VerticalAlignment="Center"/>
+                            <TextBlock Text="发送文件基准速率(KB)：" Width="200" VerticalAlignment="Center"/>
                             <TextBox Text="{Binding TransferSpeed,UpdateSourceTrigger=PropertyChanged}" Validation.ErrorTemplate="{StaticResource ErrorMessageTemplate}" Width="160" VerticalAlignment="Center"/>
                         </StackPanel>
                         <Rectangle Height="10"/>
                         <StackPanel Orientation="Horizontal">
-                            <CheckBox IsChecked="{Binding DownloadPathSelected}"/>
+                            <CheckBox IsChecked="{Binding DownloadSpeedSelected}"/>
+                            <Rectangle Width="10"/>
+                            <TextBlock Text="下载文件基准速率(KB)：" Width="200" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding DownloadSpeed,UpdateSourceTrigger=PropertyChanged}" Validation.ErrorTemplate="{StaticResource ErrorMessageTemplate}" Width="160" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Rectangle Height="10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding SaveFilePathSelected}"/>
                             <Rectangle Width="10"/>
                             <TextBlock VerticalAlignment="Center" Text="文件保存路径：" Width="200"/>
-                            <Button Width="160" Style="{StaticResource ButtonPrimary}" Command="{Binding ChooseDownloadPathCommand}">选择</Button>
+                            <Button Width="160" Style="{StaticResource ButtonPrimary}" Command="{Binding ChooseDownloadPathCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <iconPacks:PackIconFontisto Kind="Folder" />
+                                    <TextBlock Text="打开文件夹" Margin="5,0,0,0"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
                         <Rectangle Height="10"/>
                         <StackPanel Orientation="Horizontal">
                             <Rectangle Width="20"/>
                             <Border Height="30" BorderThickness="0,0,0,1" BorderBrush="Gray" Cursor="Hand">
-                                <TextBlock Width="600" Text="{Binding DownloadPath}" d:Text="9999999" VerticalAlignment="Center" FontSize="14">
+                                <TextBlock Width="600" Text="{Binding SaveFilePath}" d:Text="9999999" VerticalAlignment="Center" FontSize="14">
                                 <behavior:Interaction.Triggers>
                                     <behavior:EventTrigger EventName="MouseLeftButtonDown">
-                                        <behavior:InvokeCommandAction Command="{Binding GoToDownloadPathCommand}"/>
+                                        <behavior:InvokeCommandAction Command="{Binding GoToSaveFilePathCommand}"/>
                                     </behavior:EventTrigger>
                                 </behavior:Interaction.Triggers>
                                 </TextBlock>
                             </Border>
                         </StackPanel>
+
+                        <Rectangle Height="30"/>
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                            <Button Width="100" Height="32" Command="{Binding ApplyCommand}" Style="{StaticResource ButtonPrimary}">
+                                <StackPanel Orientation="Horizontal">
+                                    <iconPacks:PackIconFontAwesome Kind="CheckSolid" />
+                                    <TextBlock Text="应用" Margin="2,0,0,0"/>
+                                </StackPanel>
+                            </Button>
+                            <Rectangle Width="15"/>
+                            <Button Width="100" Height="32" Command="{Binding SaveCommand}" Style="{StaticResource ButtonPrimary}">
+                                <StackPanel Orientation="Horizontal">
+                                    <iconPacks:PackIconMaterial Kind="ContentSave" />
+                                    <TextBlock Text="保存" Margin="2,0,0,0"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
                     </StackPanel>
                 </ScrollViewer>
-
-                <Border Grid.Row="1">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
-                        <Button Width="110" Height="36" Command="{Binding ApplyCommand}" Style="{StaticResource ButtonPrimary}">应用</Button>
-                        <Rectangle Width="15"/>
-                        <Button Width="110" Height="36" Command="{Binding SaveCommand}" Style="{StaticResource ButtonPrimary}">保存</Button>
-                    </StackPanel>
-                </Border>
             </Grid>
         </Grid>
     </Border>

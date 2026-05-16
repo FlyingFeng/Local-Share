@@ -40,10 +40,10 @@ namespace LocalShare.Desktop.Models.Sends
         public ObservableCollection<FileTaskModel> FileTasks { get; set; } = [];
 
         private readonly SemaphoreSlim _initSlim = new SemaphoreSlim(1, 1);
-        //private Channel? _channel;
         private readonly Dictionary<string, SendFileHandler> sendFileTasks = new Dictionary<string, SendFileHandler>();
         private readonly List<FileItemInfo> _cacheShareFiles = new List<FileItemInfo>();
 
+        private readonly object locker = new object();
         public bool IsSending => sendFileTasks.Count > 0;
 
         private readonly RpcChannelHolder? _rpcChannelHolder;
@@ -78,6 +78,49 @@ namespace LocalShare.Desktop.Models.Sends
             });
         }
 
+        private FileItemInfo? GetCache(string name)
+        {
+            lock (locker)
+            {
+                return _cacheShareFiles.FirstOrDefault(s => s.FileName == name);
+            }
+        }
+
+
+        private List<FileItemInfo> GetCaches()
+        {
+            lock (locker)
+            {
+                var list = new List<FileItemInfo>();
+                list.AddRange(_cacheShareFiles);
+                return list;
+            }
+        }
+
+        private int GetCacheFileCount()
+        {
+            lock (locker)
+            {
+                return _cacheShareFiles.Count;
+            }
+        }
+
+        private void AddCacheFiles(FileItemInfo[] caches)
+        {
+            lock (locker)
+            {
+                if (caches != null && caches.Length > 0)
+                {
+                    _cacheShareFiles.Clear();
+                    foreach (var item in caches)
+                    {
+                        _cacheShareFiles.Add(item);
+                    }
+                }
+            }
+        }
+
+
         private async Task CheckAlive()
         {
             Log.Information($"Start CheckAlive()");
@@ -85,10 +128,6 @@ namespace LocalShare.Desktop.Models.Sends
             {
                 try
                 {
-                    //if (_tokenSource == null || _tokenSource.IsCancellationRequested)
-                    //{
-                    //    break;
-                    //}
                     var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
                     var _client = new LocalShareService.LocalShareServiceClient(channel);
                     await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(3));
@@ -103,9 +142,7 @@ namespace LocalShare.Desktop.Models.Sends
                     {
                         checkDuration = 3000;
                     }
-                    //Close();
                     Log.Error($"LocalNode.CheckAlive error, nodeName= {NodeName},{ex.Message}\n{ex.StackTrace}");
-                    //break;
                 }
                 finally
                 {
@@ -181,26 +218,25 @@ namespace LocalShare.Desktop.Models.Sends
                             sendFileTasks.Remove(matchedFile.TaskId);
                         }
 
-                        var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
-                        var client = new LocalShareService.LocalShareServiceClient(channel);
-                        try
-                        {
-                            await client.OperateFileTaskAsync(new FileOperationRequest
-                            {
-                                FileName = fileName,
-                                OperationType = 2,
-                                SendNodeName = GlobalShared.NodeName,
-                                TaskId = matchedFile.TaskId,
-                                Sender = 0
-                            });
-
-                        }
-                        catch (Exception ex2)
-                        {
-                            Log.Error($"CancelFileTask.inner error, {ex2.Message}\n{ex2.StackTrace}");
-                        }
+                        //var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
+                        //var client = new LocalShareService.LocalShareServiceClient(channel);
+                        //try
+                        //{
+                        //    await client.OperateFileTaskAsync(new FileOperationRequest
+                        //    {
+                        //        FileName = fileName,
+                        //        OperationType = 2,
+                        //        SendNodeName = GlobalShared.NodeName,
+                        //        TaskId = matchedFile.TaskId,
+                        //        Sender = 0
+                        //    });
+                        //}
+                        //catch (Exception ex2)
+                        //{
+                        //    Log.Error($"CancelFileTask.inner error, {ex2.Message}\n{ex2.StackTrace}");
+                        //}
                     }
-                    await Task.Delay(100);
+                    //await Task.Delay(100);
                     if (matchedFile != null)
                     {
                         await Application.Current.Dispatcher.InvokeAsync(() =>
@@ -222,41 +258,6 @@ namespace LocalShare.Desktop.Models.Sends
             }
         }
 
-
-        //public async Task UpdateNodeStateAsync()
-        //{
-        //    try
-        //    {
-        //        if (State == 1)
-        //        {
-        //            State = 0;
-        //            //_tokenSource = new CancellationTokenSource();
-        //            if (_channel == null)
-        //            {
-        //                _channel = new Channel($"{IpAddress}:{Port}", ChannelCredentials.Insecure);
-        //            }
-        //            await _channel.ConnectAsync(DateTime.UtcNow.AddSeconds(5));
-        //            if (_channel.State == ChannelState.Ready)
-        //            {
-        //                State = 0;
-        //                _ = CheckAlive();
-        //                //_ = RunLoop();
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        State = 1;
-        //        _tokenSource?.Cancel();
-        //        Log.Error($"LocalNode.UpdateNodeStateAsync error, IpAddress={IpAddress}, Port={Port}\n{ex.Message}\n{ex.StackTrace}");
-        //        throw;
-        //    }
-        //    finally
-        //    {
-
-        //    }
-        //}
-
         public async Task InitAsync()
         {
             try
@@ -266,8 +267,9 @@ namespace LocalShare.Desktop.Models.Sends
                 if (channel != null)
                 {
                     await channel.ConnectAsync(DateTime.UtcNow.AddSeconds(5));
-                    _ = RunLoop();
+                    await RefreshCacheFiles();
                     _ = CheckAlive();
+                    _ = RunLoop();
                 }
             }
             catch (Exception ex)
@@ -280,26 +282,26 @@ namespace LocalShare.Desktop.Models.Sends
             }
         }
 
-        public async Task FinishSendFile(FileTaskModel model)
+        public void FinishSendFile(FileTaskModel model)
         {
             try
             {
-                var matched = FileTasks!.FirstOrDefault(s => s.FileName == model.FileName);
-                if (matched != null)
-                {
-                    matched.State = 3;
-                    //FileTasks.Remove(matched);
-                    using var dbContext = new LocalDataContext();
-                    var entity = dbContext.SendFileTasks.FirstOrDefault(s => s.TaskId == model.TaskId);
-                    if (entity != null)
-                    {
-                        entity.State = 3;
-                        entity.LastUpdateTime = DateTime.UtcNow;
-                        await dbContext.SaveChangesAsync();
-                    }
-                    sendFileTasks.Remove(model.TaskId);
-                    Growl.Info($"文件发送完成，文件名：{model.FileName}");
-                }
+                //var matched = FileTasks!.FirstOrDefault(s => s.FileName == model.FileName);
+                //if (matched != null)
+                //{
+                //    matched.State = 3;
+                //FileTasks.Remove(matched);
+                //using var dbContext = new LocalDataContext();
+                //var entity = dbContext.SendFileTasks.FirstOrDefault(s => s.TaskId == model.TaskId);
+                //if (entity != null)
+                //{
+                //    entity.State = 3;
+                //    entity.LastUpdateTime = DateTime.UtcNow;
+                //    await dbContext.SaveChangesAsync();
+                //}
+                //}
+                sendFileTasks.Remove(model.TaskId);
+                //Growl.Info($"文件发送完成，文件名：{model.FileName}");
             }
             catch (Exception ex)
             {
@@ -310,17 +312,17 @@ namespace LocalShare.Desktop.Models.Sends
 
         private async Task RunLoop()
         {
-            await RefreshCacheFiles();
-
             while (true)
             {
                 try
                 {
-                    //if (State != 0)
-                    //{
-                    //    await Task.Delay(1000);
-                    //    continue;
-                    //}
+                    if (State != 0)
+                    {
+                        await Task.Delay(1000);
+                        continue;
+                    }
+
+                    await RefreshCacheFiles();
 
                     var currentScheduleCount = sendFileTasks.Count;
                     var validCount = GlobalShared.SameNodeMaxSendFileCount - currentScheduleCount;
@@ -331,12 +333,11 @@ namespace LocalShare.Desktop.Models.Sends
                         var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
                         var client = new LocalShareService.LocalShareServiceClient(channel);
                         await client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(5));
-                        using var dbContext = new LocalDataContext();
+                        //using var dbContext = new LocalDataContext();
                         foreach (var item in tmp)
                         {
                             if (File.Exists(item.FullFileName))
                             {
-
                                 FileInfo fi = new FileInfo(item.FullFileName);
                                 var entity = new SendFileTaskEntity
                                 {
@@ -351,8 +352,8 @@ namespace LocalShare.Desktop.Models.Sends
                                     State = (int)SendFileTaskState.Transferring,
                                     TaskId = item.TaskId
                                 };
-                                await dbContext!.AddAsync(entity);
-                                await dbContext!.SaveChangesAsync();
+                                //await dbContext!.AddAsync(entity);
+                                //await dbContext!.SaveChangesAsync();
                                 SendFileHandler handler = new SendFileHandler(channel!, NodeName, this);
                                 _ = handler.SendFile(item, entity);
                                 item.State = (int)SendFileTaskState.Transferring;
@@ -379,11 +380,11 @@ namespace LocalShare.Desktop.Models.Sends
             FileItemInfo? file = null;
             try
             {
-                if (_cacheShareFiles.Count == 0)
+                if (GetCacheFileCount() == 0)
                 {
                     await RefreshCacheFiles();
                 }
-                file = _cacheShareFiles.FirstOrDefault(s => s.FileName == fileName);
+                file = GetCache(fileName);
             }
             catch (Exception ex)
             {
@@ -397,14 +398,11 @@ namespace LocalShare.Desktop.Models.Sends
             var list = new List<FileItemInfo>();
             try
             {
-                if (_cacheShareFiles.Count == 0)
+                if (GetCacheFileCount() == 0)
                 {
                     await RefreshCacheFiles();
                 }
-                foreach (var item in _cacheShareFiles)
-                {
-                    list.Add(item);
-                }
+                list.AddRange(GetCaches());
             }
             catch (Exception ex)
             {
@@ -413,9 +411,8 @@ namespace LocalShare.Desktop.Models.Sends
             return list;
         }
 
-        public async Task<List<FileItemInfo>> RefreshCacheFiles()
+        public async Task RefreshCacheFiles()
         {
-            var list = new List<FileItemInfo>();
             try
             {
                 var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
@@ -423,41 +420,22 @@ namespace LocalShare.Desktop.Models.Sends
                 var response = await client.ListFilesAsync(new EmptyMessage());
                 if (response.Files.Count > 0)
                 {
-                    _cacheShareFiles.Clear();
-                    foreach (var eachFile in response.Files)
-                    {
-                        _cacheShareFiles.Add(eachFile);
-                        list.Add(eachFile);
-                    }
+                    AddCacheFiles(response.Files.ToArray());
+                    //lock (locker)
+                    //{
+                    //    _cacheShareFiles.Clear();
+                    //    foreach (var eachFile in response.Files)
+                    //    {
+                    //        _cacheShareFiles.Add(eachFile);
+                    //    }
+                    //}
                 }
             }
             catch (Exception ex)
             {
                 Log.Error($"Node= {NodeName}, RefreshCacheFiles error, {ex.Message}\n{ex.StackTrace}");
             }
-            return list;
         }
-
-
-        //public void Close()
-        //{
-        //    try
-        //    {
-        //        Log.Information($"Close LocalNode, NodeName={NodeName}, IpAddress={IpAddress}, Port={Port}");
-        //        _tokenSource?.Cancel();
-        //        //if (_channel != null)
-        //        //{
-        //        //    await _channel.ShutdownAsync();
-        //        //}
-        //        //_channel = null;
-        //        _tokenSource = null;
-        //        //FileTasks?.Clear();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Log.Error($"LocalNode.CloseAsync error, NodeName={NodeName}, IpAddress={IpAddress}, Port={Port}\n{ex.Message}\n{ex.StackTrace}");
-        //    }
-        //}
 
     }
 }
