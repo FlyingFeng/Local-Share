@@ -130,7 +130,7 @@ namespace LocalShare.Desktop.Models.Sends
                 {
                     var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
                     var _client = new LocalShareService.LocalShareServiceClient(channel);
-                    await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(3));
+                    await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(5));
                     State = 0;
                     checkDuration = 3000;
                 }
@@ -159,7 +159,7 @@ namespace LocalShare.Desktop.Models.Sends
             {
                 var channel = _rpcChannelHolder!.GetChannel(IpAddress, Port);
                 var _client = new LocalShareService.LocalShareServiceClient(channel);
-                await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(3));
+                await _client.GetServerNodeInfoAsync(new EmptyMessage(), deadline: DateTime.UtcNow.AddSeconds(5));
                 State = 0;
                 checkDuration = 3000;
                 HandyControl.Controls.MessageBox.Show($"节点【{NodeName}】已经在线", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -369,7 +369,7 @@ namespace LocalShare.Desktop.Models.Sends
                 }
                 finally
                 {
-                    await Task.Delay(1000);
+                    await Task.Delay(2000);
                 }
             }
         }

@@ -150,7 +150,7 @@ namespace LocalShare.Desktop.ViewModels
             }
             finally
             {
-                _udpDiscoveryService!.ClientDiscovered += UdpDiscoveryService_ClientDiscovered;
+                //_udpDiscoveryService!.ClientDiscovered += UdpDiscoveryService_ClientDiscovered;
                 WeakReferenceMessenger.Default.Send(new MessageModel
                 {
                     MessageType = MessageType.CloseMask
@@ -542,7 +542,7 @@ namespace LocalShare.Desktop.ViewModels
         public void Close()
         {
             // 取消订阅，切断单例对本对象的引用
-            _udpDiscoveryService!.ClientDiscovered -= UdpDiscoveryService_ClientDiscovered;
+            //_udpDiscoveryService!.ClientDiscovered -= UdpDiscoveryService_ClientDiscovered;
             WeakReferenceMessenger.Default.Unregister<MessageModel>(this);
         }
 
