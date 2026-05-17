@@ -1,11 +1,14 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using Grpc.Core;
+using HandyControl.Data;
 using LocalShare.Desktop.Models;
 using LocalShare.Desktop.Models.Sends;
 using LocalShare.Protocol.Define;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,6 +40,16 @@ namespace LocalShare.Desktop
 
     }
 
+
+    public partial class MessageObservabled : ObservableObject
+    {
+        [ObservableProperty]
+        private string message = string.Empty;
+        [ObservableProperty]
+        private ChatRoleType roleType = ChatRoleType.Sender;
+    }
+
+
     /// <summary>
     /// ChatWindow.xaml 的交互逻辑
     /// </summary>
@@ -46,10 +59,13 @@ namespace LocalShare.Desktop
         {
             InitializeComponent();
             WeakReferenceMessenger.Default.Register<MessageModel>(this);
+            DataContext = this;
         }
 
         public Channel? NodeChannel { get; set; }
         public LocalNode? Node { get; set; }
+
+        public ObservableCollection<MessageObservabled> ChatMessages { get; set; } = new ObservableCollection<MessageObservabled>();
 
         private async void BtnSend_Click(object sender, RoutedEventArgs e)
         {
@@ -79,7 +95,6 @@ namespace LocalShare.Desktop
                     return;
                 }
 
-
                 LocalShareService.LocalShareServiceClient client = new LocalShareService.LocalShareServiceClient(NodeChannel);
                 var request = new ChatRequest
                 {
@@ -100,17 +115,24 @@ namespace LocalShare.Desktop
                     Time = request.Time
                 });
 
-                TextBox t = new TextBox();
-                t.IsReadOnly = true;
-                t.Background = new SolidColorBrush(Color.FromRgb(0x03, 0xde, 0x6d));
-                t.BorderThickness = new Thickness(0);
-                t.TextWrapping = TextWrapping.Wrap;
-                t.Text = TxtSendMessage.Text;
-                ListBoxItem item = new ListBoxItem();
-                LbChatMessage.Items.Add(item);
-                item.HorizontalAlignment = HorizontalAlignment.Right;
-                item.Content = t;
+                ChatMessages.Add(new MessageObservabled
+                {
+                    Message = TxtSendMessage.Text,
+                    RoleType = ChatRoleType.Sender
+                });
                 TxtSendMessage.Text = string.Empty;
+
+                //TextBox t = new TextBox();
+                //t.IsReadOnly = true;
+                //t.Background = new SolidColorBrush(Color.FromRgb(0x03, 0xde, 0x6d));
+                //t.BorderThickness = new Thickness(0);
+                //t.TextWrapping = TextWrapping.Wrap;
+                //t.Text = TxtSendMessage.Text;
+                //ListBoxItem item = new ListBoxItem();
+                //LbChatMessage.Items.Add(item);
+                //item.HorizontalAlignment = HorizontalAlignment.Right;
+                //item.Content = t;
+                //TxtSendMessage.Text = string.Empty;
             }
         }
 
@@ -129,16 +151,22 @@ namespace LocalShare.Desktop
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        TextBox t = new TextBox();
-                        t.IsReadOnly = true;
-                        t.Background = new SolidColorBrush(Color.FromRgb(0xe0, 0xe0, 0xe0));
-                        t.BorderThickness = new Thickness(0);
-                        t.TextWrapping = TextWrapping.Wrap;
-                        t.Text = msg.Message;
-                        ListBoxItem item = new ListBoxItem();
-                        LbChatMessage.Items.Add(item);
-                        item.HorizontalAlignment = HorizontalAlignment.Left;
-                        item.Content = t;
+                        ChatMessages.Add(new MessageObservabled
+                        {
+                            Message = msg.Message,
+                            RoleType = ChatRoleType.Receiver
+                        });
+
+                        //TextBox t = new TextBox();
+                        //t.IsReadOnly = true;
+                        //t.Background = new SolidColorBrush(Color.FromRgb(0xe0, 0xe0, 0xe0));
+                        //t.BorderThickness = new Thickness(0);
+                        //t.TextWrapping = TextWrapping.Wrap;
+                        //t.Text = msg.Message;
+                        //ListBoxItem item = new ListBoxItem();
+                        //LbChatMessage.Items.Add(item);
+                        //item.HorizontalAlignment = HorizontalAlignment.Left;
+                        //item.Content = t;
                     });
                 }
             }
@@ -157,23 +185,33 @@ namespace LocalShare.Desktop
                     var list = ChatMessageHolder.GetChatHistoryData(Node.NodeName);
                     foreach (var msg in list)
                     {
-                        TextBox t = new TextBox();
-                        t.IsReadOnly = true;
-                        t.BorderThickness = new Thickness(0);
-                        t.Text = msg.Message;
-                        t.TextWrapping = TextWrapping.Wrap;
-                        ListBoxItem item = new ListBoxItem();
-                        LbChatMessage.Items.Add(item);
-                        item.Content = t;
+                        //TextBox t = new TextBox();
+                        //t.IsReadOnly = true;
+                        //t.BorderThickness = new Thickness(0);
+                        //t.Text = msg.Message;
+                        //t.TextWrapping = TextWrapping.Wrap;
+                        //ListBoxItem item = new ListBoxItem();
+                        //LbChatMessage.Items.Add(item);
+                        //item.Content = t;
                         if (msg.Type == 1)
                         {
-                            t.Background = new SolidColorBrush(Color.FromRgb(0xe0, 0xe0, 0xe0));
-                            item.HorizontalAlignment = HorizontalAlignment.Left;
+                            ChatMessages.Add(new MessageObservabled
+                            {
+                                Message = msg.Message,
+                                RoleType = ChatRoleType.Receiver
+                            });
+                            //t.Background = new SolidColorBrush(Color.FromRgb(0xe0, 0xe0, 0xe0));
+                            //item.HorizontalAlignment = HorizontalAlignment.Left;
                         }
                         else if (msg.Type == 0)
                         {
-                            t.Background = new SolidColorBrush(Color.FromRgb(0x03, 0xde, 0x6d));
-                            item.HorizontalAlignment = HorizontalAlignment.Right;
+                            ChatMessages.Add(new MessageObservabled
+                            {
+                                RoleType = ChatRoleType.Sender,
+                                Message = msg.Message
+                            });
+                            //t.Background = new SolidColorBrush(Color.FromRgb(0x03, 0xde, 0x6d));
+                            //item.HorizontalAlignment = HorizontalAlignment.Right;
                         }
                     }
                     TxtSendMessage.Focus();

@@ -48,7 +48,7 @@
                     <Button Width="147" Height="35" Style="{StaticResource ButtonPrimary}" Command="{Binding RandomNodeNameCommand}">
                         <StackPanel Orientation="Horizontal">
                             <!--<iconPacks:PackIconFeatherIcons Kind="Box" />-->
-                            <Path StrokeThickness="1.5"  Stroke="White" Data="M 12,22.08 V 12 M 3.27,6.96 12,12.01 20.73,6.96 M 21,16 V 8 A 2,2 0 0 0 20,6.27 l -7,-4 a 2,2 0 0 0 -2,0 l -7,4 A 2,2 0 0 0 3,8 v 8 a 2,2 0 0 0 1,1.73 l 7,4 a 2,2 0 0 0 2,0 l 7,-4 A 2,2 0 0 0 21,16 Z"></Path>
+                            <Path StrokeThickness="1.5" Stroke="White" Data="M 12,22.08 V 12 M 3.27,6.96 12,12.01 20.73,6.96 M 21,16 V 8 A 2,2 0 0 0 20,6.27 l -7,-4 a 2,2 0 0 0 -2,0 l -7,4 A 2,2 0 0 0 3,8 v 8 a 2,2 0 0 0 1,1.73 l 7,4 a 2,2 0 0 0 2,0 l 7,-4 A 2,2 0 0 0 21,16 Z"></Path>
                             <TextBlock Text="随机名称" VerticalAlignment="Center" Margin="5,0,0,0"/>
                         </StackPanel>
                     </Button>
@@ -67,7 +67,7 @@
                     <Button Background="{Binding SendBrush}" Width="147" Height="35" Command="{Binding SendViewActionCommand}">
                         <StackPanel Orientation="Horizontal">
                             <!--<iconPacks:PackIconMaterial Kind="SendVariant" />-->
-                            <Path  Fill="Black" Stretch="Uniform" Data="M3 20V14L11 12L3 10V4L22 12Z"></Path>
+                            <Path  Fill="Black" Stretch="Uniform" Width="17" Data="M3 20V14L11 12L3 10V4L22 12Z"></Path>
                             <TextBlock Text="发送" Margin="5,0,0,0" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -75,7 +75,7 @@
                     <Button Background="{Binding ReceiveBrush}" Width="147" Height="35" Command="{Binding ReceiveViewActionCommand}">
                         <StackPanel Orientation="Horizontal">
                             <!--<iconPacks:PackIconRemixIcon Kind="FolderReceivedLine" />-->
-                            <Path Fill="Black" Stretch="Uniform" Data="M22 13H20V7H11.5858L9.58579 5H4V19H13V21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H10.4142L12.4142 5H21C21.5523 5 22 5.44772 22 6V13ZM20 17H23V19H20V22.5L15 18L20 13.5V17Z"></Path>
+                            <Path Fill="Black" Stretch="Uniform" Width="17" Data="M22 13H20V7H11.5858L9.58579 5H4V19H13V21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H10.4142L12.4142 5H21C21.5523 5 22 5.44772 22 6V13ZM20 17H23V19H20V22.5L15 18L20 13.5V17Z"></Path>
                             <TextBlock Text="接收" Margin="5,0,0,0" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -83,7 +83,7 @@
                     <Button Background="{Binding BrowserBrush}" Width="147" Height="35" Command="{Binding BrowserViewActionCommand}">
                         <StackPanel Orientation="Horizontal">
                             <!--<iconPacks:PackIconFeatherIcons Kind="Globe" />-->
-                            <Path Stretch="Uniform" StrokeThickness="1.5" Stroke="Black" Data="M 12,2 A 15.3,15.3 0 0 1 16,12 15.3,15.3 0 0 1 12,22 15.3,15.3 0 0 1 8,12 15.3,15.3 0 0 1 12,2 Z M 2,12 h 20 m 0,0 A 10,10 0 0 1 12,22 10,10 0 0 1 2,12 10,10 0 0 1 12,2 10,10 0 0 1 22,12 Z"></Path>
+                            <Path Stretch="Uniform" Width="17" StrokeThickness="1.5" Stroke="Black" Data="M 12,2 A 15.3,15.3 0 0 1 16,12 15.3,15.3 0 0 1 12,22 15.3,15.3 0 0 1 8,12 15.3,15.3 0 0 1 12,2 Z M 2,12 h 20 m 0,0 A 10,10 0 0 1 12,22 10,10 0 0 1 2,12 10,10 0 0 1 12,2 10,10 0 0 1 22,12 Z"></Path>
                             <TextBlock FontSize="13" Text="浏览" Margin="5,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -91,7 +91,7 @@
                     <Button Background="{Binding HistoryBrush}" Width="147" Height="35" Command="{Binding HistoryViewActionCommand}">
                         <StackPanel Orientation="Horizontal">
                             <!--<iconPacks:PackIconPhosphorIcons Kind="ClockCounterClockwise" />-->
-                            <Path Fill="Black" Stretch="Uniform" Data="M136,80v43.47l36.12,21.67a8,8,0,0,1-8.24,13.72l-40-24A8,8,0,0,1,120,128V80a8,8,0,0,1,16,0Zm-8-48A95.44,95.44,0,0,0,60.08,60.15C52.81,67.51,46.35,74.59,40,82V64a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H72a8,8,0,0,0,0-16H49c7.15-8.42,14.27-16.35,22.39-24.57a80,80,0,1,1,1.66,114.75,8,8,0,1,0-11,11.64A96,96,0,1,0,128,32Z"></Path>
+                            <Path Fill="Black" Width="17" Stretch="Uniform" Data="M136,80v43.47l36.12,21.67a8,8,0,0,1-8.24,13.72l-40-24A8,8,0,0,1,120,128V80a8,8,0,0,1,16,0Zm-8-48A95.44,95.44,0,0,0,60.08,60.15C52.81,67.51,46.35,74.59,40,82V64a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H72a8,8,0,0,0,0-16H49c7.15-8.42,14.27-16.35,22.39-24.57a80,80,0,1,1,1.66,114.75,8,8,0,1,0-11,11.64A96,96,0,1,0,128,32Z"></Path>
                             <TextBlock Text="记录" FontSize="13" Margin="5,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -99,7 +99,7 @@
                     <Button Background="{Binding SettingBrush}" Width="147" Height="35" Command="{Binding SettingViewActionCommand}">
                         <StackPanel Orientation="Horizontal">
                             <!--<iconPacks:PackIconFeatherIcons Kind="Settings" />-->
-                            <Path Stretch="Uniform" StrokeThickness="1.5" Stroke="Black" Data="m 19.4,15 a 1.65,1.65 0 0 0 0.33,1.82 l 0.06,0.06 a 2,2 0 0 1 0,2.83 2,2 0 0 1 -2.83,0 L 16.9,19.65 a 1.65,1.65 0 0 0 -1.82,-0.33 1.65,1.65 0 0 0 -1,1.51 V 21 a 2,2 0 0 1 -2,2 2,2 0 0 1 -2,-2 V 20.91 A 1.65,1.65 0 0 0 9,19.4 1.65,1.65 0 0 0 7.18,19.73 l -0.06,0.06 a 2,2 0 0 1 -2.83,0 2,2 0 0 1 0,-2.83 L 4.35,16.9 a 1.65,1.65 0 0 0 0.33,-1.82 1.65,1.65 0 0 0 -1.51,-1 H 3 a 2,2 0 0 1 -2,-2 2,2 0 0 1 2,-2 H 3.09 A 1.65,1.65 0 0 0 4.6,9 1.65,1.65 0 0 0 4.27,7.18 L 4.21,7.12 a 2,2 0 0 1 0,-2.83 2,2 0 0 1 2.83,0 L 7.1,4.35 A 1.65,1.65 0 0 0 8.92,4.68 H 9 A 1.65,1.65 0 0 0 10,3.17 V 3 a 2,2 0 0 1 2,-2 2,2 0 0 1 2,2 v 0.09 a 1.65,1.65 0 0 0 1,1.51 1.65,1.65 0 0 0 1.82,-0.33 l 0.06,-0.06 a 2,2 0 0 1 2.83,0 2,2 0 0 1 0,2.83 L 19.65,7.1 A 1.65,1.65 0 0 0 19.32,8.92 V 9 a 1.65,1.65 0 0 0 1.51,1 H 21 a 2,2 0 0 1 2,2 2,2 0 0 1 -2,2 H 20.91 A 1.65,1.65 0 0 0 19.4,15 Z M 15,12 a 3,3 0 0 1 -3,3 3,3 0 0 1 -3,-3 3,3 0 0 1 3,-3 3,3 0 0 1 3,3 z"></Path>
+                            <Path Width="17" Stretch="Uniform" StrokeThickness="1.5" Stroke="Black" Data="m 19.4,15 a 1.65,1.65 0 0 0 0.33,1.82 l 0.06,0.06 a 2,2 0 0 1 0,2.83 2,2 0 0 1 -2.83,0 L 16.9,19.65 a 1.65,1.65 0 0 0 -1.82,-0.33 1.65,1.65 0 0 0 -1,1.51 V 21 a 2,2 0 0 1 -2,2 2,2 0 0 1 -2,-2 V 20.91 A 1.65,1.65 0 0 0 9,19.4 1.65,1.65 0 0 0 7.18,19.73 l -0.06,0.06 a 2,2 0 0 1 -2.83,0 2,2 0 0 1 0,-2.83 L 4.35,16.9 a 1.65,1.65 0 0 0 0.33,-1.82 1.65,1.65 0 0 0 -1.51,-1 H 3 a 2,2 0 0 1 -2,-2 2,2 0 0 1 2,-2 H 3.09 A 1.65,1.65 0 0 0 4.6,9 1.65,1.65 0 0 0 4.27,7.18 L 4.21,7.12 a 2,2 0 0 1 0,-2.83 2,2 0 0 1 2.83,0 L 7.1,4.35 A 1.65,1.65 0 0 0 8.92,4.68 H 9 A 1.65,1.65 0 0 0 10,3.17 V 3 a 2,2 0 0 1 2,-2 2,2 0 0 1 2,2 v 0.09 a 1.65,1.65 0 0 0 1,1.51 1.65,1.65 0 0 0 1.82,-0.33 l 0.06,-0.06 a 2,2 0 0 1 2.83,0 2,2 0 0 1 0,2.83 L 19.65,7.1 A 1.65,1.65 0 0 0 19.32,8.92 V 9 a 1.65,1.65 0 0 0 1.51,1 H 21 a 2,2 0 0 1 2,2 2,2 0 0 1 -2,2 H 20.91 A 1.65,1.65 0 0 0 19.4,15 Z M 15,12 a 3,3 0 0 1 -3,3 3,3 0 0 1 -3,-3 3,3 0 0 1 3,-3 3,3 0 0 1 3,3 z"></Path>
                             <TextBlock Text="设置" Margin="5,0,0,0" VerticalAlignment="Center" FontSize="13"/>
                         </StackPanel>
                     </Button>
@@ -107,7 +107,7 @@
                     <Button Background="{Binding AboutBrush}" Width="147" Height="35" Command="{Binding AboutViewActionCommand}">
                         <StackPanel Orientation="Horizontal">
                             <!--<iconPacks:PackIconMaterial Kind="InformationVariant" />-->
-                            <Path Stretch="Uniform" Fill="Black" Data="M13.5,4A1.5,1.5 0 0,0 12,5.5A1.5,1.5 0 0,0 13.5,7A1.5,1.5 0 0,0 15,5.5A1.5,1.5 0 0,0 13.5,4M13.14,8.77C11.95,8.87 8.7,11.46 8.7,11.46C8.5,11.61 8.56,11.6 8.72,11.88C8.88,12.15 8.86,12.17 9.05,12.04C9.25,11.91 9.58,11.7 10.13,11.36C12.25,10 10.47,13.14 9.56,18.43C9.2,21.05 11.56,19.7 12.17,19.3C12.77,18.91 14.38,17.8 14.54,17.69C14.76,17.54 14.6,17.42 14.43,17.17C14.31,17 14.19,17.12 14.19,17.12C13.54,17.55 12.35,18.45 12.19,17.88C12,17.31 13.22,13.4 13.89,10.71C14,10.07 14.3,8.67 13.14,8.77Z"></Path>
+                            <Path Stretch="Uniform" Width="17" Fill="Black" Data="M512 21.333c-235.273 0-426.667 191.394-426.667 426.667s191.394 426.667 426.667 426.667c235.273 0 426.667-191.394 426.667-426.667s-191.394-426.667-426.667-426.667zM512 789.333c-188.207 0-341.333-153.126-341.333-341.333s153.126-341.333 341.333-341.333c188.207 0 341.333 153.126 341.333 341.333s-153.126 341.333-341.333 341.333zM512 234.667c-23.561 0-42.667 19.106-42.667 42.667v213.333c0 23.561 19.106 42.667 42.667 42.667s42.667-19.106 42.667-42.667v-213.333c0-23.561-19.106-42.667-42.667-42.667zM514.125 571.729c-23.561 0-46.916 19.106-46.916 42.667v4.271c0 23.561 19.106 42.667 42.667 42.667s46.916-19.106 46.916-42.667v-4.271c0-23.561-19.102-42.667-42.667-42.667z"></Path>
                             <TextBlock Text="关于" Margin="5,0,0,0" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>

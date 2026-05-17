@@ -21,7 +21,7 @@
             <Button x:Name="BtnAddNode" Click="BtnAddNode_Click" Width="100" Height="30" Style="{StaticResource ButtonPrimary}">
                 <StackPanel Orientation="Horizontal">
                     <!--<iconPacks:PackIconMaterialDesign Kind="Add" Height="13"/>-->
-                    <Path Stretch="Uniform" Fill="White" Data="m 19,13 h -6 v 6 H 11 V 13 H 5 v -2 h 6 V 5 h 2 v 6 h 6 z"></Path>
+                    <Path Stretch="Uniform" Width="17" Fill="White" Data="m 19,13 h -6 v 6 H 11 V 13 H 5 v -2 h 6 V 5 h 2 v 6 h 6 z"></Path>
                     <TextBlock Text="添加" Margin="2,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
@@ -29,7 +29,7 @@
             <Button x:Name="BtnCancel" Click="BtnCancel_Click" Width="100" Height="30" Style="{StaticResource ButtonPrimary}">
                 <StackPanel Orientation="Horizontal">
                     <!--<iconPacks:PackIconPhosphorIcons Kind="ArrowUDownLeftBold" />-->
-                    <Path Stretch="Uniform" Fill="White" Data="M236,112a68.07,68.07,0,0,1-68,68H61l27.52,27.51a12,12,0,0,1-17,17l-48-48a12,12,0,0,1,0-17l48-48a12,12,0,1,1,17,17L61,156H168a44,44,0,0,0,0-88H80a12,12,0,0,1,0-24h88A68.07,68.07,0,0,1,236,112Z"></Path>
+                    <Path Stretch="Uniform" Width="17" Fill="White" Data="M236,112a68.07,68.07,0,0,1-68,68H61l27.52,27.51a12,12,0,0,1-17,17l-48-48a12,12,0,0,1,0-17l48-48a12,12,0,1,1,17,17L61,156H168a44,44,0,0,0,0-88H80a12,12,0,0,1,0-24h88A68.07,68.07,0,0,1,236,112Z"></Path>
                     <TextBlock Text="退出" Margin="2,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
