@@ -24,10 +24,12 @@ namespace LocalShare.Desktop
     public partial class AddLocalNodeWindow : Window
     {
         private readonly RpcChannelHolder? _channelHolder;
-        public AddLocalNodeWindow(RpcChannelHolder? channelHolder)
+        private readonly SendDataHolder? _sendDataHolder;
+        public AddLocalNodeWindow(RpcChannelHolder? channelHolder, SendDataHolder? sendDataHolder)
         {
             InitializeComponent();
             _channelHolder = channelHolder;
+            _sendDataHolder = sendDataHolder;
         }
 
         public NodeModel? NodeInfo { get; set; }
@@ -62,7 +64,15 @@ namespace LocalShare.Desktop
             try
             {
                 BtnAddNode.IsEnabled = false;
-                channel = await _channelHolder!.AddAndCloseOldChannel(ipAddress, int.Parse(port));
+                var portInt = int.Parse(port);
+                var node = _sendDataHolder!.GetNode(ipAddress: ipAddress, port: portInt);
+                if (node != null)
+                {
+                    HandyControl.Controls.MessageBox.Show($"该节点已经存在【{node.NodeName}】", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                channel = await _channelHolder!.AddAndCloseOldChannel(ipAddress, portInt);
                 await channel.ConnectAsync(DateTime.UtcNow.AddSeconds(5));
                 LocalShareService.LocalShareServiceClient client = new LocalShareService.LocalShareServiceClient(channel);
                 var nodeInfo = await client.GetServerNodeInfoAsync(new EmptyMessage());

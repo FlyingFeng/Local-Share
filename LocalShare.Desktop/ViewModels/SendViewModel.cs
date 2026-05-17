@@ -47,7 +47,8 @@ namespace LocalShare.Desktop.ViewModels
         {
             try
             {
-                AddLocalNodeWindow window = new AddLocalNodeWindow(_channelHolder);
+                AddLocalNodeWindow window = new AddLocalNodeWindow(_channelHolder, SendDataHolder);
+                window.Owner = Application.Current.MainWindow;
                 var flag = window.ShowDialog();
                 if (flag == true)
                 {

@@ -5,7 +5,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:LocalShare.Desktop.Views"
              xmlns:design="clr-namespace:LocalShare.Desktop.DesignData"
-             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:vm="clr-namespace:LocalShare.Desktop.ViewModels"
              xmlns:model="clr-namespace:LocalShare.Desktop.Models.Browsers"
              xmlns:sendModel="clr-namespace:LocalShare.Desktop.Models.Sends"
@@ -53,54 +52,55 @@
                 <Rectangle Width="18"/>
                 <Button Width="100" Height="32" IsEnabled="{Binding RefreshEnabled}" Style="{StaticResource ButtonPrimary}" Command="{Binding RefreshFileCommand}">
                     <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconPhosphorIcons Kind="ArrowsCounterClockwiseBold" />
-                        <TextBlock Text="刷新" Margin="2,0,0,0"/>
+                        <!--<iconPacks:PackIconPhosphorIcons Kind="ArrowsCounterClockwiseBold" />-->
+                        <Path Stretch="Uniform" Fill="White" Data="M88,108H40A12,12,0,0,1,28,96V48a12,12,0,0,1,24,0V67l7.8-7.8A99.42,99.42,0,0,1,130,29.94h.56a99.38,99.38,0,0,1,69.87,28.47,12,12,0,0,1-16.78,17.16,76,76,0,0,0-106.84.63L69,84H88a12,12,0,0,1,0,24Zm128,40H168a12,12,0,0,0,0,24h19l-7.8,7.8a75.55,75.55,0,0,1-53.32,22.26h-.43a75.49,75.49,0,0,1-53.09-21.63,12,12,0,0,0-16.78,17.16,99.38,99.38,0,0,0,69.87,28.47H126a99.42,99.42,0,0,0,70.16-29.29L204,189v19a12,12,0,0,0,24,0V160A12,12,0,0,0,216,148Z"></Path>
+                        <TextBlock Text="刷新" Margin="2,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
             </StackPanel>
 
-            <ScrollViewer Grid.Row="1">
-                <TreeView  ItemsSource="{Binding FileNodes}" d:DataContext="{d:DesignInstance Type=design:BrowserDesignData, IsDesignTimeCreatable=True}" d:ItemsSource="{Binding Nodes}">
-                    <TreeView.ItemContainerStyle>
-                        <Style TargetType="TreeViewItem" BasedOn="{StaticResource TreeViewItemBaseStyle}">
-                            <Setter Property="ContextMenu" Value="{x:Null}"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsLeaf}" Value="True">
-                                    <Setter Property="ContextMenu">
-                                        <Setter.Value>
-                                            <ContextMenu>
-                                                <MenuItem Header="下载"
+            <!--<ScrollViewer Grid.Row="1">-->
+            <TreeView Grid.Row="1"  ItemsSource="{Binding FileNodes}" d:DataContext="{d:DesignInstance Type=design:BrowserDesignData, IsDesignTimeCreatable=True}" d:ItemsSource="{Binding Nodes}">
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="TreeViewItem" BasedOn="{StaticResource TreeViewItemBaseStyle}">
+                        <Setter Property="ContextMenu" Value="{x:Null}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsLeaf}" Value="True">
+                                <Setter Property="ContextMenu">
+                                    <Setter.Value>
+                                        <ContextMenu>
+                                            <MenuItem Header="下载"
                                                           Command="{Binding DownloadFileCommand}"
                                                           CommandParameter="{Binding NodeName}"/>
-                                            </ContextMenu>
-                                        </Setter.Value>
-                                    </Setter>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TreeView.ItemContainerStyle>
-                    <TreeView.ItemTemplate>
-                        <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type model:RemoteNodeItem}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding NodeName}"/>
-                                <Rectangle Width="5"/>
-                                <TextBlock Text="{Binding FileSize,Converter={StaticResource Long2FileSizeConverter}}">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockDefaultInfo}">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsLeaf}" Value="True">
-                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </StackPanel>
-                        </HierarchicalDataTemplate>
-                    </TreeView.ItemTemplate>
-                </TreeView>
-            </ScrollViewer>
+                                        </ContextMenu>
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TreeView.ItemContainerStyle>
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type model:RemoteNodeItem}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding NodeName}"/>
+                            <Rectangle Width="5"/>
+                            <TextBlock Text="{Binding FileSize,Converter={StaticResource Long2FileSizeConverter}}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockDefaultInfo}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsLeaf}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+            <!--</ScrollViewer>-->
 
 
         </Grid>
@@ -144,8 +144,9 @@
                                                 Command="{Binding Path=DataContext.CancelDownloadFileTaskCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}">
                                             <StackPanel Orientation="Horizontal">
-                                                <iconPacks:PackIconMaterialDesign Kind="Cancel" />
-                                                <TextBlock Text="取消" Margin="2,0,0,0"/>
+                                                <!--<iconPacks:PackIconMaterialDesign Kind="Cancel" />-->
+                                                <Path Stretch="Uniform" Fill="White" Data="M477.5 957.2916666666666C311.25 950.5 159.3333333333333 849.75 86.875 698.25C63.5 649.375 49.5416666666667 599.5416666666667 43.5833333333333 543.75C41.625 525.25 41.625 474.75 43.5833333333333 456.25C49.5416666666667 400.4583333333334 63.5 350.625 86.875 301.7500000000001C150.25 169.2500000000001 274.5416666666667 74.6666666666667 419.25 48.8333333333334C447.5 43.7916666666666 466.9583333333333 42.1666666666667 500 42.1666666666667C572.125 42.1666666666667 634.7916666666666 56.3750000000001 699.2083333333333 87.2916666666666C819.3333333333334 145.0000000000001 908.9999999999998 253.7083333333334 943.0833333333331 383.125C970.9999999999998 489.0416666666667 960.3333333333331 599.9583333333333 912.7083333333334 699.2083333333333C857.5416666666666 814.0416666666667 754.875 901.7916666666666 632.5 938.6666666666666C582.5833333333333 953.7083333333334 533.7083333333333 959.5833333333334 477.5 957.2916666666666M546.875 872C649.375 858.5833333333334 739 806.0833333333334 801.2916666666667 723C839.9166666666666 671.4583333333334 864.5 608.9583333333334 872.75 541.25C874.7916666666666 524.3333333333334 874.7916666666666 475.6666666666667 872.75 458.75C859.2083333333333 347.9166666666668 802.9999999999999 254.1666666666668 711.875 190.625C667.0833333333334 159.375 610.5416666666666 137.3750000000001 552.5 128.5416666666668C537.125 126.2083333333334 529.125 125.7916666666666 500 125.7916666666666C470.875 125.7916666666666 462.875 126.2083333333334 447.5 128.5416666666668C346.125 143.9583333333333 259.8333333333333 195.4166666666668 198.7083333333333 276.9583333333333C160.0833333333333 328.5416666666668 135.5 391 127.25 458.75C125.2083333333333 475.6666666666667 125.2083333333333 524.3333333333334 127.25 541.25C140.2083333333334 647.3333333333333 192.2083333333334 737.7083333333334 277 801.2916666666667C328.375 839.8333333333334 395.4583333333333 866.1666666666666 458.1249999999999 872.4166666666667C465.7083333333333 873.1666666666666 473.8333333333333 874 476.2499999999999 874.2916666666666C485.125 875.2916666666667 533.5416666666666 873.75 546.875 872M363.75 665.1666666666667C352.75 661.5416666666667 342.5833333333333 652.9166666666667 337.375 642.75C334.8333333333333 637.75 334.375 635.0833333333334 334.375 625C334.375 614.875 334.8333333333333 612.2083333333333 337.4583333333333 606.875C339.7916666666667 602.1666666666667 353.0416666666667 588.0833333333334 390.5416666666667 550.2916666666667L440.5 500L390.5416666666667 449.7083333333334C353.0416666666667 411.9166666666667 339.7916666666667 397.8333333333334 337.4583333333333 393.125C334.8333333333333 387.7916666666668 334.375 385.125 334.375 375C334.375 361.0833333333334 336.8333333333333 354.9166666666668 345.875 345.875C354.9166666666667 336.8333333333334 361.0833333333333 334.375 375 334.375C385.125 334.375 387.7916666666667 334.8333333333334 393.125 337.4583333333334C397.8333333333333 339.7916666666667 411.9166666666667 353.0416666666668 449.7083333333333 390.5416666666667L500 440.5L550.2916666666666 390.5416666666667C588.0833333333334 353.0416666666668 602.1666666666666 339.7916666666667 606.875 337.4583333333334C612.2083333333333 334.8333333333334 614.875 334.375 625 334.375C638.9166666666666 334.375 645.0833333333333 336.8333333333334 654.125 345.875C663.1666666666666 354.9166666666668 665.625 361.0833333333334 665.625 375C665.625 385.125 665.1666666666666 387.7916666666668 662.5416666666666 393.125C660.2083333333334 397.8333333333334 646.9583333333333 411.9166666666667 609.4583333333334 449.7083333333334L559.5 500L609.4583333333334 550.2916666666667C646.9583333333333 588.0833333333334 660.2083333333334 602.1666666666667 662.5416666666666 606.875C665.1666666666666 612.2083333333333 665.625 614.875 665.625 625C665.625 635.0833333333334 665.1666666666666 637.75 662.625 642.75C658.7083333333333 650.4166666666667 650.9583333333333 658.1666666666667 643.125 662.2916666666667C637.625 665.2083333333334 635.4166666666666 665.625 625 665.625C606.2916666666666 665.625 607.4166666666666 666.4583333333333 549.6666666666666 608.9583333333334L500 559.4583333333333L450.2916666666667 608.9583333333334C394 665.0416666666667 393.875 665.1666666666667 376.875 665.7916666666666C371.375 666 365.4583333333334 665.7083333333334 363.75 665.1666666666667"></Path>
+                                                <TextBlock Text="取消" VerticalAlignment="Center" Margin="2,0,0,0"/>
                                             </StackPanel>
                                         </Button>
                                         <Rectangle Width="3"/>
@@ -154,8 +155,9 @@
                                                 Command="{Binding Path=DataContext.StopDownloadFileTaskCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}">
                                             <StackPanel Orientation="Horizontal">
-                                                <iconPacks:PackIconMaterialDesign Kind="PauseCircleSharp" />
-                                                <TextBlock Text="停止" Margin="2,0,0,0"/>
+                                                <!--<iconPacks:PackIconMaterialDesign Kind="PauseCircleSharp" />-->
+                                                <Path Stretch="Uniform" Fill="White" Data="M 12 2 C 6.4800055 2 2 6.4800055 2 12 C 2 17.519994 6.4800055 22 12 22 C 17.519994 22 22 17.519994 22 12 C 22 6.4800055 17.519994 2 12 2 z M 9 8 L 11 8 L 11 16 L 9 16 L 9 8 z M 13 8 L 15 8 L 15 16 L 13 16 L 13 8 z "></Path>
+                                                <TextBlock Text="停止" Margin="2,0,0,0" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
                                         <Rectangle Width="3"/>
@@ -164,8 +166,9 @@
                                                 Command="{Binding Path=DataContext.StartDownloadFileTaskCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}">
                                             <StackPanel Orientation="Horizontal">
-                                                <iconPacks:PackIconFontAwesome Kind="CirclePlayRegular" />
-                                                <TextBlock Text="开始" Margin="2,0,0,0"/>
+                                                <!--<iconPacks:PackIconFontAwesome Kind="CirclePlayRegular" />-->
+                                                <Path Stretch="Uniform" Fill="White" Data="M464 256A208 208 0 1 0 48 256a208 208 0 1 0 416 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zM188.3 147.1c7.6-4.2 16.8-4.1 24.3 .5l144 88c7.1 4.4 11.5 12.1 11.5 20.5s-4.4 16.1-11.5 20.5l-144 88c-7.4 4.5-16.7 4.7-24.3 .5s-12.3-12.2-12.3-20.9V168c0-8.7 4.7-16.7 12.3-20.9z"></Path>
+                                                <TextBlock Text="开始" Margin="2,0,0,0" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
                                     </StackPanel>
