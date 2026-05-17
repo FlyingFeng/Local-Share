@@ -44,7 +44,11 @@ namespace LocalShare.Desktop.ViewModels
         private bool transferSpeedSelected = false;
         [ObservableProperty]
         private bool downloadSpeedSelected = false;
+        [ObservableProperty]
+        private bool showTrayIconSelected = false;
 
+        [ObservableProperty]
+        private bool showTrayIcon = true;
 
         [ObservableProperty]
         [NotifyDataErrorInfo]
@@ -96,7 +100,7 @@ namespace LocalShare.Desktop.ViewModels
 
         public bool AnySelected => ServerPortSelected || BrocastPortSelected || SendNodeMaxCountSelected ||
                                     SameNodeMaxSendFileCountSelected || SaveFilePathSelected || MulticastAddressSelected ||
-                                    TransferSpeedSelected;
+                                    TransferSpeedSelected || ShowTrayIconSelected;
 
 
         [RelayCommand]
@@ -130,8 +134,20 @@ namespace LocalShare.Desktop.ViewModels
         [RelayCommand]
         private void Apply()
         {
+            if (!AnySelected)
+            {
+                Growl.Warning("没有选中应用项");
+                return;
+            }
+
             if (ValidateAll())
             {
+                if (ShowTrayIconSelected)
+                {
+                    GlobalShared.ShowTrayIcon = ShowTrayIcon;
+                }
+
+
                 if (ServerPortSelected)
                 {
                     if (int.TryParse(ServerPort, out var newPort) && GlobalShared.ServerPort != newPort)
@@ -202,10 +218,6 @@ namespace LocalShare.Desktop.ViewModels
                 {
                     Growl.Info("应用成功");
                 }
-                else
-                {
-                    Growl.Warning("没有选中应用项");
-                }
             }
         }
 
@@ -258,6 +270,11 @@ namespace LocalShare.Desktop.ViewModels
                     {
                         downloadSpeedEntity.Value = DownloadSpeed;
                     }
+                    var showTrayIconEntity = settings.FirstOrDefault(s => s.Key == LocalSettingKey.KeyShowTrayIcon);
+                    if (showTrayIconEntity != null)
+                    {
+                        showTrayIconEntity.Value = (ShowTrayIcon ? 1 : 0).ToString();
+                    }
                     await dbContext.SaveChangesAsync();
                     Growl.Info("保存成功");
                 }
@@ -286,6 +303,7 @@ namespace LocalShare.Desktop.ViewModels
                 MulticastAddress = GlobalShared.MulticastAddress!;
                 TransferSpeed = GlobalShared.TransferSpeed.ToString();
                 DownloadSpeed = GlobalShared.DownloadSpeed.ToString();
+                ShowTrayIcon = GlobalShared.ShowTrayIcon;
             }
             catch (Exception ex)
             {

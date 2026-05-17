@@ -20,6 +20,7 @@ namespace LocalShare.Desktop.ViewModels
 {
     public partial class MainViewModel : ObservableObject, IRecipient<MessageModel>
     {
+        private readonly LocalShareSetting? _setting;
         private readonly UdpMulticastDiscoveryService? _udpDiscoveryService = null;
         private readonly ReceiveDataHolder? _receiveDataHolder;
         private readonly SendDataHolder? _sendDataHolder;
@@ -34,8 +35,10 @@ namespace LocalShare.Desktop.ViewModels
         public MainViewModel(UdpMulticastDiscoveryService udpDiscoveryService,
             IServiceProvider services,
             SendDataHolder sendDataHolder,
+            LocalShareSetting setting,
             ReceiveDataHolder receiveDataHolder)
         {
+            _setting = setting;
             _services = services;
             _udpDiscoveryService = udpDiscoveryService;
             _sendDataHolder = sendDataHolder;
@@ -126,8 +129,11 @@ namespace LocalShare.Desktop.ViewModels
                         LastUpdateTime = DateTime.UtcNow,
                         NodeName = NodeName
                     };
+                    GlobalShared.NodeName = NodeName;
                     await _dbContext!.LocalNodes.AddAsync(matched);
                 }
+                _setting!.NodeName = GlobalShared.NodeName;
+                _setting!.IpAddress = GlobalShared.IpAddress;
                 await _dbContext!.SaveChangesAsync();
             }
             catch (Exception ex)
@@ -344,8 +350,8 @@ namespace LocalShare.Desktop.ViewModels
                 NodeName = GlobalShared.NodeName!;
                 IpAddress = GlobalShared.IpAddress!;
                 _localServer = new LocalServer(_receiveDataHolder!, _sendDataHolder!);
-                await StartServer();
                 StartMulticast();
+                await StartServer();
                 loaded = true;
                 //StartBrocast();
             }
@@ -410,7 +416,6 @@ namespace LocalShare.Desktop.ViewModels
             try
             {
                 _server.Start();
-                await Task.Delay(1500);
                 Growl.Info("服务启动成功");
             }
             catch (Exception ex)
@@ -424,7 +429,6 @@ namespace LocalShare.Desktop.ViewModels
         public void StartMulticast()
         {
             _udpDiscoveryService!.Start();
-            Growl.Info("启动组播成功");
         }
 
         private void StartBrocast()

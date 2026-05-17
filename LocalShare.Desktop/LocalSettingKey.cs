@@ -14,5 +14,6 @@ namespace LocalShare.Desktop
         internal const string KeyMulticastAddress = "multicast_address";
         internal const string KeyTransferSpeed = "transfer_speed";
         internal const string KeyDownloadSpeed = "download_speed";
+        internal const string KeyShowTrayIcon = "show_tray_icon";
     }
 }

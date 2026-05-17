@@ -15,6 +15,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using System.Xml.Linq;
 
 namespace LocalShare.Desktop
@@ -68,7 +70,7 @@ namespace LocalShare.Desktop
             {
                 DispatcherUnhandledException += App_DispatcherUnhandledException;
 
-                GlobalShared.IpAddress = NetworkHelper.GetLocalIPByUdp();
+                GlobalShared.IpAddress = NetworkHelper.GetLocalIPByUdp() ?? string.Empty;
                 if (string.IsNullOrEmpty(GlobalShared.IpAddress))
                 {
                     Log.Warning($"OnStartup.GetLocalIpAddress failed.");
@@ -114,22 +116,9 @@ namespace LocalShare.Desktop
                 Log.Information("Application started");
                 // 禁用休眠
                 PreventSleep();
-                _trayIcon = (TaskbarIcon)FindResource("TrayIcon");
-                var contextMenu = new System.Windows.Controls.ContextMenu();
 
-                var showItem = new System.Windows.Controls.MenuItem { Header = "恢复主窗口" };
-                showItem.Click += (s, args) => ShowMainWindow();
-
-                var exitItem = new System.Windows.Controls.MenuItem { Header = "关闭程序" };
-                exitItem.Click += (s, args) => ExitApp();
-
-                contextMenu.Items.Add(showItem);
-                contextMenu.Items.Add(new System.Windows.Controls.Separator());
-                contextMenu.Items.Add(exitItem);
-                _trayIcon.ContextMenu = contextMenu;
-                _trayIcon.TrayMouseDoubleClick += (s, args) => ShowMainWindow();
                 await LoadData();
-                GlobalShared.HttpPort = GlobalShared.ServerPort + 10;
+                GlobalShared.HttpPort = GlobalShared.ServerPort + 50;
                 _host = Host.CreateDefaultBuilder()
                  .ConfigureWebHostDefaults(webBuilder =>
                  {
@@ -153,6 +142,7 @@ namespace LocalShare.Desktop
                      services.AddSingleton<ReceiveDataHolder>();
                      services.AddSingleton<DownloadDataHolder>();
                      services.AddSingleton<RpcChannelHolder>();
+                     services.AddSingleton<LocalShareSetting>();
 
                      services.AddTransient<SendView>();
                      services.AddTransient<SendViewModel>();
@@ -169,6 +159,27 @@ namespace LocalShare.Desktop
                  }).Build();
 
                 await _host.StartAsync();
+
+                var setting = _host.Services.GetRequiredService<LocalShareSetting>();
+                setting.NodeName = GlobalShared.NodeName;
+                setting.IpAddress = GlobalShared.IpAddress;
+
+                _trayIcon = (TaskbarIcon)FindResource("TrayIcon");
+                var contextMenu = new System.Windows.Controls.ContextMenu();
+
+                var showItem = new System.Windows.Controls.MenuItem();
+                showItem.SetBinding(MenuItem.HeaderProperty, new Binding(nameof(setting.NodeName)) { Source = setting });
+
+                showItem.Click += (s, args) => ShowMainWindow();
+
+                var exitItem = new System.Windows.Controls.MenuItem { Header = "关闭程序" };
+                exitItem.Click += (s, args) => ExitApp();
+
+                contextMenu.Items.Add(showItem);
+                contextMenu.Items.Add(new System.Windows.Controls.Separator());
+                contextMenu.Items.Add(exitItem);
+                _trayIcon.ContextMenu = contextMenu;
+                _trayIcon.TrayMouseDoubleClick += (s, args) => ShowMainWindow();
                 Log.Information($"Listen at 0.0.0.0:{GlobalShared.HttpPort}");
                 var window = _host.Services.GetRequiredService<MainWindow>();
                 window.Show();
@@ -220,6 +231,22 @@ namespace LocalShare.Desktop
             }
 
             var list = await dbContext.LocalSettings.ToListAsync();
+
+            var showTrayIcon = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeyShowTrayIcon);
+            if (showTrayIcon == null)
+            {
+                showTrayIcon = new DataContext.Entities.LocalSettingEntity
+                {
+                    Key = LocalSettingKey.KeyShowTrayIcon,
+                    Value = (GlobalShared.ShowTrayIcon ? 1 : 0).ToString()
+                };
+                await dbContext.LocalSettings.AddAsync(showTrayIcon);
+            }
+            else
+            {
+                var flag = int.Parse(showTrayIcon.Value) == 1;
+                GlobalShared.ShowTrayIcon = flag;
+            }
 
             var downloadSpeed = list.FirstOrDefault(s => s.Key == LocalSettingKey.KeyDownloadSpeed);
             if (downloadSpeed == null)

@@ -1,9 +1,19 @@
 ﻿
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.AspNetCore.Authentication;
 using System.Windows.Media;
 
 namespace LocalShare.Desktop
 {
+
+    public partial class LocalShareSetting : ObservableObject
+    {
+        [ObservableProperty]
+        private string nodeName = string.Empty;
+        [ObservableProperty]
+        private string ipAddress = string.Empty;
+    }
+
     internal static class GlobalShared
     {
         internal static string IpAddress = "127.0.0.1";
@@ -16,6 +26,7 @@ namespace LocalShare.Desktop
         internal static string MulticastAddress = "239.239.239.251";
         internal static int TransferSpeed = 256;  //单位 KB
         internal static int DownloadSpeed = 256;   //单位 KB
+        internal static bool ShowTrayIcon = true;
 
         internal static int HttpPort = 0;
 
